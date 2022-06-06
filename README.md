@@ -14,13 +14,13 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
   pip_pypy3 install python-lzf
   ```
   
-  Move inside the `redis-rdb-compare/redis-rdb-tools` directory of the repository and run:
+  Move inside the `redis-rdb-compare/redis-rdb-tools/` directory of the repository and run:
   ```
   pypy3 setup.py install
   ```
   This will install the necessary packages to run the parsing tool.
   
-- Install IDEA Intellij (v.2022.1 or above) or some other IDE and you can open the `redis-rdb-compare/redis-rdb-compare` directory, which is a Maven project.
+- Install IDEA Intellij (v.2022.1 or above) or some other IDE and you can open the `redis-rdb-compare/redis-rdb-compare/` directory, which is a Maven project.
 
 
 ## Running the code
@@ -32,7 +32,8 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
 - 2 types of queries are supported:
   1. In each database, how many keys begin with a certain prefix? 
   2. For a fixed prefix, what are the 'n' most common continuations up to the next level of the each trie?
-
+  **(Both queries accept empty string as a prefix that applies to all keys of the database)**
+- Check the logs in `redis-rdb-compare/logs/` directory after the execution for detailed information about the execution.
 
 ## Java Classes
 - **Main:** Driver Code
