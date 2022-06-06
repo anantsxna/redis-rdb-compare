@@ -1,0 +1,3 @@
+[submodule "redis-rdb-tools"]
+	path = redis-rdb-tools
+	url = https://github.com/sripathikrishnan/redis-rdb-tools.git
