@@ -22,4 +22,16 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+# idea IDE files
 /.idea/
+/redis-rdb-compare/.idea/
+
+# Redis database dumps
+*.rdb
+# extracted keys from dumps
+keys*.txt
+.DS_Store
+
+# Maven target folder
+/redis-rdb-compare/target/
+
