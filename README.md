@@ -1,3 +1,6 @@
+<img src="https://img.shields.io/badge/PyPy3-v7.3.9-brightgreen">  &nbsp;&nbsp;&nbsp;  <img src="https://img.shields.io/badge/Maven-v3.8.1-blue"> &nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/openJDK-18-orange"> 
+
+
 # redis-rdb-compare
 A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb files to extract the keys and answers queries via a slack bot
 
