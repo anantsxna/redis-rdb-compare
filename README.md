@@ -35,9 +35,9 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
 
 
 ## Java Classes
-- **Main: ** Driver Code
-- **processing.Parser: ** Parses the .rdb files for keys
-- **processing.Sorter: ** Not implemented  and of no use. Yet. 
-- **trie.TrieNode: ** Node implementation for the tries (stores links to children and frequency count.)
-- **trie.QTrie: ** Trie implementation (implmenets key insertion and query answering methods.)
+- **Main:** Driver Code
+- **processing.Parser:** Parses the .rdb files for keys
+- **processing.Sorter:** Not implemented  and of no use. Yet. 
+- **trie.TrieNode:** Node implementation for the tries (stores links to children and frequency count.)
+- **trie.QTrie:** Trie implementation (implmenets key insertion and query answering methods.)
 
