@@ -29,25 +29,15 @@ public class Main {
         System.out.println("Program start");
 
         try{
-            System.out.println("Enter the path of the first .rdb file (or leave blank for default):");
+            System.out.println("Enter the path of the first .rdb file (or press enter for default):");
             String input = reader.readLine();
             if (!input.equals("")) {
                 dumpA = input;
             }
-            System.out.println("Enter the path of the second .rdb file (or leave blank for default):");
+            System.out.println("Enter the path of the second .rdb file (or press enter for default):");
             input = reader.readLine();
             if (!input.equals("")) {
                 dumpB = input;
-            }
-            System.out.println("Enter the path of where to save the keys from the first file (or leave blank for default):");
-            input = reader.readLine();
-            if (!input.equals("")) {
-                keysA = input;
-            }
-            System.out.println("Enter the path of where to save the keys from the second file (or leave blank for default):");
-            input = reader.readLine();
-            if (!input.equals("")) {
-                keysB = input;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
