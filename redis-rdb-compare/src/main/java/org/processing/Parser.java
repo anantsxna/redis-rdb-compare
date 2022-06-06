@@ -24,13 +24,30 @@ public final class Parser {
             String line = null;
             try {
                 while ((line = input.readLine()) != null) {
-                    logger.info("PYPY3: {} in File {}", line, dumpFile);
+                    logger.info("PYPY3!: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
     }
+
+    private static void watchErrors(final Process process, final String dumpFile) {
+        new Thread(() -> {
+            logger.info("Monitoring Process {}", process.toString());
+            BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            String line = null;
+            try {
+                while ((line = errors.readLine()) != null) {
+                    logger.error("PYPY3 Error: {} in File {}", line, dumpFile);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+
 
     /**
      * Parses the given dumpFile and stored the keys in keysFile.
@@ -45,7 +62,7 @@ public final class Parser {
         try {
             String[] command = new String[] {
                     "pypy3",
-                    "../redis-rdb-tools/fast-parse.py",
+                    "fast-parse.py",
                     "--rdb=" + dumpFile,
                     "--keys=" + keysFile,
                     "--objspace-std-withsmalllong",
@@ -54,10 +71,11 @@ public final class Parser {
             pb.redirectErrorStream(true);
             Process process = pb.start();
             watch(process, dumpFile);
+            watchErrors(process, dumpFile);
             Integer exitStatus = process.waitFor();
             if (exitStatus != 0) {
                 logger.error("PYPY3: Process exited with status {}", exitStatus);
-                throw new RuntimeException("ERROR: Process for parsing file" + dumpFile + "exited with status " + exitStatus);
+                throw new RuntimeException("ERROR: Process for parsing file " + dumpFile + " exited with status " + exitStatus);
             }
             else {
                 logger.info("PYPY3: Process exited with status {}", exitStatus);
