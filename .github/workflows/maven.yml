@@ -25,15 +25,15 @@ jobs:
     - name: Build with Maven
       run: mvn --batch-mode --update-snapshots -U package --file redis-rdb-compare/pom.xml
     - name: Upload coverage to Codecov
-      run: pwd
-#       uses: codecov/codecov-action@v2
-#       with:
-#         token: ${{ secrets.CODECOV_TOKEN }}
-#         directory: ./coverage/reports/
-#         env_vars: OS,PYTHON
-#         fail_ci_if_error: true
-#         files: ./coverage1.xml,./coverage2.xml
-#         flags: unittests
-#         name: codecov-umbrella
-#         path_to_write_report: ./coverage/codecov_report.txt
-#         verbose: true
+#       run: pwd
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./target/site/jacoco/
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        files: ./jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+        path_to_write_report: ./codecov_report.txt
+        verbose: true
