@@ -31,6 +31,7 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
 - Build and Run the Main class.
 - The program automatically looks for 2 Redis Database file dumps (named `dump-A.rdb` and `dump-B.rdb`) inside the main directory. But it also allows you to input the absolute path of the files.
 - The program parses the files sequentially and stores the keys in `keys-A.txt` and `keys-B.txt` files in the main directory.
+  [Download sample .rdb files here.](https://drive.google.com/drive/folders/1VvFPBn-pJBUBAgcz9VFpQ-sBKCACo5d8?usp=sharing) Put the files in the `redis-rdb-compare/` main directory or specify absolute path at the start of the program.
 - The program creates 2 Tries, for either file of keys (tokenized on `/` character and skipping the last token) and opens a menu in command line to answer queries.
 - 2 types of queries are supported:
   1. In each database, how many keys begin with a certain prefix? 
