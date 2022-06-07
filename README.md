@@ -3,7 +3,7 @@
 <img src="https://img.shields.io/badge/vulnerabilities-0-green"> 
 
 # redis-rdb-compare
-A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb files to extract the keys and answers queries via a slack bot
+A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb files to extract the keys and answers queries via a slack bot.
 
 ## Installation Guide
 - Since the repository depends on submodules, use the `--recurse-submodules` while cloning.
