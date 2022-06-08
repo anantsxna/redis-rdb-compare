@@ -33,7 +33,6 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         working-directory: /home/runner/work/redis-rdb-compare/redis-rdb-compare/redis-rdb-compare/target/site/jacoco/
-        env_vars: OS,PYTHON
         fail_ci_if_error: true
         files: ./jacoco.xml
         flags: unittests
