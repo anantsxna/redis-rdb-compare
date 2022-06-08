@@ -1,5 +1,5 @@
 
-[![build and test](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml/badge.svg)](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml) &nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/vulnerabilities-0-green"> &nbsp;&nbsp;&nbsp;  <a href="https://codecov.io/gh/anantsxna/redis-rdb-compare">
+[![CI build and test](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml/badge.svg)](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml) &nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/vulnerabilities-0-green"> &nbsp;&nbsp;&nbsp;  <a href="https://codecov.io/gh/anantsxna/redis-rdb-compare">
   <img src="https://codecov.io/gh/anantsxna/redis-rdb-compare/branch/main/graph/badge.svg?token=8L10DMFFRI"/>
 </a>
 
