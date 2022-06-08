@@ -37,7 +37,7 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
 - 2 types of queries are supported:
   1. In each database, how many keys begin with a certain prefix? 
   2. For a fixed prefix, what are the 'n' most common continuations up to the next level of the each trie?
-  **(Both queries accept empty string as a prefix that applies to all keys of the database)**
+  **(Both queries accept empty string as a prefix that applies to all keys of the database.)**
 - Check the logs in `redis-rdb-compare/logs/` directory after the execution for detailed information about the execution.
 
 ## Java Classes
