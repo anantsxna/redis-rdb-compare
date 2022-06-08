@@ -24,6 +24,8 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn --batch-mode --update-snapshots -U package --file redis-rdb-compare/pom.xml
+    - name: Verify With Maven
+      run: mvn verify 
     - name: Run LS
       run: ls -R
 #     - name: Upload coverage to Codecov
