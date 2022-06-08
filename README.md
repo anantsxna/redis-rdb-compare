@@ -1,13 +1,17 @@
+# redis-rdb-compare
 
-[![CI build and test](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml/badge.svg)](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml) &nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/vulnerabilities-0-green"> &nbsp;&nbsp;&nbsp;  <a href="https://codecov.io/gh/anantsxna/redis-rdb-compare">
+[![CI build and test](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml/badge.svg)](https://github.com/anantsxna/redis-rdb-compare/actions/workflows/maven.yml)
+<img src="https://img.shields.io/badge/vulnerabilities-0-green">
+<a href="https://codecov.io/gh/anantsxna/redis-rdb-compare">
   <img src="https://codecov.io/gh/anantsxna/redis-rdb-compare/branch/main/graph/badge.svg?token=8L10DMFFRI"/>
 </a>
+<img src="https://img.shields.io/badge/Maven Central-v3.8.1-blue">
+<img src="https://img.shields.io/badge/openJDK-18-blue"> 
+<img src="https://img.shields.io/badge/PyPy3-v7.3.9-blue">
 
-<img src="https://img.shields.io/badge/PyPy3-v7.3.9-blue">  &nbsp;&nbsp;&nbsp;  <img src="https://img.shields.io/badge/Maven Central-v3.8.1-blue"> &nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/openJDK-18-blue"> 
 
     
 
-# redis-rdb-compare
 A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb files to extract the keys and answers queries via a slack bot.
 
 ## Installation Guide
