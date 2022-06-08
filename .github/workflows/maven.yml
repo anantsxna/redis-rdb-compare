@@ -22,12 +22,8 @@ jobs:
         java-version: '18'
         distribution: 'corretto'
         cache: maven
-    - name: Build with Maven
-      run: mvn --batch-mode --update-snapshots package --file redis-rdb-compare/pom.xml
-    - name: Verify With Maven
+    - name: Build-Test-Verify With Maven
       run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
-    - name: Run LS
-      run: ls -R
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
@@ -38,4 +34,3 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         verbose: true
-      
