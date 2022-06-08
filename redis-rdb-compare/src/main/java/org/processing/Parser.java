@@ -4,6 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Parser class.
@@ -11,6 +14,8 @@ import java.io.*;
  */
 public final class Parser {
     private static final Logger logger = LogManager.getLogger(Parser.class);
+
+    private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     /**
      * Runnable for thread that gathers the logs from the redis-rdb-tools python script.
@@ -47,19 +52,26 @@ public final class Parser {
         }).start();
     }
 
-
-
     /**
-     * Parses the given dumpFile and stored the keys in keysFile.
+     * Adds the dump and key file to the list.
      *
      * @param dumpFile: the location of the dump file to parse, must be a .rdb file.
      * @param keysFile: the location of the file to store the keys, must be a .txt file.
-     * The keys will be stored in the same order as they appear in the dump file.
      *
      */
-    public static void parse(String dumpFile, String keysFile) {
-        logger.info("Parsing dump file {} into keys file {}", dumpFile, keysFile);
-        try {
+    public static void addToParser(String dumpFile, String keysFile) {
+        parsePairs.put(dumpFile, keysFile);
+    }
+
+    /**
+     * Parses the dumpFile and stores the keys in keysFile for each pair.
+     *
+     * The keys will be stored in the same order as they appear in the dump file.
+     */
+
+    public static void parse() {
+        List<Process> parseProcesses = new ArrayList<>();
+        parsePairs.forEach((dumpFile, keysFile) -> {
             String[] command = new String[] {
                     "pypy3",
                     "fast-parse.py",
@@ -69,19 +81,32 @@ public final class Parser {
             };
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
-            Process process = pb.start();
+            logger.info("Parsing dump file {} into keys file {}", dumpFile, keysFile);
+            Process process = null;
+            try {
+                process = pb.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             watch(process, dumpFile);
             watchErrors(process, dumpFile);
-            Integer exitStatus = process.waitFor();
+            parseProcesses.add(process);
+        });
+
+        parseProcesses.forEach((process) -> {
+            int exitStatus = 0;
+            try {
+                exitStatus = process.waitFor();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             if (exitStatus != 0) {
                 logger.error("PYPY3: Process exited with status {}", exitStatus);
-                throw new RuntimeException("ERROR: Process for parsing file " + dumpFile + " exited with status " + exitStatus);
+                throw new RuntimeException("ERROR: Process for parsing file exited with status " + exitStatus);
             }
             else {
                 logger.info("PYPY3: Process exited with status {}", exitStatus);
             }
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 }

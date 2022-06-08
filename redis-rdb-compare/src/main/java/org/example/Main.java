@@ -44,8 +44,10 @@ public class Main {
         }
 
 
-        Parser.parse(dumpA, keysA);
-        Parser.parse(dumpB, keysB);
+        Parser.addToParser(dumpA, keysA);
+        Parser.addToParser(dumpB, keysB);
+        Parser.parse();
+
         System.out.println("Both .rdb Files Successfully parsed.");
         System.out.println("Keys from " + dumpA + " stored in: " + keysA);
         System.out.println("Keys from " + dumpB + " stored in: " + keysB);
