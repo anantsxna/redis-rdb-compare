@@ -27,54 +27,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.22.2</version>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.jacoco</groupId>-->
-<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
-<!--                <version>0.8.8</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>prepare-agent</id>-->
-<!--                        <goals>-->
-<!--                            <goal>prepare-agent</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <destFile>${project.build.directory}/jacoco.exec</destFile>-->
-<!--&lt;!&ndash;                            <propertyName>surefireArgLine</propertyName>&ndash;&gt;-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>default-report</id>-->
-<!--                        <goals>-->
-<!--                            <goal>report</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>-->
-<!--                            <outputDirectory>${project.build.directory}</outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-
-<!--                    <execution>-->
-<!--                        <id>jacoco-check</id>-->
-<!--                        <goals>-->
-<!--                            <goal>check</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <rules>-->
-<!--                                <rule>-->
-<!--&lt;!&ndash;                                    <element>PACKAGE</element>&ndash;&gt;-->
-<!--&lt;!&ndash;                                    <limits>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <limit>&ndash;&gt;-->
-<!--&lt;!&ndash;                                            <counter>LINE</counter>&ndash;&gt;-->
-<!--&lt;!&ndash;                                            <value>COVEREDRATIO</value>&ndash;&gt;-->
-<!--&lt;!&ndash;                                            <minimum>0.50</minimum>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        </limit>&ndash;&gt;-->
-<!--&lt;!&ndash;                                    </limits>&ndash;&gt;-->
-<!--                                </rule>-->
-<!--                            </rules>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
