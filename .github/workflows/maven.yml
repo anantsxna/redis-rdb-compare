@@ -23,9 +23,9 @@ jobs:
         distribution: 'corretto'
         cache: maven
     - name: Build with Maven
-      run: mvn --batch-mode --update-snapshots -U package --file redis-rdb-compare/pom.xml
+      run: mvn --batch-mode --update-snapshots package --file redis-rdb-compare/pom.xml
     - name: Verify With Maven
-      run: mvn verify 
+      run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
     - name: Run LS
       run: ls -R
 #     - name: Upload coverage to Codecov
