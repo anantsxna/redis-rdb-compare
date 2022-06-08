@@ -28,15 +28,15 @@ jobs:
       run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
     - name: Run LS
       run: ls -R
-#     - name: Upload coverage to Codecov
-#       uses: codecov/codecov-action@v2
-#       with:
-#         token: ${{ secrets.CODECOV_TOKEN }}
-#         working-directory: /home/runner/work/redis-rdb-compare/redis-rdb-compare/redis-rdb-compare/target/site/jacoco/
-#         env_vars: OS,PYTHON
-#         fail_ci_if_error: true
-#         files: ./jacoco.xml
-#         flags: unittests
-#         name: codecov-umbrella
-#         verbose: true
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        working-directory: /home/runner/work/redis-rdb-compare/redis-rdb-compare/redis-rdb-compare/target/site/jacoco/
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        files: ./jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+        verbose: true
       
