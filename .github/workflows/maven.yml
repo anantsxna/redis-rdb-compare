@@ -22,5 +22,15 @@ jobs:
         java-version: '18'
         distribution: 'corretto'
         cache: maven
-    - name: Build with Maven
-      run: mvn --batch-mode --update-snapshots -U package --file redis-rdb-compare/pom.xml
+    - name: Build-Test-Verify With Maven
+      run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        working-directory: /home/runner/work/redis-rdb-compare/redis-rdb-compare/redis-rdb-compare/target/site/jacoco/
+        fail_ci_if_error: true
+        files: ./jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+        verbose: true
