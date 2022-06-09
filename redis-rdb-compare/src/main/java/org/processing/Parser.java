@@ -109,4 +109,8 @@ public final class Parser {
             }
         });
     }
+
+    public static void clear() {
+        parsePairs.clear();
+    }
 }
