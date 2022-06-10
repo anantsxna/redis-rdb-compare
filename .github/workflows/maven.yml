@@ -22,6 +22,8 @@ jobs:
         java-version: '18'
         distribution: 'corretto'
         cache: maven
+    - name: Prettier Check
+      run: mvn prettier:check
     - name: Build-Test-Verify With Maven
       run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
     - name: Upload coverage to Codecov
