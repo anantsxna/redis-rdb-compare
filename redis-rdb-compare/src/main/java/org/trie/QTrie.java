@@ -28,7 +28,7 @@ public final class QTrie {
     /**
      * Reads keys from file and inserts them into trie.
      */
-    public void takeInput() {
+    private void takeInput() {
         try (FileReader fileReader = new FileReader(keysFile); BufferedReader reader = new BufferedReader(fileReader)) {
             logger.info("Reading keys from file: {}", keysFile);
             String line;
@@ -50,7 +50,7 @@ public final class QTrie {
      *
      * @param dbKey: key to be inserted.
      */
-    public void insertKey(String dbKey) {
+    private void insertKey(String dbKey) {
         StringTokenizer tokenizer = new StringTokenizer(dbKey, "/");
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
@@ -107,7 +107,7 @@ public final class QTrie {
      *
      * @return Pair<full key, frequency of the key>.
      */
-    public Map.Entry<String, Integer> getKeyAndCountOutput(Map.Entry<String, TrieNode> _entry, String prefix) {
+    private Map.Entry<String, Integer> getKeyAndCountOutput(Map.Entry<String, TrieNode> _entry, String prefix) {
         return Map.entry(prefix.concat("/").concat(_entry.getKey()).concat("/*"), _entry.getValue().getCount());
     }
 

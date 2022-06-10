@@ -110,6 +110,9 @@ public final class Parser {
         });
     }
 
+    /**
+     * Clears the list of files to parse.
+     */
     public static void clear() {
         parsePairs.clear();
     }

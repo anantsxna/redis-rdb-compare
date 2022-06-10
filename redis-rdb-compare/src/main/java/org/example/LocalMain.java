@@ -13,17 +13,17 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-public class Main {
+public class LocalMain {
     static String dumpA = "../dump-A.rdb";
     static String dumpB = "../dump-B.rdb";
     static String keysA = "../keys-A.txt";
     static String keysB = "../keys-B.txt";
 
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LogManager.getLogger(LocalMain.class);
     private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     /**
-     * Driver Code
+     * Driver Code for locally running without slack
      */
     public static void main(String[] args) {
         System.out.println("Program start");
@@ -42,7 +42,6 @@ public class Main {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
 
         Parser.addToParser(dumpA, keysA);
         Parser.addToParser(dumpB, keysB);
