@@ -1,6 +1,7 @@
 package org.example;
 
 import com.slack.api.model.block.LayoutBlock;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.processing.Parser;
@@ -9,45 +10,53 @@ import org.querying.countQuery;
 import org.querying.nextKeyQuery;
 import org.trie.QTrie;
 
-import java.util.List;
 // TODO: Change all return methods from String to List<LayoutBlock>
 public class SlackHelper {
+
     private static final String dumpA = "../dump-A.rdb";
     private static final String dumpB = "../dump-B.rdb";
     private static final String keysA = "../keys-A.txt";
     private static final String keysB = "../keys-B.txt";
     public static QTrie trieA = null;
     public static QTrie trieB = null;
-    private static final String PARSING_NOT_COMPLETED = "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
-    private static final String PARSING_STARTED = "Parsing has started. Please wait. Use \"/parse\" command again to check status.";
-    private static final String PARSING_IN_PROGRESS = "Parsing already in progress. Please wait.";
+    private static final String PARSING_NOT_COMPLETED =
+        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
+    private static final String PARSING_STARTED =
+        "Parsing has started. Please wait. Use \"/parse\" command again to check status.";
+    private static final String PARSING_IN_PROGRESS =
+        "Parsing already in progress. Please wait.";
     private static final String PARSING_COMPLETED = "Parsing completed.";
-    private static final String TRIES_NOT_CREATED = "Tries not created. Please wait for tries to be created or use \"/maketrie\" command to start creating tries.";
-    private static final String TRIE_CONSTRUCTION_STARTED = "Trie construction started. Please wait. Use \"/maketrie\" command again to check status.";
-    private static final String TRIE_CONSTRUCTION_IN_PROGRESS = "Trie construction already in progress. Please wait.";
-    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed.";
-    private static final String BAD_ARGUMENTS = "Please provide proper arguments. Refer to \"/redis-bot-help\" for more information.";
+    private static final String TRIES_NOT_CREATED =
+        "Tries not created. Please wait for tries to be created or use \"/maketrie\" command to start creating tries.";
+    private static final String TRIE_CONSTRUCTION_STARTED =
+        "Trie construction started. Please wait. Use \"/maketrie\" command again to check status.";
+    private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
+        "Trie construction already in progress. Please wait.";
+    private static final String TRIE_CONSTRUCTION_COMPLETED =
+        "Trie construction completed.";
+    private static final String BAD_ARGUMENTS =
+        "Please provide proper arguments. Refer to \"/redis-bot-help\" for more information.";
     private static final Logger logger = LogManager.getLogger(SlackHelper.class);
 
     private enum ParsingStatus {
         NOT_STARTED,
         IN_PROGRESS,
-        COMPLETED
+        COMPLETED,
     }
 
     private enum TrieStatus {
         NOT_CONSTRUCTED,
         CONSTRUCTING,
-        CONSTRUCTED
+        CONSTRUCTED,
     }
+
     private static volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
     private static volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
     public static String parseUtils() {
-        if(parsingStatus == ParsingStatus.IN_PROGRESS) {
+        if (parsingStatus == ParsingStatus.IN_PROGRESS) {
             return PARSING_IN_PROGRESS;
-        }
-        else if(parsingStatus == ParsingStatus.COMPLETED) {
+        } else if (parsingStatus == ParsingStatus.COMPLETED) {
             return PARSING_COMPLETED;
             //TODO: ask user for intent, reset parsingStatus to NOT_STARTED and skip return
         }
@@ -61,21 +70,22 @@ public class SlackHelper {
             Parser.parse();
             parsingStatus = ParsingStatus.COMPLETED;
             //TODO: Find a way to send a message to the user that the parsing is completed
-        }).start();
+        })
+            .start();
         parsingStatus = ParsingStatus.IN_PROGRESS;
         return PARSING_STARTED;
     }
 
     public static String trieConstructionUtils() {
-        if(parsingStatus != ParsingStatus.COMPLETED) {
+        if (parsingStatus != ParsingStatus.COMPLETED) {
             return PARSING_NOT_COMPLETED;
         }
 
-        if(trieStatus == TrieStatus.CONSTRUCTING) {
+        if (trieStatus == TrieStatus.CONSTRUCTING) {
             return TRIE_CONSTRUCTION_IN_PROGRESS;
         }
 
-        if(trieStatus == TrieStatus.CONSTRUCTED) {
+        if (trieStatus == TrieStatus.CONSTRUCTED) {
             return TRIE_CONSTRUCTION_COMPLETED;
         }
 
@@ -85,17 +95,21 @@ public class SlackHelper {
             trieA = new QTrie(keysA);
             trieB = new QTrie(keysB);
             long endTime = System.currentTimeMillis();
-            System.out.println("Trie construction completed in " + (endTime - startTime) + " milliseconds");
+            System.out.println(
+                "Trie construction completed in " +
+                (endTime - startTime) +
+                " milliseconds"
+            );
             trieStatus = TrieStatus.CONSTRUCTED;
-        }).start();
+        })
+            .start();
         return TRIE_CONSTRUCTION_STARTED;
     }
 
     public static String countUtils(String text) {
-       if(trieStatus != TrieStatus.CONSTRUCTED) {
+        if (trieStatus != TrieStatus.CONSTRUCTED) {
             return TRIES_NOT_CREATED;
-        }
-        else {
+        } else {
             // TODO: implement syntax checking of the key
         }
         Query query = new countQuery(text);
@@ -106,17 +120,15 @@ public class SlackHelper {
     public static String getNextKeyUtils(String text) {
         String key = "";
         int count = 1;
-        if(trieStatus != TrieStatus.CONSTRUCTED) {
+        if (trieStatus != TrieStatus.CONSTRUCTED) {
             return TRIES_NOT_CREATED;
-        }
-        else if(text.isEmpty()) {
+        } else if (text.isEmpty()) {
             return BAD_ARGUMENTS;
-        }
-        else {
+        } else {
             // TODO: implement syntax checking of the key
 
         }
-        try{
+        try {
             String[] tokens = text.split(" ");
             key = tokens[0];
             count = Integer.parseInt(tokens[1]);
@@ -129,5 +141,4 @@ public class SlackHelper {
         query.execute();
         return query.result();
     }
-
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
  * Trie Node class.
  */
 public final class TrieNode {
+
     private final HashMap<String, TrieNode> children; // children of the node
     private Integer count; // count of strings that go through this node
 
@@ -42,4 +43,3 @@ public final class TrieNode {
         children.put(childName, new TrieNode());
     }
 }
-

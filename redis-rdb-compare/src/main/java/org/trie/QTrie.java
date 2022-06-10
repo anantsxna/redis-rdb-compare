@@ -1,16 +1,16 @@
 package org.trie;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Trie class.
  */
 public final class QTrie {
+
     private static final Logger logger = LogManager.getLogger(QTrie.class);
     private final TrieNode root;
     private final String keysFile;
@@ -29,7 +29,10 @@ public final class QTrie {
      * Reads keys from file and inserts them into trie.
      */
     private void takeInput() {
-        try (FileReader fileReader = new FileReader(keysFile); BufferedReader reader = new BufferedReader(fileReader)) {
+        try (
+            FileReader fileReader = new FileReader(keysFile);
+            BufferedReader reader = new BufferedReader(fileReader)
+        ) {
             logger.info("Reading keys from file: {}", keysFile);
             String line;
             int i = 0;
@@ -61,8 +64,7 @@ public final class QTrie {
                     current.addChild(nextKey);
                 }
                 current = current.getChild(nextKey);
-            }
-            else break;
+            } else break;
         }
     }
 
@@ -79,7 +81,8 @@ public final class QTrie {
      *
      *      If the number of child nodes is less than n, List has less than (n+2) pairs.
      */
-    public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n) throws Exception {
+    public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n)
+        throws Exception {
         final String prefix = _prefix.replaceFirst("/$", "");
         if (prefix.isBlank() || prefix.isEmpty()) {
             throw new Exception("Prefix cannot be empty");
@@ -88,14 +91,23 @@ public final class QTrie {
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
         TrieNode node = traverseTrie(prefix);
 
-        result.add(new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount()));
-        result.add(new AbstractMap.SimpleEntry<>(prefix + " total children", node.getChildrenCount()));
+        result.add(
+            new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount())
+        );
+        result.add(
+            new AbstractMap.SimpleEntry<>(
+                prefix + " total children",
+                node.getChildrenCount()
+            )
+        );
 
-        node.getChildren()
-                .entrySet().stream()
-                .sorted((e1, e2) -> e2.getValue().getCount() - e1.getValue().getCount())
-                .limit(n)
-                .forEach(e -> result.add(getKeyAndCountOutput(e, prefix)));
+        node
+            .getChildren()
+            .entrySet()
+            .stream()
+            .sorted((e1, e2) -> e2.getValue().getCount() - e1.getValue().getCount())
+            .limit(n)
+            .forEach(e -> result.add(getKeyAndCountOutput(e, prefix)));
 
         return result;
     }
@@ -107,8 +119,14 @@ public final class QTrie {
      *
      * @return Pair<full key, frequency of the key>.
      */
-    private Map.Entry<String, Integer> getKeyAndCountOutput(Map.Entry<String, TrieNode> _entry, String prefix) {
-        return Map.entry(prefix.concat("/").concat(_entry.getKey()).concat("/*"), _entry.getValue().getCount());
+    private Map.Entry<String, Integer> getKeyAndCountOutput(
+        Map.Entry<String, TrieNode> _entry,
+        String prefix
+    ) {
+        return Map.entry(
+            prefix.concat("/").concat(_entry.getKey()).concat("/*"),
+            _entry.getValue().getCount()
+        );
     }
 
     /**
@@ -143,4 +161,3 @@ public final class QTrie {
         return current;
     }
 }
-

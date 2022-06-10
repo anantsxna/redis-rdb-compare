@@ -1,7 +1,9 @@
 package org.querying;
+
 import org.example.SlackHelper;
 
 public class countQuery extends Query {
+
     private final String key;
     private int countInA = 0, countInB = 0;
 
@@ -9,6 +11,7 @@ public class countQuery extends Query {
         super(QueryType.GET_COUNT);
         key = text;
     }
+
     public void execute() {
         System.out.println("executing count query...!");
         try {
@@ -19,15 +22,21 @@ public class countQuery extends Query {
             throw new RuntimeException(e);
         }
         setExitCode(0);
-
     }
+
     public String result() {
-        if(getExitCode() == 0) {
-            return "Count for " + key + "/* in first database: " + countInA + " and in second database: " + countInB;
-        } else if(getExitCode() == -1) {
+        if (getExitCode() == 0) {
+            return (
+                "Count for " +
+                key +
+                "/* in first database: " +
+                countInA +
+                " and in second database: " +
+                countInB
+            );
+        } else if (getExitCode() == -1) {
             return "Error: Query could not execute";
-        }
-        else {
+        } else {
             return "Error: Query failed";
         }
     }
