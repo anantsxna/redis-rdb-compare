@@ -91,14 +91,9 @@ public final class QTrie {
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
         TrieNode node = traverseTrie(prefix);
 
+        result.add(new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount()));
         result.add(
-            new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount())
-        );
-        result.add(
-            new AbstractMap.SimpleEntry<>(
-                prefix + " total children",
-                node.getChildrenCount()
-            )
+            new AbstractMap.SimpleEntry<>(prefix + " total children", node.getChildrenCount())
         );
 
         node

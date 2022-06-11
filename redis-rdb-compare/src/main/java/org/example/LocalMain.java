@@ -61,10 +61,7 @@ public class LocalMain {
         QTrie trieB = new QTrie(keysB);
         long endTime = System.currentTimeMillis();
         logger.info(
-            "Total Tries construction time: " +
-            (endTime - startTime) /
-            1000.0 +
-            " seconds."
+            "Total Tries construction time: " + (endTime - startTime) / 1000.0 + " seconds."
         );
         System.out.println("Tries created!");
 
@@ -99,10 +96,7 @@ public class LocalMain {
                                 );
                             } catch (Exception e) {
                                 System.out.println(
-                                    "No keys found for " +
-                                    prefix +
-                                    " in " +
-                                    trie.getKeysFile()
+                                    "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
                                 logger.error(
                                     "Query-1: For prefix {}, Error in getCountForPrefix: {}",
@@ -172,10 +166,7 @@ public class LocalMain {
                                 }
                             } catch (Exception e) {
                                 System.out.println(
-                                    "No keys found for " +
-                                    prefix +
-                                    " in " +
-                                    trie.getKeysFile()
+                                    "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
                                 logger.error(
                                     "Query-2: For fixed prefix {}, Error in topNKeyWithPrefix: {}",

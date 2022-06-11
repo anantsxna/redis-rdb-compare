@@ -35,7 +35,7 @@
                 <version>0.16</version>
                 <configuration>
                     <prettierJavaVersion>1.5.0</prettierJavaVersion>
-                    <printWidth>90</printWidth>
+                    <printWidth>100</printWidth>
                     <tabWidth>4</tabWidth>
                     <useTabs>false</useTabs>
                     <ignoreConfigFile>true</ignoreConfigFile>
@@ -138,6 +138,11 @@
         <dependency>
             <groupId>com.slack.api</groupId>
             <artifactId>bolt-socket-mode</artifactId>
+            <version>1.22.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.slack.api</groupId>
+            <artifactId>slack-api-client</artifactId>
             <version>1.22.2</version>
         </dependency>
         <dependency>

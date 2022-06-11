@@ -22,20 +22,18 @@ public class SlackHelper {
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String PARSING_STARTED =
-        "Parsing has started. Please wait. Use \"/parse\" command again to check status.";
-    private static final String PARSING_IN_PROGRESS =
-        "Parsing already in progress. Please wait.";
-    private static final String PARSING_COMPLETED = "Parsing completed.";
+        "Parsing has started...\nPlease wait.\nUse \"/parse\" command again to check status.";
+    private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
+    public static final String PARSING_COMPLETED = "Parsing completed.";
     private static final String TRIES_NOT_CREATED =
-        "Tries not created. Please wait for tries to be created or use \"/maketrie\" command to start creating tries.";
+        "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
     private static final String TRIE_CONSTRUCTION_STARTED =
-        "Trie construction started. Please wait. Use \"/maketrie\" command again to check status.";
+        "Trie construction started...\nPlease wait.\nUse \"/maketrie\" command again to check status.";
     private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
-        "Trie construction already in progress. Please wait.";
-    private static final String TRIE_CONSTRUCTION_COMPLETED =
-        "Trie construction completed.";
+        "Trie construction in progress.\nPlease wait.";
+    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed.";
     private static final String BAD_ARGUMENTS =
-        "Please provide proper arguments. Refer to \"/redis-bot-help\" for more information.";
+        "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
     private static final Logger logger = LogManager.getLogger(SlackHelper.class);
 
     private enum ParsingStatus {
@@ -96,9 +94,7 @@ public class SlackHelper {
             trieB = new QTrie(keysB);
             long endTime = System.currentTimeMillis();
             System.out.println(
-                "Trie construction completed in " +
-                (endTime - startTime) +
-                " milliseconds"
+                "Trie construction completed in " + (endTime - startTime) + " milliseconds"
             );
             trieStatus = TrieStatus.CONSTRUCTED;
         })
@@ -126,7 +122,6 @@ public class SlackHelper {
             return BAD_ARGUMENTS;
         } else {
             // TODO: implement syntax checking of the key
-
         }
         try {
             String[] tokens = text.split(" ");

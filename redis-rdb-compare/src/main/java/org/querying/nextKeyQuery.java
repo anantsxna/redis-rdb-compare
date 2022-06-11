@@ -24,24 +24,14 @@ public class nextKeyQuery extends Query {
         try {
             for (QTrie trie : new QTrie[] { trieA, trieB }) {
                 try {
-                    List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(
-                        key,
-                        n
-                    );
+                    List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
                     int found = query.size() - 2;
                     if (found < n) {
-                        System.out.println(
-                            "Found " +
-                            found +
-                            " prefixes only, less than the requested number of prefixes"
-                        );
+                        result
+                            .append("Found ")
+                            .append(found)
+                            .append(" prefixes only, less than the requested number of prefixes");
                     }
-                    result
-                        .append("Top ")
-                        .append(found)
-                        .append(" keys-prefixes with fixed prefix *")
-                        .append(key)
-                        .append("*: \n");
                     result
                         .append("Total keys with prefix *")
                         .append(key)
@@ -51,7 +41,7 @@ public class nextKeyQuery extends Query {
                     result
                         .append("Top ")
                         .append(found)
-                        .append(" key-prefixes with prefix: \"")
+                        .append(" key-prefixes that start with: \"")
                         .append(key)
                         .append("\": \n");
                     for (int i = 2; i < query.size(); i++) {

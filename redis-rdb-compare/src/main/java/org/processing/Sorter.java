@@ -16,10 +16,7 @@ public class Sorter {
      */
     static void sort(String keysFile, String sortedKeysFile) {
         logger.info(
-            "Sorting keys in file " +
-            keysFile +
-            " and saving result in file " +
-            sortedKeysFile
+            "Sorting keys in file " + keysFile + " and saving result in file " + sortedKeysFile
         );
     }
 }
