@@ -1,23 +1,29 @@
 package org.trie;
 
 import java.util.HashMap;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Trie Node class.
  */
+@Builder
 public final class TrieNode {
-    private HashMap<String, TrieNode> children; // children of the node
-    private Integer count; // count of strings that go through this node
 
-    public TrieNode() {
-        children = new HashMap<>();
-        count = 0;
-    }
+    @NonNull
+    @Builder.Default
+    private final HashMap<String, TrieNode> children = new HashMap<>(); // children of the node
+
+    @Builder.Default
+    private Integer count = 0; // count of strings that go through this node
 
     public Integer getCount() {
         return count;
     }
 
+    @NotNull
     public HashMap<String, TrieNode> getChildren() {
         return children;
     }
@@ -39,7 +45,6 @@ public final class TrieNode {
     }
 
     public void addChild(String childName) {
-        children.put(childName, new TrieNode());
+        children.put(childName, TrieNode.builder().build());
     }
 }
-

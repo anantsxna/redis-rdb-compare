@@ -1,31 +1,37 @@
 package org.processing;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import lombok.Builder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Parser class.
  * Processes the .rdb file and creates a list of all the keys.
  */
+@Builder
 public final class Parser {
+
+    @Builder.Default
     private static final Logger logger = LogManager.getLogger(Parser.class);
 
+    @Builder.Default
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     /**
      * Runnable for thread that gathers the logs from the redis-rdb-tools python script.
      * @param process: the process which runs the script.
-     *
+     * @param dumpFile: write-file fpr the process
      */
     private static void watch(final Process process, final String dumpFile) {
         new Thread(() -> {
             logger.info("Monitoring Process {}", process.toString());
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader input = new BufferedReader(
+                new InputStreamReader(process.getInputStream())
+            );
             String line = null;
             try {
                 while ((line = input.readLine()) != null) {
@@ -34,13 +40,21 @@ public final class Parser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        })
+            .start();
     }
 
+    /**
+     * Runnable for thread that gathers the errors from the redis-rdb-tools python script.
+     * @param process: the process which runs the script
+     * @param dumpFile: write-file for the process
+     */
     private static void watchErrors(final Process process, final String dumpFile) {
         new Thread(() -> {
             logger.info("Monitoring Process {}", process.toString());
-            BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            BufferedReader errors = new BufferedReader(
+                new InputStreamReader(process.getErrorStream())
+            );
             String line = null;
             try {
                 while ((line = errors.readLine()) != null) {
@@ -49,7 +63,8 @@ public final class Parser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        })
+            .start();
     }
 
     /**
@@ -59,7 +74,7 @@ public final class Parser {
      * @param keysFile: the location of the file to store the keys, must be a .txt file.
      *
      */
-    public static void addToParser(String dumpFile, String keysFile) {
+    public void addToParser(String dumpFile, String keysFile) {
         parsePairs.put(dumpFile, keysFile);
     }
 
@@ -68,16 +83,15 @@ public final class Parser {
      *
      * The keys will be stored in the same order as they appear in the dump file.
      */
-
-    public static void parse() {
+    public void parse() {
         List<Process> parseProcesses = new ArrayList<>();
         parsePairs.forEach((dumpFile, keysFile) -> {
             String[] command = new String[] {
-                    "pypy3",
-                    "fast-parse.py",
-                    "--rdb=" + dumpFile,
-                    "--keys=" + keysFile,
-                    "--objspace-std-withsmalllong",
+                "pypy3",
+                "fast-parse.py",
+                "--rdb=" + dumpFile,
+                "--keys=" + keysFile,
+                "--objspace-std-withsmalllong",
             };
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
@@ -93,8 +107,8 @@ public final class Parser {
             parseProcesses.add(process);
         });
 
-        parseProcesses.forEach((process) -> {
-            int exitStatus = 0;
+        parseProcesses.forEach(process -> {
+            int exitStatus;
             try {
                 exitStatus = process.waitFor();
             } catch (InterruptedException e) {
@@ -102,11 +116,19 @@ public final class Parser {
             }
             if (exitStatus != 0) {
                 logger.error("PYPY3: Process exited with status {}", exitStatus);
-                throw new RuntimeException("ERROR: Process for parsing file exited with status " + exitStatus);
-            }
-            else {
+                throw new RuntimeException(
+                    "ERROR: Process for parsing file exited with status " + exitStatus
+                );
+            } else {
                 logger.info("PYPY3: Process exited with status {}", exitStatus);
             }
         });
+    }
+
+    /**
+     * Clears the list of files to parse.
+     */
+    public void clear() {
+        parsePairs.clear();
     }
 }

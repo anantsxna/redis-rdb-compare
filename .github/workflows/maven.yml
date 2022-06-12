@@ -5,9 +5,9 @@ name: CI build and test
 
 on:
   push:
-    branches: [ "main", "anantsxna-patch-1" ]
+    branches: [ "main", "anantsxna-patch-1", "slack" ]
   pull_request:
-    branches: [ "main", "anantsxna-patch-1" ]
+    branches: [ "main", "anantsxna-patch-1", "slack" ]
 
 jobs:
   build:
@@ -22,6 +22,8 @@ jobs:
         java-version: '18'
         distribution: 'corretto'
         cache: maven
+    - name: Prettier Check
+      run: cd redis-rdb-compare && mvn prettier:check && cd ..
     - name: Build-Test-Verify With Maven
       run: mvn --batch-mode --update-snapshots verify --file redis-rdb-compare/pom.xml
     - name: Upload coverage to Codecov
