@@ -9,7 +9,7 @@ class TrieNodeTest {
     @Test
     void initCount() {
         System.out.println("Running initCount test...");
-        TrieNode node = new TrieNode();
+        TrieNode node = TrieNode.builder().build();
         assertEquals(node.getCount(), 0);
     }
 }

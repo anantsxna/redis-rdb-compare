@@ -2,23 +2,22 @@ package org.querying;
 
 import static org.example.Channel.getChannel;
 
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 import org.example.Channel;
 
+@SuperBuilder
 public class countQuery extends Query {
 
+    @NonNull
     private final String key;
-
-    public countQuery(String text, String channelId) {
-        super(QueryType.GET_COUNT, channelId);
-        key = text;
-    }
 
     public void execute() {
         System.out.println("executing count query...!");
         try {
             Channel channel = getChannel(getChannelId());
-            int countInA = channel.trieA.getCountForPrefix(key);
-            int countInB = channel.trieB.getCountForPrefix(key);
+            int countInA = channel.getTrieA().getCountForPrefix(key);
+            int countInB = channel.getTrieB().getCountForPrefix(key);
             result
                 .append("Total keys with prefix *")
                 .append(key)
@@ -30,8 +29,7 @@ public class countQuery extends Query {
                 .append(countInB)
                 .append("\n");
         } catch (Exception e) {
-            setExitCode(1);
-            throw new RuntimeException(e);
+            result.append("The key does not exist in the database.");
         }
         setExitCode(0);
     }

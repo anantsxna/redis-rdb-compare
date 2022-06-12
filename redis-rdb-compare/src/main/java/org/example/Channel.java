@@ -1,21 +1,42 @@
 package org.example;
 
 import java.util.HashMap;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.processing.Parser;
 import org.trie.QTrie;
 
+@Getter
+@Builder
 public class Channel {
 
+    @Builder.Default
     static volatile HashMap<String, Channel> channels = new HashMap<>();
 
-    public String dumpA = "../dump-A.rdb";
-    public String dumpB = "../dump-B.rdb";
-    public String keysA = "../keys-A.txt";
-    public String keysB = "../keys-B.txt";
-    public QTrie trieA = null;
-    public QTrie trieB = null;
+    @Builder.Default
+    private volatile String dumpA = "../dump-A.rdb";
 
-    public Parser parser = new Parser();
+    @Builder.Default
+    private volatile String dumpB = "../dump-B.rdb";
+
+    @Builder.Default
+    private volatile String keysA = "../keys-A.txt";
+
+    @Builder.Default
+    private volatile String keysB = "../keys-B.txt";
+
+    @Setter
+    @Builder.Default
+    private volatile QTrie trieA = null;
+
+    @Setter
+    @Builder.Default
+    private volatile QTrie trieB = null;
+
+    @Builder.Default
+    private volatile Parser parser = Parser.builder().build();
 
     public enum ParsingStatus {
         NOT_STARTED,
@@ -29,15 +50,24 @@ public class Channel {
         CONSTRUCTED,
     }
 
+    public enum InteractiveSessionStatus {
+        //TODO: implement check so that command line interaction and interactive session cannot be used together
+    }
+
+    @Builder.Default
     public volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
+
+    @Builder.Default
     public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
-    public Channel() {}
-
-    public static Channel getChannel(String channelId) {
+    public static Channel getChannel(final String channelId) {
         if (!channels.containsKey(channelId)) {
-            channels.put(channelId, new Channel());
+            channels.put(channelId, Channel.builder().build());
         }
         return channels.get(channelId);
+    }
+
+    public static void removeChannel(final String channelId) {
+        channels.remove(channelId);
     }
 }

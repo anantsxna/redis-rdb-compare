@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import lombok.Builder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,16 +12,19 @@ import org.apache.logging.log4j.Logger;
  * Parser class.
  * Processes the .rdb file and creates a list of all the keys.
  */
+@Builder
 public final class Parser {
 
+    @Builder.Default
     private static final Logger logger = LogManager.getLogger(Parser.class);
 
+    @Builder.Default
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     /**
      * Runnable for thread that gathers the logs from the redis-rdb-tools python script.
      * @param process: the process which runs the script.
-     *
+     * @param dumpFile: write-file fpr the process
      */
     private static void watch(final Process process, final String dumpFile) {
         new Thread(() -> {
@@ -40,6 +44,11 @@ public final class Parser {
             .start();
     }
 
+    /**
+     * Runnable for thread that gathers the errors from the redis-rdb-tools python script.
+     * @param process: the process which runs the script
+     * @param dumpFile: write-file for the process
+     */
     private static void watchErrors(final Process process, final String dumpFile) {
         new Thread(() -> {
             logger.info("Monitoring Process {}", process.toString());
@@ -74,7 +83,6 @@ public final class Parser {
      *
      * The keys will be stored in the same order as they appear in the dump file.
      */
-
     public void parse() {
         List<Process> parseProcesses = new ArrayList<>();
         parsePairs.forEach((dumpFile, keysFile) -> {
@@ -100,7 +108,7 @@ public final class Parser {
         });
 
         parseProcesses.forEach(process -> {
-            int exitStatus = 0;
+            int exitStatus;
             try {
                 exitStatus = process.waitFor();
             } catch (InterruptedException e) {

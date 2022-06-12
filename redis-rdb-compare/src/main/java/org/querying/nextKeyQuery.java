@@ -4,25 +4,24 @@ import static org.example.Channel.getChannel;
 
 import java.util.List;
 import java.util.Map;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 import org.example.Channel;
 import org.trie.QTrie;
 
+@SuperBuilder
 public class nextKeyQuery extends Query {
 
-    String key = "";
-    int n = 1;
+    @NonNull
+    String key;
 
-    public nextKeyQuery(String _key, int _n, String channelId) {
-        super(QueryType.TOP_K_CHILDREN, channelId);
-        key = _key;
-        n = _n;
-    }
+    int n;
 
     public void execute() {
         System.out.println("executing nextKey query...!");
         try {
             Channel channel = getChannel(getChannelId());
-            for (QTrie trie : new QTrie[] { channel.trieA, channel.trieB }) {
+            for (QTrie trie : new QTrie[] { channel.getTrieA(), channel.getTrieB() }) {
                 try {
                     List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
                     int found = query.size() - 2;
@@ -30,7 +29,9 @@ public class nextKeyQuery extends Query {
                         result
                             .append("Found ")
                             .append(found)
-                            .append(" prefixes only, less than the requested number of prefixes");
+                            .append(
+                                " prefixes only, less than the requested number of prefixes.\n"
+                            );
                     }
                     result
                         .append("Total keys with prefix *")
@@ -70,8 +71,7 @@ public class nextKeyQuery extends Query {
                 result.append("\n");
             }
         } catch (Exception e) {
-            setExitCode(1);
-            throw new RuntimeException(e);
+            result.append("The key does not exist in the database.");
         }
         setExitCode(0);
     }

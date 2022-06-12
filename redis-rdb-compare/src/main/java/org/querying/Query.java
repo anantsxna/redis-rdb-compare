@@ -1,5 +1,9 @@
 package org.querying;
 
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
 public abstract class Query {
 
     public enum QueryType {
@@ -7,19 +11,14 @@ public abstract class Query {
         GET_COUNT,
     }
 
+    @NonNull
     private final QueryType queryType;
+
     private final long startTime;
     private long endTime;
-    private int exitCode = -1;
-    private String channelId;
+    private int exitCode;
+    private final String channelId;
     StringBuilder result;
-
-    protected Query(QueryType _queryType, String _channelId) {
-        queryType = _queryType;
-        startTime = System.currentTimeMillis();
-        channelId = _channelId;
-        result = new StringBuilder();
-    }
 
     public abstract void execute();
 

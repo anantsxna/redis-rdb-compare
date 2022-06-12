@@ -47,7 +47,7 @@ public class LocalMain {
             throw new RuntimeException(e);
         }
 
-        Parser parser = new Parser();
+        Parser parser = Parser.builder().build();
         parser.addToParser(dumpA, keysA);
         parser.addToParser(dumpB, keysB);
         parser.parse();
@@ -58,8 +58,8 @@ public class LocalMain {
 
         System.out.println("Trie Creation Started!");
         long startTime = System.currentTimeMillis();
-        QTrie trieA = new QTrie(keysA);
-        QTrie trieB = new QTrie(keysB);
+        QTrie trieA = QTrie.builder().keysFile(dumpA).build();
+        QTrie trieB = QTrie.builder().keysFile(dumpB).build();
         long endTime = System.currentTimeMillis();
         logger.info(
             "Total Tries construction time: " + (endTime - startTime) / 1000.0 + " seconds."
@@ -124,7 +124,7 @@ public class LocalMain {
                                     System.out.println(
                                         "Found " +
                                         found +
-                                        " prefixes only, less than the requested number of prefixes"
+                                        " prefixes only, less than the requested number of prefixes.\n"
                                     );
                                 }
                                 logger.info(
