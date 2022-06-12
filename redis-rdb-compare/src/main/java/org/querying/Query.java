@@ -11,10 +11,14 @@ public abstract class Query {
     private final long startTime;
     private long endTime;
     private int exitCode = -1;
+    private String channelId;
+    StringBuilder result;
 
-    protected Query(QueryType _queryType) {
+    protected Query(QueryType _queryType, String _channelId) {
         queryType = _queryType;
         startTime = System.currentTimeMillis();
+        channelId = _channelId;
+        result = new StringBuilder();
     }
 
     public abstract void execute();
@@ -27,5 +31,9 @@ public abstract class Query {
 
     protected int getExitCode() {
         return exitCode;
+    }
+
+    protected String getChannelId() {
+        return channelId;
     }
 }

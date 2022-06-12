@@ -65,7 +65,7 @@ public final class Parser {
      * @param keysFile: the location of the file to store the keys, must be a .txt file.
      *
      */
-    public static void addToParser(String dumpFile, String keysFile) {
+    public void addToParser(String dumpFile, String keysFile) {
         parsePairs.put(dumpFile, keysFile);
     }
 
@@ -75,7 +75,7 @@ public final class Parser {
      * The keys will be stored in the same order as they appear in the dump file.
      */
 
-    public static void parse() {
+    public void parse() {
         List<Process> parseProcesses = new ArrayList<>();
         parsePairs.forEach((dumpFile, keysFile) -> {
             String[] command = new String[] {
@@ -120,7 +120,7 @@ public final class Parser {
     /**
      * Clears the list of files to parse.
      */
-    public static void clear() {
+    public void clear() {
         parsePairs.clear();
     }
 }

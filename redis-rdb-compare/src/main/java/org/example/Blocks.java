@@ -11,29 +11,12 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.element.BlockElements;
 import java.util.List;
 
-public class SlackPostUtils {
+public class Blocks {
 
-    public static void postResponseAsync(
-        List<LayoutBlock> layoutBlocks,
-        String channelId,
-        String responseMessage
-    ) {
-        Slack slack = Slack.getInstance();
-        String token = System.getenv("SLACK_BOT_TOKEN");
-        slack
-            .methodsAsync(token)
-            .chatPostMessage(req ->
-                req.channel(channelId).text(responseMessage).blocks(layoutBlocks)
-            )
-            .thenAcceptAsync(res -> {
-                if (res.isOk()) {
-                    System.out.println("Message posted successfully.");
-                } else {
-                    String errorCode = res.getError(); // e.g., "invalid_auth", "channel_not_found"
-                    System.out.println("Error posting message: " + errorCode);
-                    throw new RuntimeException("Error posting message: " + errorCode);
-                }
-            });
+    public static int INDEX = 0;
+
+    private static String getIndex() {
+        return String.valueOf(INDEX++);
     }
 
     public static LayoutBlock ButtonBlock(
@@ -44,7 +27,13 @@ public class SlackPostUtils {
         return actions(actions ->
             actions.elements(
                 asElements(
-                    button(b -> b.text(plainText(buttonText)).style(buttonStyle).value(buttonValue))
+                    button(b ->
+                        b
+                            .text(plainText(buttonText))
+                            .style(buttonStyle)
+                            .value(buttonValue)
+                            .actionId("buttonBlock-" + buttonValue + "-" + getIndex())
+                    )
                 )
             )
         );

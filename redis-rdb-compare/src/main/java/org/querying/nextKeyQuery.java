@@ -1,20 +1,19 @@
 package org.querying;
 
-import static org.example.SlackHelper.trieA;
-import static org.example.SlackHelper.trieB;
+import static org.example.Channel.getChannel;
 
 import java.util.List;
 import java.util.Map;
+import org.example.Channel;
 import org.trie.QTrie;
 
 public class nextKeyQuery extends Query {
 
     String key = "";
     int n = 1;
-    StringBuilder result = new StringBuilder();
 
-    public nextKeyQuery(String _key, int _n) {
-        super(QueryType.TOP_K_CHILDREN);
+    public nextKeyQuery(String _key, int _n, String channelId) {
+        super(QueryType.TOP_K_CHILDREN, channelId);
         key = _key;
         n = _n;
     }
@@ -22,7 +21,8 @@ public class nextKeyQuery extends Query {
     public void execute() {
         System.out.println("executing nextKey query...!");
         try {
-            for (QTrie trie : new QTrie[] { trieA, trieB }) {
+            Channel channel = getChannel(getChannelId());
+            for (QTrie trie : new QTrie[] { channel.trieA, channel.trieB }) {
                 try {
                     List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
                     int found = query.size() - 2;

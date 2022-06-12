@@ -1,9 +1,16 @@
 package org.example;
 
+import static org.example.PostUpdate.*;
+import static org.example.SlackUtils.countUtils;
+import static org.example.SlackUtils.parseUtils;
+import static org.example.SlackUtils.trieConstructionUtils;
+
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.grizzly.http.util.URLDecoder;
 
 public class SlackMain {
 
@@ -21,16 +28,12 @@ public class SlackMain {
         app.command(
             "/parse",
             (req, ctx) -> {
-                String response = SlackHelper.parseUtils();
-                if (response.equals(SlackHelper.PARSING_COMPLETED)) {
-                    SlackPost.postSimpleDangerButtonResponseAsync(
-                        response,
-                        "Reset and Try Again?",
-                        "reset-all",
-                        req.getContext().getChannelId()
-                    );
+                String channelId = req.getContext().getChannelId();
+                String response = parseUtils(channelId);
+                if (response.equals(SlackUtils.PARSING_COMPLETED)) {
+                    postResetButtonResponseAsync(response, channelId);
                 } else {
-                    SlackPost.postSimpleResponseAsync(response, req.getContext().getChannelId());
+                    postSimpleResponseAsync(response, req.getContext().getChannelId());
                 }
                 return ctx.ack();
             }
@@ -38,19 +41,18 @@ public class SlackMain {
         app.command(
             "/maketrie",
             (req, ctx) -> {
-                SlackPost.postSimpleResponseAsync(
-                    SlackHelper.trieConstructionUtils(),
-                    req.getContext().getChannelId()
-                );
+                String channelId = req.getContext().getChannelId();
+                postSimpleResponseAsync(trieConstructionUtils(channelId), channelId);
                 return ctx.ack();
             }
         );
         app.command(
             "/frequency",
             (req, ctx) -> {
-                SlackPost.postSimpleResponseAsync(
-                    SlackHelper.countUtils(req.getPayload().getText()),
-                    req.getContext().getChannelId()
+                String channelId = req.getContext().getChannelId();
+                postSimpleResponseAsync(
+                    countUtils(req.getPayload().getText(), channelId),
+                    channelId
                 );
                 return ctx.ack();
             }
@@ -58,9 +60,10 @@ public class SlackMain {
         app.command(
             "/getnext",
             (req, ctx) -> {
-                SlackPost.postSimpleResponseAsync(
-                    SlackHelper.getNextKeyUtils(req.getPayload().getText()),
-                    req.getContext().getChannelId()
+                String channelId = req.getContext().getChannelId();
+                postSimpleResponseAsync(
+                    SlackUtils.getNextKeyUtils(req.getPayload().getText(), channelId),
+                    channelId
                 );
                 return ctx.ack();
             }
@@ -85,8 +88,22 @@ public class SlackMain {
                             """
                 )
         );
+        app.blockAction(
+            Pattern.compile("^buttonBlock-resetAll-\\d*"),
+            (req, ctx) -> {
+                String actionId = req.getPayload().getActions().get(0).getActionId();
+                assert (actionId.startsWith("buttonBlock-resetAll-"));
+                String messageTs = req.getPayload().getContainer().getMessageTs();
+                String channelId = req.getPayload().getChannel().getId();
+                //TODO: Switch to complex response with new start page
+                updateSimpleResponseAsync("You clicked the reset button", channelId, messageTs);
+                return ctx.ack();
+            }
+        );
+
         try {
-            new SocketModeApp(app).start();
+            SocketModeApp socketModeApp = new SocketModeApp(app);
+            socketModeApp.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -1,24 +1,19 @@
 package org.example;
 
-import com.slack.api.model.block.LayoutBlock;
-import java.util.List;
+import static org.example.Channel.getChannel;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.Channel.ParsingStatus;
+import org.example.Channel.TrieStatus;
 import org.processing.Parser;
 import org.querying.Query;
 import org.querying.countQuery;
 import org.querying.nextKeyQuery;
 import org.trie.QTrie;
 
-// TODO: Change all return methods from String to List<LayoutBlock>
-public class SlackHelper {
+public class SlackUtils {
 
-    private static final String dumpA = "../dump-A.rdb";
-    private static final String dumpB = "../dump-B.rdb";
-    private static final String keysA = "../keys-A.txt";
-    private static final String keysB = "../keys-B.txt";
-    public static QTrie trieA = null;
-    public static QTrie trieB = null;
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String PARSING_STARTED =
@@ -34,89 +29,80 @@ public class SlackHelper {
     private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed.";
     private static final String BAD_ARGUMENTS =
         "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
-    private static final Logger logger = LogManager.getLogger(SlackHelper.class);
+    private static final Logger logger = LogManager.getLogger(SlackUtils.class);
 
-    private enum ParsingStatus {
-        NOT_STARTED,
-        IN_PROGRESS,
-        COMPLETED,
-    }
-
-    private enum TrieStatus {
-        NOT_CONSTRUCTED,
-        CONSTRUCTING,
-        CONSTRUCTED,
-    }
-
-    private static volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
-    private static volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
-
-    public static String parseUtils() {
-        if (parsingStatus == ParsingStatus.IN_PROGRESS) {
+    public static String parseUtils(String channelId) {
+        Channel channel = getChannel(channelId);
+        if (channel.parsingStatus == ParsingStatus.IN_PROGRESS) {
             return PARSING_IN_PROGRESS;
-        } else if (parsingStatus == ParsingStatus.COMPLETED) {
+        } else if (channel.parsingStatus == ParsingStatus.COMPLETED) {
             return PARSING_COMPLETED;
             //TODO: ask user for intent, reset parsingStatus to NOT_STARTED and skip return
         }
 
         //TODO: ask user for input regarding file location
         //TODO: download files from s3 link and save to local directory
-        Parser.clear();
-        Parser.addToParser(dumpA, keysA);
-        Parser.addToParser(dumpB, keysB);
+        Parser parser = channel.parser;
+        parser.clear();
+        parser.addToParser(channel.dumpA, channel.keysA);
+        parser.addToParser(channel.dumpB, channel.keysB);
         new Thread(() -> {
-            Parser.parse();
-            parsingStatus = ParsingStatus.COMPLETED;
+            parser.parse();
+            channel.parsingStatus = ParsingStatus.COMPLETED;
             //TODO: Find a way to send a message to the user that the parsing is completed
         })
             .start();
-        parsingStatus = ParsingStatus.IN_PROGRESS;
+        channel.parsingStatus = ParsingStatus.IN_PROGRESS;
         return PARSING_STARTED;
     }
 
-    public static String trieConstructionUtils() {
-        if (parsingStatus != ParsingStatus.COMPLETED) {
+    public static String trieConstructionUtils(String channelId) {
+        Channel channel = getChannel(channelId);
+        if (channel.parsingStatus != ParsingStatus.COMPLETED) {
             return PARSING_NOT_COMPLETED;
         }
 
-        if (trieStatus == TrieStatus.CONSTRUCTING) {
+        if (channel.trieStatus == TrieStatus.CONSTRUCTING) {
             return TRIE_CONSTRUCTION_IN_PROGRESS;
         }
 
-        if (trieStatus == TrieStatus.CONSTRUCTED) {
+        if (channel.trieStatus == TrieStatus.CONSTRUCTED) {
             return TRIE_CONSTRUCTION_COMPLETED;
         }
 
-        trieStatus = TrieStatus.CONSTRUCTING;
+        channel.trieStatus = TrieStatus.CONSTRUCTING;
         new Thread(() -> {
             long startTime = System.currentTimeMillis();
-            trieA = new QTrie(keysA);
-            trieB = new QTrie(keysB);
+            channel.trieA = new QTrie(channel.keysA);
+            channel.trieB = new QTrie(channel.keysB);
             long endTime = System.currentTimeMillis();
+            //TODO: Add slackpost command here
             System.out.println(
                 "Trie construction completed in " + (endTime - startTime) + " milliseconds"
             );
-            trieStatus = TrieStatus.CONSTRUCTED;
+            channel.trieStatus = TrieStatus.CONSTRUCTED;
         })
             .start();
         return TRIE_CONSTRUCTION_STARTED;
     }
 
-    public static String countUtils(String text) {
-        if (trieStatus != TrieStatus.CONSTRUCTED) {
+    public static String countUtils(String channelId, String text) {
+        Channel channel = getChannel(channelId);
+        if (channel.trieStatus != TrieStatus.CONSTRUCTED) {
             return TRIES_NOT_CREATED;
         } else {
             // TODO: implement syntax checking of the key
         }
-        Query query = new countQuery(text);
+        Query query = new countQuery(text, channelId);
         query.execute();
         return query.result();
     }
 
-    public static String getNextKeyUtils(String text) {
+    public static String getNextKeyUtils(String channelId, String text) {
         String key = "";
         int count = 1;
-        if (trieStatus != TrieStatus.CONSTRUCTED) {
+        Channel channel = getChannel(channelId);
+        if (channel.trieStatus != TrieStatus.CONSTRUCTED) {
             return TRIES_NOT_CREATED;
         } else if (text.isEmpty()) {
             return BAD_ARGUMENTS;
@@ -132,7 +118,7 @@ public class SlackHelper {
             return BAD_ARGUMENTS;
         }
         System.out.println("Key: " + key + " Count: " + count);
-        Query query = new nextKeyQuery(key, count);
+        Query query = new nextKeyQuery(key, count, channelId);
         query.execute();
         return query.result();
     }

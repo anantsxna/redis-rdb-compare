@@ -1,22 +1,34 @@
 package org.querying;
 
-import org.example.SlackHelper;
+import static org.example.Channel.getChannel;
+
+import org.example.Channel;
 
 public class countQuery extends Query {
 
     private final String key;
-    private int countInA = 0, countInB = 0;
 
-    public countQuery(String text) {
-        super(QueryType.GET_COUNT);
+    public countQuery(String text, String channelId) {
+        super(QueryType.GET_COUNT, channelId);
         key = text;
     }
 
     public void execute() {
         System.out.println("executing count query...!");
         try {
-            countInA = SlackHelper.trieA.getCountForPrefix(key);
-            countInB = SlackHelper.trieB.getCountForPrefix(key);
+            Channel channel = getChannel(getChannelId());
+            int countInA = channel.trieA.getCountForPrefix(key);
+            int countInB = channel.trieB.getCountForPrefix(key);
+            result
+                .append("Total keys with prefix *")
+                .append(key)
+                .append("*: ")
+                .append("in first database: ")
+                .append(countInA)
+                .append(", ")
+                .append("in second database: ")
+                .append(countInB)
+                .append("\n");
         } catch (Exception e) {
             setExitCode(1);
             throw new RuntimeException(e);
@@ -26,14 +38,7 @@ public class countQuery extends Query {
 
     public String result() {
         if (getExitCode() == 0) {
-            return (
-                "Count for " +
-                key +
-                "/* in first database: " +
-                countInA +
-                " and in second database: " +
-                countInB
-            );
+            return result.toString();
         } else if (getExitCode() == -1) {
             return "Error: Query could not execute";
         } else {
