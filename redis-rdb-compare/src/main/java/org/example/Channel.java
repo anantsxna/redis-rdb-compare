@@ -56,7 +56,6 @@ public class Channel {
 
     @Builder.Default
     public volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
-
     @Builder.Default
     public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
