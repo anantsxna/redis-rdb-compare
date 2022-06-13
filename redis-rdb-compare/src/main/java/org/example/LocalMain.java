@@ -10,6 +10,10 @@ import org.apache.logging.log4j.Logger;
 import org.processing.Parser;
 import org.trie.QTrie;
 
+/**
+ * LocalMain class.
+ * Driver class for locally running the application features without the use of slack.
+ */
 public class LocalMain {
 
     static String dumpA = "../dump-A.rdb";

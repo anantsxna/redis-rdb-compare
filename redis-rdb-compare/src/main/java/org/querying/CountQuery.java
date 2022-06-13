@@ -6,18 +6,22 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.example.Channel;
 
+/**
+ * "/getcount [prefixKey]" query.
+ */
 @SuperBuilder
-public class countQuery extends Query {
+public class CountQuery extends Query {
 
-    @NonNull
     private final String key;
 
+    @Override
     public void execute() {
-        System.out.println("executing count query...!");
         try {
             Channel channel = getChannel(getChannelId());
+            long startTime = System.currentTimeMillis();
             int countInA = channel.getTrieA().getCountForPrefix(key);
             int countInB = channel.getTrieB().getCountForPrefix(key);
+            long endTime = System.currentTimeMillis();
             result
                 .append("Total keys with prefix *")
                 .append(key)
@@ -27,13 +31,17 @@ public class countQuery extends Query {
                 .append(", ")
                 .append("in second database: ")
                 .append(countInB)
-                .append("\n");
+                .append("\n")
+                .append("time: ")
+                .append(endTime - startTime)
+                .append(" ms\n");
         } catch (Exception e) {
             result.append("The key does not exist in the database.");
         }
         setExitCode(0);
     }
 
+    @Override
     public String result() {
         if (getExitCode() == 0) {
             return result.toString();

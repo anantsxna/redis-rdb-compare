@@ -1,9 +1,8 @@
-package org.example;
+package org.messaging;
 
-import static com.slack.api.model.block.Blocks.*;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.example.Blocks.*;
-import static org.example.PostUpdateUtils.*;
+import static org.messaging.Blocks.*;
+import static org.messaging.PostUpdateUtils.*;
 
 import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.HeaderBlock;
@@ -14,17 +13,33 @@ import com.slack.api.model.block.element.PlainTextInputElement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contains methods for posting, updating and deleting messages asynchronously and synchronously.
+ * Methods invoke utility methods from PostUpdateUtils
+ * after constructing the message with methods from Blocks.
+ */
 public class PostUpdate {
 
     private static final String REDIS_LOGO_URL =
         "https://avatars.githubusercontent.com/u/1529926?s=200&v=4";
 
+    /**
+     * Post a text message to the channel.
+     * @param responseMessage: the message to post
+     * @param channelId: the channel to post to
+     */
     public static void postTextResponseAsync(String responseMessage, final String channelId) {
         List<LayoutBlock> blocks = new ArrayList<>();
         blocks.add(TextImageBlock(responseMessage, REDIS_LOGO_URL));
         postResponseAsync(blocks, channelId, responseMessage);
     }
 
+    /**
+     * Update a text message in a channel.
+     * @param responseMessage: the new updated text message
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateTextResponseAsync(
         String responseMessage,
         final String channelId,
@@ -36,6 +51,11 @@ public class PostUpdate {
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
     }
 
+    /**
+     * Post a text message and a button to reset the channel
+     * @param responseMessage: the message to post
+     * @param channelId: the channel to post to
+     */
     public static void postResetButtonResponseAsync(
         String responseMessage,
         final String channelId
@@ -49,6 +69,12 @@ public class PostUpdate {
         );
     }
 
+    /**
+     * Update a message with text adn a button to reset the channel
+     * @param responseMessage: the message to update
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateResetButtonResponseAsync(
         String responseMessage,
         final String channelId,
@@ -69,6 +95,11 @@ public class PostUpdate {
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
     }
 
+    /**
+     * Post the message at the start of an interactive session
+     * @param responseMessage: the welcome message
+     * @param channelId: the channel to post to
+     */
     public static void postStartButtonResponse(String responseMessage, final String channelId) {
         postTwoButtonsWithHeaderResponseAsync(
             responseMessage,
@@ -82,6 +113,13 @@ public class PostUpdate {
         );
     }
 
+    /**
+     * Update a given message to the start of an interactive session after deleting previous session
+     * @param information: the session has been deleted message
+     * @param responseMessage: the welcome again message
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateStartButtonResponse(
         String information,
         String responseMessage,
@@ -102,10 +140,21 @@ public class PostUpdate {
         );
     }
 
+    /**
+     * Close the interactive session and delete the message
+     */
     public static void deleteStartButtonResponse(final String channelId, String timestamp) {
         deleteResponseAsync(channelId, timestamp);
     }
 
+    /**
+     * Post a text message and a button
+     * @param responseMessage: the message to post
+     * @param buttonText: the text of the button
+     * @param buttonValue: a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyle: default/primary/danger
+     * @param channelId: the channel to post to
+     */
     public static void postButtonWithTextResponseAsync(
         String responseMessage,
         String buttonText,
@@ -119,6 +168,15 @@ public class PostUpdate {
         postResponseAsync(blocks, channelId, responseMessage);
     }
 
+    /**
+     * Update a message with a text message and a button
+     * @param responseMessage: the new updated text message
+     * @param buttonTextA : the text of the first button
+     * @param buttonValueA: a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyleA: default/primary/danger
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateTwoButtonsWithTextAndHeaderResponseAsync(
         String responseMessage,
         String headerText,
@@ -149,6 +207,15 @@ public class PostUpdate {
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
     }
 
+    /**
+     * Post a text header and two buttons
+     *
+     * @param responseMessage: the message to post
+     * @param buttonTextA : the text of the first button
+     * @param buttonValueA: a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyleA: default/primary/danger
+     * @param channelId: the channel to update
+     */
     public static void postTwoButtonsWithHeaderResponseAsync(
         String responseMessage,
         String buttonTextA,
@@ -179,6 +246,13 @@ public class PostUpdate {
         postResponseAsync(blocks, channelId, responseMessage);
     }
 
+    /**
+     * Update a message with the "/getcount" query's interactive response
+     * Also displays the result of the previous query
+     * @param responseMessage: the message to update
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateQueryCountResponseAsync(
         String responseMessage,
         final String channelId,
@@ -221,14 +295,24 @@ public class PostUpdate {
                 "Get Next",
                 "queryAll-next",
                 "primary",
-                "Exit.",
+                "Reset.",
                 "resetAll",
-                "danger"
+                "danger",
+                "Any parsed data and tries will be deleted.",
+                "Reset",
+                "Cancel"
             )
         );
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
     }
 
+    /**
+     * Update a message with the "/getnext" query's interactive response
+     * Also displays the result of the previous query
+     * @param responseMessage: the message to update
+     * @param channelId: the channel to update
+     * @param timestamp: the timestamp of the message to update
+     */
     public static void updateQueryNextResponseAsync(
         String responseMessage,
         final String channelId,
@@ -271,9 +355,12 @@ public class PostUpdate {
                 "Get Next",
                 "queryAll-next",
                 "primary",
-                "Exit.",
+                "Reset",
                 "resetAll",
-                "danger"
+                "danger",
+                "Any parsed data and tries will be deleted.",
+                "Reset",
+                "Cancel"
             )
         );
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
