@@ -11,8 +11,17 @@ import com.slack.api.model.block.composition.ConfirmationDialogObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElements;
 
+/**
+ * Methods for specific blocks used in responses.
+ */
 public class Blocks {
 
+    /**
+     * @param buttonText: the text of the button
+     * @param buttonValue: the value used to make the actionId of the payload the button will send back
+     * @param buttonStyle: default/primary/danger
+     * @return button element
+     */
     public static LayoutBlock ButtonBlock(
         String buttonText,
         String buttonValue,
@@ -33,6 +42,12 @@ public class Blocks {
         );
     }
 
+    /**
+     * @param buttonTextA: the text of the first button
+     * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
+     * @param buttonStyleA: default/primary/danger
+     * @return an action block with 2 button
+     */
     public static LayoutBlock TwoButtonBlock(
         String buttonTextA,
         String buttonValueA,
@@ -63,6 +78,15 @@ public class Blocks {
         );
     }
 
+    /**
+     * @param buttonTextA: the text of the first button
+     * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
+     * @param buttonStyleA: default/primary/danger
+     * @param warningText: the warning in the confirm dialog
+     * @param confirmText: the text of the confirm button
+     * @param denyText: the text of the deny button
+     * @return an action block with 3 buttons, the third button will open a confirm dialog
+     */
     public static LayoutBlock ThreeButtonBlock(
         String buttonTextA,
         String buttonValueA,
@@ -116,6 +140,15 @@ public class Blocks {
         );
     }
 
+    /**
+     * @param buttonText: the text of the button
+     * @param buttonValue: the value used to make the actionId of the payload the button will send back
+     * @param buttonStyle: default/primary/danger
+     * @param warningText: the warning in the confirm dialog
+     * @param confirmText: the text of the confirm button
+     * @param denyText: the text of the deny button
+     * @return button element with confirm dialog
+     */
     public static LayoutBlock ButtonWithConfirmBlock(
         String buttonText,
         String buttonValue,
@@ -149,6 +182,11 @@ public class Blocks {
         );
     }
 
+    /**
+     * @param imageUrl: the url of the image
+     * @param altText: the alt text of the image
+     * @return an image as a block
+     */
     public static LayoutBlock ImageBlock(String imageUrl, String altText) {
         return section(section ->
             section
@@ -157,10 +195,19 @@ public class Blocks {
         );
     }
 
+    /**
+     * @param text: output text
+     * @return a text box as a block
+     */
     public static LayoutBlock TextBlock(String text) {
         return section(section -> section.text(markdownText(text)));
     }
 
+    /**
+     * @param text: output text
+     * @param imageUrl: the url of the image
+     * @return a text + image box as a block
+     */
     public static LayoutBlock TextImageBlock(String text, String imageUrl) {
         return section(section ->
             section
