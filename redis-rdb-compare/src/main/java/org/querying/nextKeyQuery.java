@@ -9,21 +9,26 @@ import lombok.experimental.SuperBuilder;
 import org.example.Channel;
 import org.trie.QTrie;
 
+/**
+ * "/getnext [prefixKey] [n]" query.
+ */
 @SuperBuilder
-public class nextKeyQuery extends Query {
+public class NextKeyQuery extends Query {
 
     @NonNull
     String key;
 
     int n;
 
+    @Override
     public void execute() {
-        System.out.println("executing nextKey query...!");
         try {
             Channel channel = getChannel(getChannelId());
             for (QTrie trie : new QTrie[] { channel.getTrieA(), channel.getTrieB() }) {
                 try {
+                    long startTime = System.currentTimeMillis();
                     List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
+                    long endTime = System.currentTimeMillis();
                     int found = query.size() - 2;
                     if (found < n) {
                         result
@@ -60,6 +65,7 @@ public class nextKeyQuery extends Query {
                             .append(query.get(1).getValue() - found)
                             .append(" others...\n");
                     }
+                    result.append("time: ").append(endTime - startTime).append(" ms\n");
                 } catch (Exception e) {
                     result
                         .append("No keys found for ")
@@ -76,6 +82,7 @@ public class nextKeyQuery extends Query {
         setExitCode(0);
     }
 
+    @Override
     public String result() {
         if (getExitCode() == 0) {
             return result.toString();

@@ -1,8 +1,15 @@
 package org.querying;
 
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Abstract class for all queries.
+ */
 @SuperBuilder
 public abstract class Query {
 
@@ -14,25 +21,21 @@ public abstract class Query {
     @NonNull
     private final QueryType queryType;
 
-    private final long startTime;
-    private long endTime;
-    private int exitCode;
+    private long executionTime;
+
+    @Builder.Default
+    @Getter
+    @Setter
+    private int exitCode = -1;
+
+    @NonNull
+    @Getter
     private final String channelId;
-    StringBuilder result;
 
-    public abstract void execute();
+    @Builder.Default
+    StringBuilder result = new StringBuilder();
 
-    public abstract String result();
+    public abstract void execute(); //abstract method for executing the query
 
-    protected void setExitCode(int code) {
-        exitCode = code;
-    }
-
-    protected int getExitCode() {
-        return exitCode;
-    }
-
-    protected String getChannelId() {
-        return channelId;
-    }
+    public abstract String result(); //abstract method for returning the result of the query
 }

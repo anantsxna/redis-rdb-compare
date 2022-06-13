@@ -8,12 +8,16 @@ import lombok.Setter;
 import org.processing.Parser;
 import org.trie.QTrie;
 
+/**
+ * Channel Class
+ * Maps a channel id to dumps files, keys files, a parser and tries and maintains their status.
+ */
 @Getter
 @Builder
 public class Channel {
 
     @Builder.Default
-    static volatile HashMap<String, Channel> channels = new HashMap<>();
+    static volatile HashMap<String, Channel> channels = new HashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
     private volatile String dumpA = "../dump-A.rdb";
@@ -50,16 +54,18 @@ public class Channel {
         CONSTRUCTED,
     }
 
-    public enum InteractiveSessionStatus {
-        //TODO: implement check so that command line interaction and interactive session cannot be used together
-    }
-
     @Builder.Default
     public volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
 
     @Builder.Default
     public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
+    /**
+     * Getter for the channel.
+     * If the channel id is not set, a new channel is created.
+     * @param channelId: the id for the required channel
+     * @return Channel object
+     */
     public static Channel getChannel(final String channelId) {
         if (!channels.containsKey(channelId)) {
             channels.put(channelId, Channel.builder().build());
@@ -67,6 +73,10 @@ public class Channel {
         return channels.get(channelId);
     }
 
+    /**
+     * Remove a channel from the channels map.
+     * @param channelId: the id for the channel to be removed
+     */
     public static void removeChannel(final String channelId) {
         channels.remove(channelId);
     }

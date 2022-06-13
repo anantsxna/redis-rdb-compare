@@ -1,10 +1,10 @@
-package org.example;
+package org.messaging;
 
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.example.Blocks.*;
-import static org.example.PostUpdateUtils.updateResponseSync;
+import static org.messaging.Blocks.*;
+import static org.messaging.PostUpdateUtils.updateResponseSync;
 
 import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
+import org.example.Channel;
 import org.processing.Parser;
 import org.trie.QTrie;
 
@@ -28,7 +29,11 @@ public class ParseAndMakeTrieView {
     private final long startTime = System.currentTimeMillis();
 
     private Channel channel;
+
+    @Builder.Default
     private long parseTime = 0;
+
+    @Builder.Default
     private long makeTrieTime = 0;
 
     public void run() {
@@ -99,9 +104,12 @@ public class ParseAndMakeTrieView {
                         "Get Next",
                         "queryAll-next",
                         "primary",
-                        "Exit.",
+                        "Reset",
                         "resetAll",
-                        "danger"
+                        "danger",
+                        "Any parsed data and tries will be deleted.",
+                        "Reset",
+                        "Cancel"
                     )
                 );
                 blocks.add(DividerBlock.builder().build());

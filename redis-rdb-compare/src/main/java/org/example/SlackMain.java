@@ -1,18 +1,28 @@
 package org.example;
 
-import static org.example.PostUpdate.*;
 import static org.example.SlackUtils.*;
+import static org.messaging.PostUpdate.*;
 
-import com.google.gson.Gson;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
+import com.slack.api.model.event.AppMentionEvent;
 import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.messaging.ParseAndMakeTrieView;
 
+/**
+ * Slack App that handles the following:
+ * - Slash Commands (/ping, /parse, /maketrie, /reset, /redis-bot-help, /start)
+ * - Events from Slack (AppMentionEvent, MessageChangedEvent, MessageDeletedEvent)
+ * - Interactive components' payloads to the App via blockActions
+ *
+ * This class is the main entry point for the application.
+ * Each channel within the Slack workspace is treated as a separate client
+ */
 public class SlackMain {
 
     private static final Logger logger = LogManager.getLogger(SlackMain.class);
@@ -22,15 +32,21 @@ public class SlackMain {
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
 
+    /**
+     * Main method for the application.
+     */
     public static void main(String[] args) {
         System.out.println("Hello world, starting bot!");
         var app = new App();
+        // command "/ping" - responds with "pong"
         app.command(
             "/ping",
             (req, ctx) -> {
                 return ctx.ack(":wave: Pong");
             }
         );
+
+        // command "/parse" - starts parsing
         app.command(
             "/parse",
             (req, ctx) -> {
@@ -44,6 +60,8 @@ public class SlackMain {
                 return ctx.ack();
             }
         );
+
+        // command "/maketrie" - starts creating tries
         app.command(
             "/maketrie",
             (req, ctx) -> {
@@ -52,6 +70,8 @@ public class SlackMain {
                 return ctx.ack();
             }
         );
+
+        // command "/getcount [prefixKey]" - gets the count of the prefixKey in all tries
         app.command(
             "/getcount",
             (req, ctx) -> {
@@ -60,6 +80,8 @@ public class SlackMain {
                 return ctx.ack();
             }
         );
+
+        // command "/getnext [prefixKey] [n]" - gets 'n' keys with the prefixKey in all tries
         app.command(
             "/getnext",
             (req, ctx) -> {
@@ -72,6 +94,7 @@ public class SlackMain {
             }
         );
 
+        // command "/clear" - resets the data within the channel
         app.command(
             "/clear",
             (req, ctx) -> {
@@ -81,6 +104,7 @@ public class SlackMain {
             }
         );
 
+        // command "/redis-bot-help" - provides help for the bot
         app.command(
             "/redis-bot-help",
             (req, ctx) ->
@@ -98,6 +122,7 @@ public class SlackMain {
                 )
         );
 
+        // command "/start" - starts interactive session
         app.command(
             "/start",
             (req, ctx) -> {
@@ -108,6 +133,8 @@ public class SlackMain {
             }
         );
 
+        // blockActions - handle the interactive sessions' components' payloads
+        // blockAction "startAll" - handles the payload from the "Parse and Make Tries" button
         app.blockAction(
             Pattern.compile("^buttonBlock-startAll-\\w*"),
             (req, ctx) -> {
@@ -130,6 +157,7 @@ public class SlackMain {
             }
         );
 
+        // blockAction "queryAll" - handles the payload from the "Get Next" and "Get Count" buttons
         app.blockAction(
             Pattern.compile("^buttonBlock-queryAll-[-\\w]*"),
             (req, ctx) -> {
@@ -150,6 +178,7 @@ public class SlackMain {
             }
         );
 
+        // blockAction "resetAll" - handles the payload from the "Reset" button
         app.blockAction(
             Pattern.compile("^buttonBlock-resetAll-\\w*"),
             (req, ctx) -> {
@@ -163,6 +192,7 @@ public class SlackMain {
             }
         );
 
+        // blockAction "exitAll" - handles the payload from the "Close" button
         app.blockAction(
             Pattern.compile("^buttonBlock-exitAll-\\w*"),
             (req, ctx) -> {
@@ -173,6 +203,7 @@ public class SlackMain {
             }
         );
 
+        // blockAction "countQuery" - handles the payload from the "Count of a Key" input
         app.blockAction(
             Pattern.compile("^inputBlock-countQuery-\\w*"),
             (req, ctx) -> {
@@ -185,6 +216,7 @@ public class SlackMain {
             }
         );
 
+        // blockAction "nextQuery" - handles the payload from the "Next Keys" input
         app.blockAction(
             Pattern.compile("^inputBlock-nextQuery-\\w*"),
             (req, ctx) -> {
@@ -197,10 +229,22 @@ public class SlackMain {
             }
         );
 
+        // events - handle the interactive sessions' event based payloads
         app.event(MessageChangedEvent.class, (payload, ctx) -> ctx.ack());
         app.event(MessageEvent.class, (payload, ctx) -> ctx.ack());
         app.event(MessageDeletedEvent.class, (payload, ctx) -> ctx.ack());
+        // event "AppMentionEvent" - starts the session when bot is @mentioned in a channel
+        app.event(
+            AppMentionEvent.class,
+            (payload, ctx) -> {
+                final String channelId = payload.getEvent().getChannel();
+                String response = "Welcome to the interactive session.";
+                postStartButtonResponse(response, channelId);
+                return ctx.ack();
+            }
+        );
 
+        //start the app
         try {
             SocketModeApp socketModeApp = new SocketModeApp(app);
             socketModeApp.start();

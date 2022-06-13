@@ -1,4 +1,4 @@
-package org.example;
+package org.messaging;
 
 import static com.slack.api.model.block.Blocks.*;
 import static com.slack.api.model.block.composition.BlockCompositions.*;
@@ -72,7 +72,10 @@ public class Blocks {
         String buttonStyleB,
         String buttonTextC,
         String buttonValueC,
-        String buttonStyleC
+        String buttonStyleC,
+        String warningText,
+        String confirmText,
+        String denyText
     ) {
         return actions(actions ->
             actions.elements(
@@ -97,6 +100,16 @@ public class Blocks {
                             .style(buttonStyleC)
                             .value(buttonValueC)
                             .actionId("buttonBlock-" + buttonValueC + "-" + randomAlphanumeric(10))
+                            .confirm(
+                                ConfirmationDialogObject
+                                    .builder()
+                                    .title(PlainTextObject.builder().text("Are you sure?").build())
+                                    .text(PlainTextObject.builder().text(warningText).build())
+                                    .confirm(PlainTextObject.builder().text(confirmText).build())
+                                    .deny(PlainTextObject.builder().text(denyText).build())
+                                    .style("primary")
+                                    .build()
+                            )
                     )
                 )
             )
