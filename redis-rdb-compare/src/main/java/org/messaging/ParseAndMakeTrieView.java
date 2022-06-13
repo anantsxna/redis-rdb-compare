@@ -22,15 +22,21 @@ import org.trie.QTrie;
  */
 @Builder
 public class ParseAndMakeTrieView {
+
     @NonNull
     private final String timestamp;
+
     @NonNull
     private final String channelId;
+
     @Builder.Default
     private final long startTime = System.currentTimeMillis();
+
     private Channel channel;
+
     @Builder.Default
     private long parseTime = 0;
+
     @Builder.Default
     private long makeTrieTime = 0;
 
@@ -74,10 +80,10 @@ public class ParseAndMakeTrieView {
      */
     public void updateResponse() {
         updateResponseSync(
-                buildResponse(),
-                channelId,
-                "Response from parsing and making trie",
-                timestamp
+            buildResponse(),
+            channelId,
+            "Response from parsing and making trie",
+            timestamp
         );
     }
 
@@ -105,20 +111,20 @@ public class ParseAndMakeTrieView {
                 blocks.add(TextBlock("Trie construction time: " + makeTrieTime + "ms"));
                 blocks.add(DividerBlock.builder().build());
                 blocks.add(
-                        ThreeButtonBlock(
-                                "Get Count",
-                                "queryAll-count",
-                                "primary",
-                                "Get Next",
-                                "queryAll-next",
-                                "primary",
-                                "Reset",
-                                "resetAll",
-                                "danger",
-                                "Any parsed data and tries will be deleted.",
-                                "Reset",
-                                "Cancel"
-                        )
+                    ThreeButtonBlock(
+                        "Get Count",
+                        "queryAll-count",
+                        "primary",
+                        "Get Next",
+                        "queryAll-next",
+                        "primary",
+                        "Reset",
+                        "resetAll",
+                        "danger",
+                        "Any parsed data and tries will be deleted.",
+                        "Reset",
+                        "Cancel"
+                    )
                 );
                 blocks.add(DividerBlock.builder().build());
             }
