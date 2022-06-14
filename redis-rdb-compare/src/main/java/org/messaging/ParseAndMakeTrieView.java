@@ -51,13 +51,13 @@ public class ParseAndMakeTrieView {
         parser.clear();
         parser.addToParser(channel.getDumpA(), channel.getKeysA());
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
-        channel.parsingStatus = Channel.ParsingStatus.IN_PROGRESS;
+        channel.setParsingStatus(Channel.ParsingStatus.IN_PROGRESS);
         System.out.println("Parsing completed.");
         updateResponse();
 
         parser.parse();
         parseTime = System.currentTimeMillis() - startTime;
-        channel.parsingStatus = Channel.ParsingStatus.COMPLETED;
+        channel.setParsingStatus(Channel.ParsingStatus.COMPLETED);
         System.out.println("Parsing completed in " + parseTime + " milliseconds");
         updateResponse();
 
@@ -94,9 +94,9 @@ public class ParseAndMakeTrieView {
     private List<LayoutBlock> buildResponse() {
         List<LayoutBlock> blocks = new ArrayList<>();
         blocks.add(DividerBlock.builder().build());
-        if (channel.parsingStatus.equals(Channel.ParsingStatus.NOT_STARTED)) {
+        if (channel.getParsingStatus().equals(Channel.ParsingStatus.NOT_STARTED)) {
             blocks.add(TextBlock("Parsing has not started yet."));
-        } else if (channel.parsingStatus.equals(Channel.ParsingStatus.IN_PROGRESS)) {
+        } else if (channel.getParsingStatus().equals(Channel.ParsingStatus.IN_PROGRESS)) {
             blocks.add(TextBlock("Parsing..."));
         } else {
             blocks.add(TextBlock("Parsing completed."));

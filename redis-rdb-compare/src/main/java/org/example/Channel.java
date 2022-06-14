@@ -20,24 +20,24 @@ public class Channel {
     static volatile HashMap<String, Channel> channels = new HashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
-    private volatile String dumpA = "../dump-A.rdb";
+    private final String dumpA = "../dump-A.rdb";
 
     @Builder.Default
-    private volatile String dumpB = "../dump-B.rdb";
+    private final String dumpB = "../dump-B.rdb";
 
     @Builder.Default
-    private volatile String keysA = "../keys-A.txt";
+    private final String keysA = "../keys-A.txt";
 
     @Builder.Default
-    private volatile String keysB = "../keys-B.txt";
-
-    @Setter
-    @Builder.Default
-    private volatile QTrie trieA = null;
+    private final String keysB = "../keys-B.txt";
 
     @Setter
     @Builder.Default
-    private volatile QTrie trieB = null;
+    private QTrie trieA = null;
+
+    @Setter
+    @Builder.Default
+    private QTrie trieB = null;
 
     @Builder.Default
     private volatile Parser parser = Parser.builder().build();
@@ -55,9 +55,11 @@ public class Channel {
     }
 
     @Builder.Default
-    public volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
+    @Setter
+    private volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
 
     @Builder.Default
+    @Setter
     public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
     /**

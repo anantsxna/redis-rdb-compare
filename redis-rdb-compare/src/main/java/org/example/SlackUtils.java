@@ -49,7 +49,7 @@ public class SlackUtils {
      */
     public static String startAllUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.parsingStatus.equals(ParsingStatus.NOT_STARTED)) {
+        if (!channel.getParsingStatus().equals(ParsingStatus.NOT_STARTED)) {
             return SESSION_IN_PROGRESS;
         }
         return "";
@@ -88,25 +88,25 @@ public class SlackUtils {
      */
     public static String parseUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        if (channel.parsingStatus.equals(ParsingStatus.IN_PROGRESS)) {
+        if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
             return PARSING_IN_PROGRESS;
-        } else if (channel.parsingStatus.equals(ParsingStatus.COMPLETED)) {
+        } else if (channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
             return PARSING_COMPLETED;
         }
 
         //TODO: ask user for input regarding file location,
         // download files from s3 link and save to local directory,
         // set dumpA and dumpB
+        channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
         Parser parser = channel.getParser();
         parser.clear();
         parser.addToParser(channel.getDumpA(), channel.getKeysA());
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
         new Thread(() -> {
             parser.parse();
-            channel.parsingStatus = ParsingStatus.COMPLETED;
+            channel.setParsingStatus(ParsingStatus.COMPLETED);
         })
             .start();
-        channel.parsingStatus = ParsingStatus.IN_PROGRESS;
         return PARSING_STARTED;
     }
 
@@ -118,7 +118,7 @@ public class SlackUtils {
      */
     public static String trieConstructionUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.parsingStatus.equals(ParsingStatus.COMPLETED)) {
+        if (!channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
             return PARSING_NOT_COMPLETED;
         }
 
