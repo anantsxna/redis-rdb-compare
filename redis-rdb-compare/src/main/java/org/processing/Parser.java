@@ -22,7 +22,8 @@ public final class Parser {
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     /**
-     * Runnable for thread that gathers the logs from the redis-rdb-tools python script.
+     * Method for thread that gathers the logs from the redis-rdb-tools python script.
+     * Thread-safe method becuase logging is thread-safe and parameters are immutable.
      * @param process: the process which runs the script.
      * @param dumpFile: write-file fpr the process
      */
@@ -46,6 +47,7 @@ public final class Parser {
 
     /**
      * Runnable for thread that gathers the errors from the redis-rdb-tools python script.
+     * Thread-safe method becuase logging is thread-safe and parameters are immutable.
      * @param process: the process which runs the script
      * @param dumpFile: write-file for the process
      */
