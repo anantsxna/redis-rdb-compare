@@ -49,15 +49,22 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
   **(Both queries accept empty string as a prefix that applies to all keys of the database.)**
 - Check the logs in `redis-rdb-compare/logs/` directory after the execution for detailed information about the execution.
 
-<figure>
-  <img
-  src="images/redis-rdb-compare-bot-flow.png"
-  alt="flow chart of the working">
-  <div style="text-align: center;">
-    <figcaption>Fig. Working of the Bot</figcaption>
-  </div>
-</figure>
+#
 
+<p align="center">
+    <img
+    src="images/redis-rdb-compare-bot-flow.png"
+    alt="flow chart of the working"
+    height="50%"
+    width="50%"
+    >
+</p>
+
+<p align="center">
+  Fig. Working of the Bot
+ </p>
+ 
+ 
 ## Java Classes
 - **org.example:** Driver Code for running the app locally and on the Slack Bot, Utility methods to handle command/payload processing.
 - **org.processing:** Parser class for the .rdb files.
