@@ -50,13 +50,15 @@ public class SlackMain {
         app.command(
             "/parse",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                String response = parseUtils(channelId);
-                if (response.equals(PARSING_COMPLETED)) {
-                    postResetButtonResponseAsync(response, channelId);
-                } else {
-                    postTextResponseAsync(response, channelId);
-                }
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    String response = parseUtils(channelId);
+                    if (response.equals(PARSING_COMPLETED)) {
+                        postResetButtonResponseAsync(response, channelId);
+                    } else {
+                        postTextResponseAsync(response, channelId);
+                    }
+                }).start();
                 return ctx.ack();
             }
         );
@@ -65,8 +67,10 @@ public class SlackMain {
         app.command(
             "/maketrie",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(trieConstructionUtils(channelId), channelId);
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    postTextResponseAsync(trieConstructionUtils(channelId), channelId);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -75,8 +79,10 @@ public class SlackMain {
         app.command(
             "/getcount",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(countUtils(req.getPayload().getText(), channelId), channelId);
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    postTextResponseAsync(countUtils(req.getPayload().getText(), channelId), channelId);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -85,11 +91,13 @@ public class SlackMain {
         app.command(
             "/getnext",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(
-                    SlackUtils.getNextKeyUtils(req.getPayload().getText(), channelId),
-                    channelId
-                );
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    postTextResponseAsync(
+                            SlackUtils.getNextKeyUtils(req.getPayload().getText(), channelId),
+                            channelId
+                    );
+                }).start();
                 return ctx.ack();
             }
         );
@@ -98,8 +106,10 @@ public class SlackMain {
         app.command(
             "/clear",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(clearUtils(channelId), channelId);
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    postTextResponseAsync(clearUtils(channelId), channelId);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -126,9 +136,11 @@ public class SlackMain {
         app.command(
             "/start",
             (req, ctx) -> {
-                final String channelId = req.getContext().getChannelId();
-                String response = "Welcome to the interactive session.";
-                postStartButtonResponse(response, channelId);
+                new Thread(() -> {
+                    final String channelId = req.getContext().getChannelId();
+                    String response = "Welcome to the interactive session.";
+                    postStartButtonResponse(response, channelId);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -138,21 +150,23 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-startAll-\\w*"),
             (req, ctx) -> {
-                final String channelId = req.getPayload().getChannel().getId();
-                String response = startAllUtils(channelId);
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                if (response.equals(SESSION_IN_PROGRESS)) {
-                    System.out.println("Session in progress");
-                    updateResetButtonResponseAsync(response, channelId, messageTs);
-                } else {
-                    System.out.println("Session not in progress");
-                    ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
-                        .builder()
-                        .timestamp(messageTs)
-                        .channelId(channelId)
-                        .build();
-                    new Thread(parseAndMakeTrieView::run).start();
-                }
+                new Thread(() -> {
+                    final String channelId = req.getPayload().getChannel().getId();
+                    String response = startAllUtils(channelId);
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    if (response.equals(SESSION_IN_PROGRESS)) {
+                        System.out.println("Session in progress");
+                        updateResetButtonResponseAsync(response, channelId, messageTs);
+                    } else {
+                        System.out.println("Session not in progress");
+                        ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
+                                .builder()
+                                .timestamp(messageTs)
+                                .channelId(channelId)
+                                .build();
+                        new Thread(parseAndMakeTrieView::run).start();
+                    }
+                }).start();
                 return ctx.ack();
             }
         );
@@ -161,19 +175,21 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-queryAll-[-\\w]*"),
             (req, ctx) -> {
-                String actionId = req.getPayload().getActions().get(0).getActionId();
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                final String channelId = req.getPayload().getChannel().getId();
-                String response = queryAllUtils(channelId);
-                if (response.equals(QUERYING_NOT_POSSIBLE)) {
-                    updateResetButtonResponseAsync(response, channelId, messageTs);
-                } else {
-                    if (actionId.startsWith("buttonBlock-queryAll-count")) {
-                        updateQueryCountResponseAsync(response, channelId, messageTs);
+                new Thread(() -> {
+                    String actionId = req.getPayload().getActions().get(0).getActionId();
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    final String channelId = req.getPayload().getChannel().getId();
+                    String response = queryAllUtils(channelId);
+                    if (response.equals(QUERYING_NOT_POSSIBLE)) {
+                        updateResetButtonResponseAsync(response, channelId, messageTs);
                     } else {
-                        updateQueryNextResponseAsync(response, channelId, messageTs);
+                        if (actionId.startsWith("buttonBlock-queryAll-count")) {
+                            updateQueryCountResponseAsync(response, channelId, messageTs);
+                        } else {
+                            updateQueryNextResponseAsync(response, channelId, messageTs);
+                        }
                     }
-                }
+                }).start();
                 return ctx.ack();
             }
         );
@@ -182,12 +198,14 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-resetAll-\\w*"),
             (req, ctx) -> {
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                final String channelId = req.getPayload().getChannel().getId();
-                clearUtils(channelId);
-                String information = "Deleted: Bot files for this channel.";
-                String response = "Welcome to the new interactive session.";
-                updateStartButtonResponse(information, response, channelId, messageTs);
+                new Thread(() -> {
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    final String channelId = req.getPayload().getChannel().getId();
+                    clearUtils(channelId);
+                    String information = "Deleted: Bot files for this channel.";
+                    String response = "Welcome to the new interactive session.";
+                    updateStartButtonResponse(information, response, channelId, messageTs);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -196,9 +214,11 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-exitAll-\\w*"),
             (req, ctx) -> {
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                final String channelId = req.getPayload().getChannel().getId();
-                deleteStartButtonResponse(channelId, messageTs);
+                new Thread(() -> {
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    final String channelId = req.getPayload().getChannel().getId();
+                    deleteStartButtonResponse(channelId, messageTs);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -207,11 +227,13 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^inputBlock-countQuery-\\w*"),
             (req, ctx) -> {
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                final String channelId = req.getPayload().getChannel().getId();
-                String prefixKey = req.getPayload().getActions().get(0).getValue();
-                String response = countUtils(prefixKey, channelId);
-                updateQueryCountResponseAsync(response, channelId, messageTs);
+                new Thread(() -> {
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    final String channelId = req.getPayload().getChannel().getId();
+                    String prefixKey = req.getPayload().getActions().get(0).getValue();
+                    String response = countUtils(prefixKey, channelId);
+                    updateQueryCountResponseAsync(response, channelId, messageTs);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -220,11 +242,13 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^inputBlock-nextQuery-\\w*"),
             (req, ctx) -> {
-                String messageTs = req.getPayload().getContainer().getMessageTs();
-                final String channelId = req.getPayload().getChannel().getId();
-                String prefixKey_count = req.getPayload().getActions().get(0).getValue();
-                String response = getNextKeyUtils(prefixKey_count, channelId);
-                updateQueryNextResponseAsync(response, channelId, messageTs);
+                new Thread(() -> {
+                    String messageTs = req.getPayload().getContainer().getMessageTs();
+                    final String channelId = req.getPayload().getChannel().getId();
+                    String prefixKey_count = req.getPayload().getActions().get(0).getValue();
+                    String response = getNextKeyUtils(prefixKey_count, channelId);
+                    updateQueryNextResponseAsync(response, channelId, messageTs);
+                }).start();
                 return ctx.ack();
             }
         );
@@ -237,9 +261,13 @@ public class SlackMain {
         app.event(
             AppMentionEvent.class,
             (payload, ctx) -> {
-                final String channelId = payload.getEvent().getChannel();
-                String response = "Welcome to the interactive session.";
-                postStartButtonResponse(response, channelId);
+                System.out.println("asdasdasdasd");
+                new Thread(() -> {
+                    System.out.println("hhhhhhhhh");
+                    final String channelId = payload.getEvent().getChannel();
+                    String response = "Welcome to the interactive session.";
+                    postStartButtonResponse(response, channelId);
+                }).start();
                 return ctx.ack();
             }
         );
