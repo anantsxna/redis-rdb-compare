@@ -104,7 +104,7 @@ public class SlackUtils {
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
         new Thread(() -> {
             parser.parse();
-            channel.setParsingStatus(ParsingStatus.COMPLETED);
+            channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
         })
             .start();
         return PARSING_STARTED;
@@ -144,7 +144,7 @@ public class SlackUtils {
                 " milliseconds in channel " +
                 channelId
             );
-            channel.trieStatus = TrieStatus.CONSTRUCTED;
+            channel.trieStatus = TrieStatus.CONSTRUCTED; //volatile variable write
         })
             .start();
         return TRIE_CONSTRUCTION_STARTED;

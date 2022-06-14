@@ -76,7 +76,7 @@ public class ParseAndMakeTrieView {
     }
 
     /**
-     * Calls the Utility method to update response
+     * Calls the utility method to update response
      */
     public void updateResponse() {
         updateResponseSync(
