@@ -50,9 +50,8 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
 - Check the logs in `redis-rdb-compare/logs/` directory after the execution for detailed information about the execution.
 
 ## Java Classes
-- **Main:** Driver Code
-- **processing.Parser:** Parses the .rdb files for keys
-- **processing.Sorter:** Not implemented  and of no use. Yet. 
-- **trie.TrieNode:** Node implementation for the tries (stores links to children and frequency count.)
-- **trie.QTrie:** Trie implementation (implmenets key insertion and query answering methods.)
+- **org.example:** Driver Code for running the app locally and on the Slack Bot, Utility methods to handle command/payload processing.
+- **org.processing:** Parser class for the .rdb files.
+- **org.querying:** Query interfcae and classes. 
+- **org.trie:** Trie and TrieNode implementation.
 
