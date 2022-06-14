@@ -5,7 +5,7 @@
 <a href="https://codecov.io/gh/anantsxna/redis-rdb-compare">
   <img src="https://codecov.io/gh/anantsxna/redis-rdb-compare/branch/main/graph/badge.svg?token=8L10DMFFRI"/>
 </a>
-<img src="https://img.shields.io/badge/Maven Central-v3.8.1-blue">
+<img src="https://img.shields.io/badge/maven-v3.8.1-blue">
 <img src="https://img.shields.io/badge/openJDK-18-blue"> 
 <img src="https://img.shields.io/badge/PyPy3-v7.3.9-blue">
 
