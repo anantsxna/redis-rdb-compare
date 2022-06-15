@@ -4,7 +4,6 @@ import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.model.block.LayoutBlock;
-
 import java.io.IOException;
 import java.util.List;
 

@@ -1,12 +1,11 @@
 package org.example;
 
+import java.util.HashMap;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.processing.Parser;
 import org.trie.QTrie;
-
-import java.util.HashMap;
 
 /**
  * Channel Class

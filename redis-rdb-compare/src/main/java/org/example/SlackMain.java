@@ -1,19 +1,18 @@
 package org.example;
 
+import static org.example.SlackUtils.*;
+import static org.messaging.PostUpdate.*;
+
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
 import com.slack.api.model.event.AppMentionEvent;
 import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.messaging.ParseAndMakeTrieView;
-
-import java.util.regex.Pattern;
-
-import static org.example.SlackUtils.*;
-import static org.messaging.PostUpdate.*;
 
 /**
  * Slack App that handles the following:

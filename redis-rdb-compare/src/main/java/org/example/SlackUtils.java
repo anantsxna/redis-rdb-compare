@@ -1,5 +1,8 @@
 package org.example;
 
+import static org.example.Channel.getChannel;
+import static org.example.Channel.removeChannel;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.Channel.ParsingStatus;
@@ -9,9 +12,6 @@ import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
 import org.querying.Query;
 import org.trie.QTrie;
-
-import static org.example.Channel.getChannel;
-import static org.example.Channel.removeChannel;
 
 /**
  * Utility class for the Slack Main class.
@@ -52,6 +52,8 @@ public class SlackUtils {
         if (!channel.getParsingStatus().equals(ParsingStatus.NOT_STARTED)) {
             return SESSION_IN_PROGRESS;
         }
+        //TODO: return session available message, not empty
+        // add check in startAll blockAction accordingly
         return "";
     }
 
@@ -65,6 +67,8 @@ public class SlackUtils {
         if (!channel.trieStatus.equals(TrieStatus.CONSTRUCTED)) {
             return QUERYING_NOT_POSSIBLE;
         }
+        //TODO: return session available message, not empty
+        // add check in startAll blockAction accordingly
         return "";
     }
 
@@ -166,6 +170,7 @@ public class SlackUtils {
                 assert (!text.isEmpty());
                 assert (!text.contains(" "));
             } catch (Exception e) {
+                //TODO : expand reasons for invalid query
                 return BAD_ARGUMENTS;
             }
         }
@@ -202,6 +207,7 @@ public class SlackUtils {
                 count = Integer.parseInt(tokens[1]);
                 assert (tokens.length == 2);
             } catch (Exception e) {
+                //TODO : expand reasons for invalid query
                 return BAD_ARGUMENTS;
             }
         }

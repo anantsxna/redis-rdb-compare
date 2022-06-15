@@ -1,10 +1,9 @@
 package org.trie;
 
+import java.util.HashMap;
 import lombok.Builder;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 /**
  * Trie Node class.
