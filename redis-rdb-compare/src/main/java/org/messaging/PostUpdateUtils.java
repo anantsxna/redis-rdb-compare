@@ -6,6 +6,7 @@ import com.slack.api.methods.response.chat.ChatUpdateResponse;
 import com.slack.api.model.block.LayoutBlock;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utility class for PostUpdate.
@@ -13,7 +14,11 @@ import java.util.List;
  *
  * Rigid design classes from PostUpdate invoke methods from this class to post, update and delete messages.
  */
+@Slf4j
 public class PostUpdateUtils {
+
+    static Slack slack = Slack.getInstance();
+    static String token = System.getenv("SLACK_BOT_TOKEN");
 
     /**
      * Post a new message to a channel async.
@@ -26,8 +31,7 @@ public class PostUpdateUtils {
         final String channelId,
         String responseMessage
     ) {
-        Slack slack = Slack.getInstance();
-        String token = System.getenv("SLACK_BOT_TOKEN");
+        log.info("Posting message synchronously in channel {}...", channelId);
         slack
             .methodsAsync(token)
             .chatPostMessage(req ->
@@ -35,11 +39,10 @@ public class PostUpdateUtils {
             )
             .thenAcceptAsync(res -> {
                 if (res.isOk()) {
-                    System.out.println("Message posted successfully.");
+                    log.info("Message posted successfully.");
                 } else {
                     String errorCode = res.getError(); // e.g., "invalid_auth", "channel_not_found"
-                    System.out.println("Error posting message: " + errorCode);
-                    throw new RuntimeException("Error posting message: " + errorCode);
+                    log.info("Error posting message: {}", errorCode);
                 }
             });
     }
@@ -50,18 +53,16 @@ public class PostUpdateUtils {
      * @param timestamp The message to delete is determined by the timestamp parameter.
      */
     public static void deleteResponseAsync(final String channelId, String timestamp) {
-        Slack slack = Slack.getInstance();
-        String token = System.getenv("SLACK_BOT_TOKEN");
+        log.info("Deleting message asynchronously...");
         slack
             .methodsAsync(token)
             .chatDelete(req -> req.channel(channelId).ts(timestamp))
             .thenAcceptAsync(res -> {
                 if (res.isOk()) {
-                    System.out.println("Message deleted successfully.");
+                    log.info("Message deleted successfully.");
                 } else {
                     String errorCode = res.getError(); // e.g., "invalid_auth", "channel_not_found"
-                    System.out.println("Error deleting message: " + errorCode);
-                    throw new RuntimeException("Error deleting message: " + errorCode);
+                    log.info("Error deleting message: {}", errorCode);
                 }
             });
     }
@@ -79,8 +80,7 @@ public class PostUpdateUtils {
         String responseMessage,
         String timestamp
     ) {
-        Slack slack = Slack.getInstance();
-        String token = System.getenv("SLACK_BOT_TOKEN");
+        log.info("Updating message asynchronously in channel {}...", channelId);
         slack
             .methodsAsync(token)
             .chatUpdate(req ->
@@ -88,11 +88,10 @@ public class PostUpdateUtils {
             )
             .thenAcceptAsync(res -> {
                 if (res.isOk()) {
-                    System.out.println("Message updated successfully.");
+                    log.info("Message updated successfully.");
                 } else {
                     String errorCode = res.getError(); // e.g., "invalid_auth", "channel_not_found"
-                    System.out.println("Error updating message: " + errorCode);
-                    throw new RuntimeException("Error updating message: " + errorCode);
+                    log.info("Error updating message: {}", errorCode);
                 }
             });
     }
@@ -110,10 +109,8 @@ public class PostUpdateUtils {
         String responseMessage,
         String timestamp
     ) {
-        Slack slack = Slack.getInstance();
-        String token = System.getenv("SLACK_BOT_TOKEN");
         ChatUpdateResponse response = null;
-        System.out.println("Updating message synchronously...");
+        log.info("Updating message synchronously in channel {}...", channelId);
         try {
             response =
                 slack
@@ -130,11 +127,10 @@ public class PostUpdateUtils {
         }
 
         if (response.isOk()) {
-            System.out.println("Message updated successfully.");
+            log.info("Message updated successfully.");
         } else {
             String errorCode = response.getError(); // e.g., "invalid_auth", "channel_not_found"
-            System.out.println("Error updating message: " + errorCode);
-            throw new RuntimeException("Error updating message: " + errorCode);
+            log.info("Error updating message: {}", errorCode);
         }
     }
 }

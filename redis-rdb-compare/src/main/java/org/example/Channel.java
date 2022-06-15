@@ -1,9 +1,13 @@
 package org.example;
 
 import java.util.HashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.processing.Parser;
 import org.trie.QTrie;
 
@@ -11,6 +15,7 @@ import org.trie.QTrie;
  * Channel Class
  * Maps a channel id to dumps files, keys files, a parser and tries and maintains their status.
  */
+@Slf4j
 @Getter
 @Builder
 public class Channel {
@@ -61,6 +66,18 @@ public class Channel {
     @Setter
     public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
+    @Builder.Default
+    @Getter
+    private ReadWriteLock parseLock = new ReentrantReadWriteLock();
+
+    @Builder.Default
+    @Getter
+    private Lock writeParseLock = parseLock.writeLock();
+
+    @Builder.Default
+    @Getter
+    private Lock readParseLock = parseLock.readLock();
+
     /**
      * Getter for the channel.
      * If the channel id is not set, a new channel is created.
@@ -69,6 +86,7 @@ public class Channel {
      */
     public static Channel getChannel(final String channelId) {
         if (!channels.containsKey(channelId)) {
+            log.info("Creating new channel for channel id: {}", channelId);
             channels.put(channelId, Channel.builder().build());
         }
         return channels.get(channelId);

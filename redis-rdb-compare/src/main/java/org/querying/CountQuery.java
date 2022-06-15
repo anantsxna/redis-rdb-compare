@@ -3,11 +3,13 @@ package org.querying;
 import static org.example.Channel.getChannel;
 
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.example.Channel;
 
 /**
  * "/getcount [prefixKey]" query.
  */
+@Slf4j
 @SuperBuilder
 public class CountQuery extends Query {
 
@@ -34,6 +36,7 @@ public class CountQuery extends Query {
                 .append("time: ")
                 .append(endTime - startTime)
                 .append(" ms\n");
+            log.info("Count query for key: {} in channel: {}", key, getChannelId());
         } catch (Exception e) {
             result.append("The key does not exist in the database.");
         }

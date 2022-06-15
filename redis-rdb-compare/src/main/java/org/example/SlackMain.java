@@ -35,13 +35,13 @@ public class SlackMain {
      * Main method for the application.
      */
     public static void main(String[] args) {
-        System.out.println("Hello world, starting bot!");
         var app = new App();
 
         // command "/ping" - responds with "pong"
         app.command(
             "/ping",
             (req, ctx) -> {
+                log.info("/ping command received");
                 return ctx.ack(":wave: Pong");
             }
         );
@@ -50,8 +50,10 @@ public class SlackMain {
         app.command(
             "/parse",
             (req, ctx) -> {
+                log.info("/parse command received");
                 final String channelId = req.getContext().getChannelId();
                 String response = parseUtils(channelId);
+                log.info("parseUtils response: {}", response);
                 if (response.equals(PARSING_COMPLETED)) {
                     postResetButtonResponseAsync(response, channelId);
                 } else {
@@ -65,8 +67,11 @@ public class SlackMain {
         app.command(
             "/maketrie",
             (req, ctx) -> {
+                log.info("/maketrie command received");
                 final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(trieConstructionUtils(channelId), channelId);
+                String response = trieConstructionUtils(channelId);
+                log.info("trieConstructionUtils response: {}", response);
+                postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
         );
@@ -75,8 +80,11 @@ public class SlackMain {
         app.command(
             "/getcount",
             (req, ctx) -> {
+                log.info("/getcount command received");
                 final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(countUtils(req.getPayload().getText(), channelId), channelId);
+                String response = countUtils(req.getPayload().getText(), channelId);
+                log.info("countUtils response: {}", response);
+                postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
         );
@@ -85,11 +93,11 @@ public class SlackMain {
         app.command(
             "/getnext",
             (req, ctx) -> {
+                log.info("/getnext command received");
                 final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(
-                    SlackUtils.getNextKeyUtils(req.getPayload().getText(), channelId),
-                    channelId
-                );
+                String response = getNextKeyUtils(req.getPayload().getText(), channelId);
+                log.info("getNextKeyUtils response: {}", response);
+                postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
         );
@@ -98,8 +106,11 @@ public class SlackMain {
         app.command(
             "/clear",
             (req, ctx) -> {
+                log.info("/clear command received");
                 final String channelId = req.getContext().getChannelId();
-                postTextResponseAsync(clearUtils(channelId), channelId);
+                String response = clearUtils(channelId);
+                log.info("clearUtils response: {}", response);
+                postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
         );
@@ -107,27 +118,30 @@ public class SlackMain {
         // command "/redis-bot-help" - provides help for the bot
         app.command(
             "/redis-bot-help",
-            (req, ctx) ->
-                ctx.ack(
+            (req, ctx) -> {
+                log.info("/redis-bot-help command received");
+                return ctx.ack(
                     """
-                            usage:
-                            \t*/ping* - check if the bot if working.
-                            \t*/start* - start interactive session.
-                            \t*/clear* - clear all files related to the current session.
-                            \t*/parse* - parse the input string and return the result. Input via S3 links not implemented yet.
-                            \t*/maketrie* - create the tries and store the parsed keys inside them. Requires "/parse" to be called first.
-                            \t*/getcount [prefix_key]* - return the count of the prefix_key inside both the tries. Requires "/maketrie" to be called first.
-                            \t*/getnext [prefix_key] [n]* - return the most common 'n' keys that have the same prefix, 'prefix_key'. Requires "/maketrie" to be called first.
-                            """
-                )
+                                usage:
+                                \t*/ping* - check if the bot if working.
+                                \t*/start* - start interactive session.
+                                \t*/clear* - clear all files related to the current session.
+                                \t*/parse* - parse the input string and return the result. Input via S3 links not implemented yet.
+                                \t*/maketrie* - create the tries and store the parsed keys inside them. Requires "/parse" to be called first.
+                                \t*/getcount [prefix_key]* - return the count of the prefix_key inside both the tries. Requires "/maketrie" to be called first.
+                                \t*/getnext [prefix_key] [n]* - return the most common 'n' keys that have the same prefix, 'prefix_key'. Requires "/maketrie" to be called first.
+                                """
+                );
+            }
         );
 
         // command "/start" - starts interactive session
         app.command(
             "/start",
             (req, ctx) -> {
+                log.info("/start command received");
                 final String channelId = req.getContext().getChannelId();
-                String response = "Welcome to the interactive session.";
+                String response = ":wave: Welcome to the interactive session.";
                 postStartButtonResponse(response, channelId);
                 return ctx.ack();
             }
@@ -138,14 +152,15 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-startAll-\\w*"),
             (req, ctx) -> {
+                log.info("\"Parse and Make Tries\" button clicked");
                 final String channelId = req.getPayload().getChannel().getId();
                 String response = startAllUtils(channelId);
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 if (response.equals(SESSION_IN_PROGRESS)) {
-                    System.out.println("Session in progress");
+                    log.info("Session in progress");
                     updateResetButtonResponseAsync(response, channelId, messageTs);
                 } else {
-                    System.out.println("Session not in progress");
+                    log.info("Session not in progress");
                     ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
                         .builder()
                         .timestamp(messageTs)
@@ -161,6 +176,7 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-queryAll-[-\\w]*"),
             (req, ctx) -> {
+                log.info("Query button clicked");
                 String actionId = req.getPayload().getActions().get(0).getActionId();
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
@@ -182,11 +198,12 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-resetAll-\\w*"),
             (req, ctx) -> {
+                log.info("Reset button clicked");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
                 clearUtils(channelId);
                 String information = "Deleted: Bot files for this channel.";
-                String response = "Welcome to the new interactive session.";
+                String response = ":wave: Welcome to the new interactive session.";
                 updateStartButtonResponse(information, response, channelId, messageTs);
                 return ctx.ack();
             }
@@ -196,6 +213,7 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^buttonBlock-exitAll-\\w*"),
             (req, ctx) -> {
+                log.info("Close button clicked");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
                 deleteStartButtonResponse(channelId, messageTs);
@@ -207,6 +225,7 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^inputBlock-countQuery-\\w*"),
             (req, ctx) -> {
+                log.info("Count of a Key input received");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
                 String prefixKey = req.getPayload().getActions().get(0).getValue();
@@ -220,6 +239,7 @@ public class SlackMain {
         app.blockAction(
             Pattern.compile("^inputBlock-nextQuery-\\w*"),
             (req, ctx) -> {
+                log.info("Next Keys input received");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
                 String prefixKey_count = req.getPayload().getActions().get(0).getValue();
@@ -233,12 +253,14 @@ public class SlackMain {
         app.event(MessageChangedEvent.class, (payload, ctx) -> ctx.ack());
         app.event(MessageEvent.class, (payload, ctx) -> ctx.ack());
         app.event(MessageDeletedEvent.class, (payload, ctx) -> ctx.ack());
+
         // event "AppMentionEvent" - starts the session when bot is @mentioned in a channel
         app.event(
             AppMentionEvent.class,
             (payload, ctx) -> {
+                log.info("AppMentionEvent received");
                 final String channelId = payload.getEvent().getChannel();
-                String response = "Welcome to the interactive session.";
+                String response = ":wave: Welcome to the interactive session.";
                 postStartButtonResponse(response, channelId);
                 return ctx.ack();
             }
@@ -247,6 +269,7 @@ public class SlackMain {
         //start the app
         try {
             SocketModeApp socketModeApp = new SocketModeApp(app);
+            log.info("App started. Hello World.");
             socketModeApp.start();
         } catch (Exception e) {
             throw new RuntimeException(e);

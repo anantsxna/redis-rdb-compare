@@ -139,10 +139,9 @@ public class SlackUtils {
             channel.getTrieA().takeInput();
             channel.getTrieB().takeInput();
             long endTime = System.currentTimeMillis();
-            System.out.println(
-                "Trie construction completed in " +
-                (endTime - startTime) +
-                " milliseconds in channel " +
+            log.info(
+                "Trie construction completed in {} milliseconds in channel {}",
+                endTime - startTime,
                 channelId
             );
             channel.trieStatus = TrieStatus.CONSTRUCTED; //volatile variable write
@@ -171,7 +170,7 @@ public class SlackUtils {
                 return BAD_ARGUMENTS;
             }
         }
-        System.out.println("Counting for key: " + text);
+        log.info("Counting for key: " + text);
         Query query = CountQuery
             .builder()
             .key(text)

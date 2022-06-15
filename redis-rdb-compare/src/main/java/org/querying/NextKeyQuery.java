@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.example.Channel;
 import org.trie.QTrie;
 
 /**
  * "/getnext [prefixKey] [n]" query.
  */
+@Slf4j
 @SuperBuilder
 public class NextKeyQuery extends Query {
 
@@ -75,6 +77,7 @@ public class NextKeyQuery extends Query {
                         .append("\n");
                 }
                 result.append("\n");
+                log.info("Next query for key: {} in channel: {}", key, getChannelId());
             }
         } catch (Exception e) {
             result.append("The key does not exist in the database.");

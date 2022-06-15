@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.example.Channel;
 import org.processing.Parser;
 import org.trie.QTrie;
@@ -18,6 +19,7 @@ import org.trie.QTrie;
  * A self updating class for dealing with a periodically changing response message.
  * Displays parsing and trie construction status in interactive mode.
  */
+@Slf4j
 @Builder
 public class ParseAndMakeTrieView {
 
@@ -43,33 +45,33 @@ public class ParseAndMakeTrieView {
      */
     public void run() {
         //execute parse, execute maketrie, periodically update the response
-        System.out.println("Parsing and making trie for channel " + channelId);
+        log.info("Parsing and making trie for channel " + channelId);
         channel = Channel.getChannel(channelId);
         channel.setParsingStatus(Channel.ParsingStatus.IN_PROGRESS);
         Parser parser = channel.getParser();
         parser.clear();
         parser.addToParser(channel.getDumpA(), channel.getKeysA());
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
-        System.out.println("Parsing completed.");
+        log.info("Parsing completed.");
         updateResponse();
 
         parser.parse();
         parseTime = System.currentTimeMillis() - startTime;
         channel.setParsingStatus(Channel.ParsingStatus.COMPLETED);
-        System.out.println("Parsing completed in " + parseTime + " milliseconds");
+        log.info("Parsing completed in " + parseTime + " milliseconds");
         updateResponse();
 
         channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
         channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
         channel.trieStatus = Channel.TrieStatus.CONSTRUCTING;
-        System.out.println("Trie construction started.");
+        log.info("Trie construction started.");
         updateResponse();
 
         channel.getTrieA().takeInput();
         channel.getTrieB().takeInput();
         makeTrieTime = System.currentTimeMillis() - startTime - parseTime;
         channel.trieStatus = Channel.TrieStatus.CONSTRUCTED;
-        System.out.println("Trie construction completed in " + makeTrieTime + " milliseconds");
+        log.info("Trie construction completed in " + makeTrieTime + " milliseconds");
         updateResponse();
     }
 

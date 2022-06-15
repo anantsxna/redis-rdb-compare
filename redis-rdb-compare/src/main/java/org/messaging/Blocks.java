@@ -12,6 +12,7 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.ConfirmationDialogObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElements;
+import com.slack.api.model.block.element.ButtonElement;
 
 /**
  * Methods for specific blocks used in responses.
@@ -22,7 +23,63 @@ public class Blocks {
      * @param buttonText: the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
-     * @return button element
+     * @return a button
+     */
+    public static ButtonElement buttonElement(
+        String buttonText,
+        String buttonValue,
+        String buttonStyle
+    ) {
+        return button(b ->
+            b
+                .text(plainText(buttonText))
+                .style(buttonStyle)
+                .value(buttonValue)
+                .actionId("buttonBlock-" + buttonValue + "-" + randomAlphanumeric(10))
+        );
+    }
+
+    /**
+     * @param buttonText: the text of the button
+     * @param buttonValue: the value used to make the actionId of the payload the button will send back
+     * @param buttonStyle: default/primary/danger
+     * @param warningText: the warning in the confirm dialog
+     * @param confirmText: the text of the confirm button
+     * @param denyText: the text of the deny button
+     * @return a button with a confirm dialog
+     */
+    public static ButtonElement buttonWithConfirmationDialog(
+        String buttonText,
+        String buttonValue,
+        String buttonStyle,
+        String warningText,
+        String confirmText,
+        String denyText
+    ) {
+        return button(b ->
+            b
+                .text(plainText(buttonText))
+                .style(buttonStyle)
+                .value(buttonValue)
+                .actionId("buttonBlock-" + buttonValue + "-" + randomAlphanumeric(10))
+                .confirm(
+                    ConfirmationDialogObject
+                        .builder()
+                        .title(PlainTextObject.builder().text("Are you sure?").build())
+                        .text(PlainTextObject.builder().text(warningText).build())
+                        .confirm(PlainTextObject.builder().text(confirmText).build())
+                        .deny(PlainTextObject.builder().text(denyText).build())
+                        .style("primary")
+                        .build()
+                )
+        );
+    }
+
+    /**
+     * @param buttonText: the text of the button
+     * @param buttonValue: the value used to make the actionId of the payload the button will send back
+     * @param buttonStyle: default/primary/danger
+     * @return button block
      */
     public static LayoutBlock ButtonBlock(
         String buttonText,
@@ -30,17 +87,7 @@ public class Blocks {
         String buttonStyle
     ) {
         return actions(actions ->
-            actions.elements(
-                asElements(
-                    button(b ->
-                        b
-                            .text(plainText(buttonText))
-                            .style(buttonStyle)
-                            .value(buttonValue)
-                            .actionId("buttonBlock-" + buttonValue + "-" + randomAlphanumeric(10))
-                    )
-                )
-            )
+            actions.elements(asElements(buttonElement(buttonText, buttonValue, buttonStyle)))
         );
     }
 
@@ -48,7 +95,7 @@ public class Blocks {
      * @param buttonTextA: the text of the first button
      * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
      * @param buttonStyleA: default/primary/danger
-     * @return an action block with 2 button
+     * @return an action block with 2 buttons
      */
     public static LayoutBlock TwoButtonBlock(
         String buttonTextA,
@@ -61,20 +108,8 @@ public class Blocks {
         return actions(actions ->
             actions.elements(
                 asElements(
-                    button(b ->
-                        b
-                            .text(plainText(buttonTextA))
-                            .style(buttonStyleA)
-                            .value(buttonValueA)
-                            .actionId("buttonBlock-" + buttonValueA + "-" + randomAlphanumeric(10))
-                    ),
-                    button(b ->
-                        b
-                            .text(plainText(buttonTextB))
-                            .style(buttonStyleB)
-                            .value(buttonValueB)
-                            .actionId("buttonBlock-" + buttonValueB + "-" + randomAlphanumeric(10))
-                    )
+                    buttonElement(buttonTextA, buttonValueA, buttonStyleA),
+                    buttonElement(buttonTextB, buttonValueB, buttonStyleB)
                 )
             )
         );
@@ -106,36 +141,15 @@ public class Blocks {
         return actions(actions ->
             actions.elements(
                 asElements(
-                    button(b ->
-                        b
-                            .text(plainText(buttonTextA))
-                            .style(buttonStyleA)
-                            .value(buttonValueA)
-                            .actionId("buttonBlock-" + buttonValueA + "-" + randomAlphanumeric(10))
-                    ),
-                    button(b ->
-                        b
-                            .text(plainText(buttonTextB))
-                            .style(buttonStyleB)
-                            .value(buttonValueB)
-                            .actionId("buttonBlock-" + buttonValueB + "-" + randomAlphanumeric(10))
-                    ),
-                    button(b ->
-                        b
-                            .text(plainText(buttonTextC))
-                            .style(buttonStyleC)
-                            .value(buttonValueC)
-                            .actionId("buttonBlock-" + buttonValueC + "-" + randomAlphanumeric(10))
-                            .confirm(
-                                ConfirmationDialogObject
-                                    .builder()
-                                    .title(PlainTextObject.builder().text("Are you sure?").build())
-                                    .text(PlainTextObject.builder().text(warningText).build())
-                                    .confirm(PlainTextObject.builder().text(confirmText).build())
-                                    .deny(PlainTextObject.builder().text(denyText).build())
-                                    .style("primary")
-                                    .build()
-                            )
+                    buttonElement(buttonTextA, buttonValueA, buttonStyleA),
+                    buttonElement(buttonTextB, buttonValueB, buttonStyleB),
+                    buttonWithConfirmationDialog(
+                        buttonTextC,
+                        buttonValueC,
+                        buttonStyleC,
+                        warningText,
+                        confirmText,
+                        denyText
                     )
                 )
             )
@@ -162,22 +176,13 @@ public class Blocks {
         return actions(actions ->
             actions.elements(
                 asElements(
-                    button(b ->
-                        b
-                            .text(plainText(buttonText))
-                            .style(buttonStyle)
-                            .value(buttonValue)
-                            .actionId("buttonBlock-" + buttonValue + "-" + randomAlphanumeric(10))
-                            .confirm(
-                                ConfirmationDialogObject
-                                    .builder()
-                                    .title(PlainTextObject.builder().text("Are you sure?").build())
-                                    .text(PlainTextObject.builder().text(warningText).build())
-                                    .confirm(PlainTextObject.builder().text(confirmText).build())
-                                    .deny(PlainTextObject.builder().text(denyText).build())
-                                    .style("primary")
-                                    .build()
-                            )
+                    buttonWithConfirmationDialog(
+                        buttonText,
+                        buttonValue,
+                        buttonStyle,
+                        warningText,
+                        confirmText,
+                        denyText
                     )
                 )
             )
