@@ -1,10 +1,9 @@
 package org.querying;
 
-import static org.example.Channel.getChannel;
-
-import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.example.Channel;
+
+import static org.example.Channel.getChannel;
 
 /**
  * "/getcount [prefixKey]" query.

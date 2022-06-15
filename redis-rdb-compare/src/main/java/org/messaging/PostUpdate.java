@@ -1,17 +1,18 @@
 package org.messaging;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.messaging.Blocks.*;
-import static org.messaging.PostUpdateUtils.*;
-
 import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.HeaderBlock;
 import com.slack.api.model.block.InputBlock;
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.PlainTextInputElement;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.messaging.Blocks.*;
+import static org.messaging.PostUpdateUtils.*;
 
 /**
  * Contains methods for posting, updating and deleting messages asynchronously and synchronously.

@@ -1,8 +1,5 @@
 package org.example;
 
-import static org.example.Channel.getChannel;
-import static org.example.Channel.removeChannel;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.Channel.ParsingStatus;
@@ -12,6 +9,9 @@ import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
 import org.querying.Query;
 import org.trie.QTrie;
+
+import static org.example.Channel.getChannel;
+import static org.example.Channel.removeChannel;
 
 /**
  * Utility class for the Slack Main class.

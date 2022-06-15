@@ -1,13 +1,14 @@
 package org.trie;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.*;
 import lombok.Builder;
 import lombok.NonNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.*;
 
 /**
  * Trie class.

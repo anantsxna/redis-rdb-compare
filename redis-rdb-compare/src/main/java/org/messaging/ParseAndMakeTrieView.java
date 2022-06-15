@@ -1,20 +1,19 @@
 package org.messaging;
 
-import static com.slack.api.model.block.Blocks.actions;
-import static com.slack.api.model.block.composition.BlockCompositions.plainText;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.messaging.Blocks.*;
-import static org.messaging.PostUpdateUtils.updateResponseSync;
-
 import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import org.example.Channel;
 import org.processing.Parser;
 import org.trie.QTrie;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.messaging.Blocks.TextBlock;
+import static org.messaging.Blocks.ThreeButtonBlock;
+import static org.messaging.PostUpdateUtils.updateResponseSync;
 
 /**
  * A self updating class for dealing with a periodically changing response message.

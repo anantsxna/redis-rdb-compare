@@ -1,13 +1,14 @@
 package org.querying;
 
-import static org.example.Channel.getChannel;
-
-import java.util.List;
-import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.example.Channel;
 import org.trie.QTrie;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.example.Channel.getChannel;
 
 /**
  * "/getnext [prefixKey] [n]" query.
