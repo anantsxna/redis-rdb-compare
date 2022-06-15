@@ -5,17 +5,15 @@ import java.io.FileReader;
 import java.util.*;
 import lombok.Builder;
 import lombok.NonNull;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Trie class.
  */
+@Slf4j
 @Builder
 public final class QTrie {
-
-    private static final Logger logger = LogManager.getLogger(QTrie.class);
 
     @Builder.Default
     private final TrieNode root = TrieNode.builder().build();
@@ -36,14 +34,14 @@ public final class QTrie {
             FileReader fileReader = new FileReader(keysFile);
             BufferedReader reader = new BufferedReader(fileReader)
         ) {
-            logger.info("Reading keys from file: {}", keysFile);
+            log.info("Reading keys from file: {}", keysFile);
             String line;
             int i = 0;
             while ((line = reader.readLine()) != null) {
                 insertKey(line);
                 i++;
                 if (i % 100000 == 0) {
-                    logger.info("Read " + i + " keys.");
+                    log.info("Read " + i + " keys.");
                 }
             }
         } catch (Exception e) {

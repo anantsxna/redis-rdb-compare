@@ -7,18 +7,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import lombok.Builder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Parser class.
  * Processes the .rdb file and creates a list of all the keys.
  */
+@Slf4j
 @Builder
 public final class Parser {
-
-    @Builder.Default
-    private static final Logger logger = LogManager.getLogger(Parser.class);
 
     @Builder.Default
     private static final HashMap<String, String> parsePairs = new HashMap<>();
@@ -31,14 +28,14 @@ public final class Parser {
      */
     private static void watch(final Process process, final String dumpFile) {
         new Thread(() -> {
-            logger.info("Monitoring Process {}", process.toString());
+            log.info("Monitoring Process {}", process.toString());
             BufferedReader input = new BufferedReader(
                 new InputStreamReader(process.getInputStream())
             );
             String line = null;
             try {
                 while ((line = input.readLine()) != null) {
-                    logger.info("PYPY3!: {} in File {}", line, dumpFile);
+                    log.info("PYPY3!: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -55,14 +52,14 @@ public final class Parser {
      */
     private static void watchErrors(final Process process, final String dumpFile) {
         new Thread(() -> {
-            logger.info("Monitoring Process {}", process.toString());
+            log.info("Monitoring Process {}", process.toString());
             BufferedReader errors = new BufferedReader(
                 new InputStreamReader(process.getErrorStream())
             );
             String line = null;
             try {
                 while ((line = errors.readLine()) != null) {
-                    logger.error("PYPY3 Error: {} in File {}", line, dumpFile);
+                    log.error("PYPY3 Error: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -99,7 +96,7 @@ public final class Parser {
             };
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
-            logger.info("Parsing dump file {} into keys file {}", dumpFile, keysFile);
+            log.info("Parsing dump file {} into keys file {}", dumpFile, keysFile);
             Process process = null;
             try {
                 process = pb.start();
@@ -119,12 +116,12 @@ public final class Parser {
                 throw new RuntimeException(e);
             }
             if (exitStatus != 0) {
-                logger.error("PYPY3: Process exited with status {}", exitStatus);
+                log.error("PYPY3: Process exited with status {}", exitStatus);
                 throw new RuntimeException(
                     "ERROR: Process for parsing file exited with status " + exitStatus
                 );
             } else {
-                logger.info("PYPY3: Process exited with status {}", exitStatus);
+                log.info("PYPY3: Process exited with status {}", exitStatus);
             }
         });
     }

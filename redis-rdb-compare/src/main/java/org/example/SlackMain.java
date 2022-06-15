@@ -10,8 +10,7 @@ import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import java.util.regex.Pattern;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.messaging.ParseAndMakeTrieView;
 
 /**
@@ -23,9 +22,9 @@ import org.messaging.ParseAndMakeTrieView;
  * This class is the main entry point for the application.
  * Each channel within the Slack workspace is treated as a separate client
  */
+@Slf4j
 public class SlackMain {
 
-    private static final Logger logger = LogManager.getLogger(SlackMain.class);
     private static final String SESSION_IN_PROGRESS =
         "A session is already open in this channel.\n";
     private static final String PARSING_COMPLETED = "Parsing completed.";
@@ -38,6 +37,7 @@ public class SlackMain {
     public static void main(String[] args) {
         System.out.println("Hello world, starting bot!");
         var app = new App();
+
         // command "/ping" - responds with "pong"
         app.command(
             "/ping",

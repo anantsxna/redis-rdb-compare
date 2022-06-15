@@ -3,8 +3,7 @@ package org.example;
 import static org.example.Channel.getChannel;
 import static org.example.Channel.removeChannel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.example.Channel.ParsingStatus;
 import org.example.Channel.TrieStatus;
 import org.processing.Parser;
@@ -17,6 +16,7 @@ import org.trie.QTrie;
  * Utility class for the Slack Main class.
  * Provides methods for parsing, making tries and executing queries.
  */
+@Slf4j
 public class SlackUtils {
 
     private static final String PARSING_NOT_COMPLETED =
@@ -36,11 +36,8 @@ public class SlackUtils {
         "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
     private static final String SESSION_IN_PROGRESS =
         "A session is already open in this channel.\n";
-
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
-
-    private static final Logger logger = LogManager.getLogger(SlackUtils.class);
 
     /**
      * Checks if the interactive session can start or not

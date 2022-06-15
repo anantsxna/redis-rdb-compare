@@ -45,11 +45,11 @@ public class ParseAndMakeTrieView {
         //execute parse, execute maketrie, periodically update the response
         System.out.println("Parsing and making trie for channel " + channelId);
         channel = Channel.getChannel(channelId);
+        channel.setParsingStatus(Channel.ParsingStatus.IN_PROGRESS);
         Parser parser = channel.getParser();
         parser.clear();
         parser.addToParser(channel.getDumpA(), channel.getKeysA());
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
-        channel.setParsingStatus(Channel.ParsingStatus.IN_PROGRESS);
         System.out.println("Parsing completed.");
         updateResponse();
 

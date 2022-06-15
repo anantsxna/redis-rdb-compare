@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.processing.Parser;
 import org.trie.QTrie;
 
@@ -14,14 +13,13 @@ import org.trie.QTrie;
  * LocalMain class.
  * Driver class for locally running the application features without the use of slack.
  */
+@Slf4j
 public class LocalMain {
 
-    static String dumpA = "../dump-A.rdb";
-    static String dumpB = "../dump-B.rdb";
+    static String dumpA = "../dump-A-200M.rdb";
+    static String dumpB = "../dump-B-200M.rdb";
     static String keysA = "../keys-A.txt";
     static String keysB = "../keys-B.txt";
-
-    private static final Logger logger = LogManager.getLogger(LocalMain.class);
     private static final BufferedReader reader = new BufferedReader(
         new InputStreamReader(System.in)
     );
@@ -65,9 +63,7 @@ public class LocalMain {
         QTrie trieA = QTrie.builder().keysFile(dumpA).build();
         QTrie trieB = QTrie.builder().keysFile(dumpB).build();
         long endTime = System.currentTimeMillis();
-        logger.info(
-            "Total Tries construction time: " + (endTime - startTime) / 1000.0 + " seconds."
-        );
+        log.info("Total Tries construction time: " + (endTime - startTime) / 1000.0 + " seconds.");
         System.out.println("Tries created!");
 
         try {
@@ -86,7 +82,7 @@ public class LocalMain {
                     if (queryType == 1) {
                         System.out.println("Prefix to search for: ");
                         String prefix = reader.readLine();
-                        logger.info("Query-1: {}", prefix);
+                        log.info("Query-1: {}", prefix);
 
                         for (QTrie trie : new QTrie[] { trieA, trieB }) {
                             try {
@@ -103,7 +99,7 @@ public class LocalMain {
                                 System.out.println(
                                     "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
-                                logger.error(
+                                log.error(
                                     "Query-1: For prefix {}, Error in getCountForPrefix: {}",
                                     prefix,
                                     e.getMessage()
@@ -115,7 +111,7 @@ public class LocalMain {
                         String prefix = reader.readLine();
                         System.out.println("Number of prefixes to return: ");
                         int n = Integer.parseInt(reader.readLine());
-                        logger.info("Query-2: {}, {} keys", prefix, n);
+                        log.info("Query-2: {}, {} keys", prefix, n);
 
                         for (QTrie trie : new QTrie[] { trieA, trieB }) {
                             try {
@@ -131,7 +127,7 @@ public class LocalMain {
                                         " prefixes only, less than the requested number of prefixes.\n"
                                     );
                                 }
-                                logger.info(
+                                log.info(
                                     "Top {} keys-prefixes with fixed prefix {} found in file {}: ",
                                     found,
                                     prefix,
@@ -173,7 +169,7 @@ public class LocalMain {
                                 System.out.println(
                                     "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
-                                logger.error(
+                                log.error(
                                     "Query-2: For fixed prefix {}, Error in topNKeyWithPrefix: {}",
                                     prefix,
                                     e.getMessage()
@@ -191,7 +187,7 @@ public class LocalMain {
                 }
             }
             System.out.println("Program terminated successfully.");
-            logger.info("Program terminated successfully.");
+            log.info("Program terminated successfully.");
         } catch (Exception e) {
             e.printStackTrace();
         }
