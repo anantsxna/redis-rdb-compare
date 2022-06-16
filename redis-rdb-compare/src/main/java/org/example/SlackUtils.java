@@ -100,7 +100,6 @@ public class SlackUtils {
             channel.getParseLock().readLock().unlock();
         }
 
-
         //TODO: ask user for input regarding file location,
         // download files from s3 link and save to local directory,
         // set dumpA and dumpB
@@ -124,7 +123,7 @@ public class SlackUtils {
                 channel.getParseLock().writeLock().unlock();
             }
         })
-                .start();
+            .start();
 
         return PARSING_STARTED;
     }
