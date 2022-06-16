@@ -31,7 +31,7 @@ public class PostUpdateUtils {
         final String channelId,
         String responseMessage
     ) {
-        log.info("Posting message synchronously in channel {}...", channelId);
+        log.info("Posting message asynchronously in channel {}...", channelId);
         slack
             .methodsAsync(token)
             .chatPostMessage(req ->
