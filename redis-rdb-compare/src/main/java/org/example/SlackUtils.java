@@ -1,7 +1,6 @@
 package org.example;
 
-import static org.example.Channel.getChannel;
-import static org.example.Channel.removeChannel;
+import static org.example.Channel.*;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.Channel.ParsingStatus;
@@ -36,22 +35,22 @@ public class SlackUtils {
         "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
     private static final String SESSION_IN_PROGRESS =
         "A session is already open in this channel.\n";
+    private static final String SESSION_CREATED =
+        "A session has been created in this channel. Ready to parse and make tries.\n";
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
 
     /**
-     * Checks if the interactive session can start or not
-     * @param channelId: the channel to start the session
-     * @return SESSION_IN_PROGRESS if session cannot start, else returns empty string
+     * Create a channel with the given channelId.
+     * @param channelId: the channel to create
+     * @return true if channel was created, false if channel already exists
      */
-    public static String startAllUtils(final String channelId) {
-        Channel channel = getChannel(channelId);
-        if (!channel.getParsingStatus().equals(ParsingStatus.NOT_STARTED)) {
+    public static String createUtils(final String channelId) {
+        if (createChannel(channelId)) {
+            return SESSION_CREATED;
+        } else {
             return SESSION_IN_PROGRESS;
         }
-        //TODO: return session available message, not empty
-        // add check in startAll blockAction accordingly
-        return "";
     }
 
     /**
@@ -65,7 +64,7 @@ public class SlackUtils {
             return QUERYING_NOT_POSSIBLE;
         }
         //TODO: return session available message, not empty
-        // add check in startAll blockAction accordingly
+        // add check in parseAndMakeTrieAll blockAction accordingly
         return "";
     }
 
@@ -78,7 +77,7 @@ public class SlackUtils {
      */
     public static String clearUtils(final String channelId) {
         removeChannel(channelId);
-        return "Deleted: bot files for this channel.";
+        return "Deleted: session for this channel.";
     }
 
     /**

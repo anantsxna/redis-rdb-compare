@@ -1,6 +1,9 @@
 package org.example;
 
+import static org.messaging.PostUpdate.postTextResponseAsync;
+
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,7 +24,7 @@ import org.trie.QTrie;
 public class Channel {
 
     @Builder.Default
-    static volatile HashMap<String, Channel> channels = new HashMap<>(); //static map of channel ids to channels
+    private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
     private final String dumpA = "../dump-A.rdb";
@@ -72,16 +75,35 @@ public class Channel {
 
     /**
      * Getter for the channel.
-     * If the channel id is not set, a new channel is created.
      * @param channelId: the id for the required channel
      * @return Channel object
      */
-    public static Channel getChannel(final String channelId) {
+    public static Channel getChannel(final String channelId) throws IllegalStateException {
         if (!channels.containsKey(channelId)) {
-            log.info("Creating new channel for channel id: {}", channelId);
-            channels.put(channelId, Channel.builder().build());
+            postTextResponseAsync(
+                "Sorry, you need to create a session first by running \"/process\"",
+                channelId
+            );
+            // TODO: what to do here
+            //            throw new IllegalStateException(
+            //                "requested channel by id " + channelId + " does not exist"
+            //            );
+            return null;
         }
         return channels.get(channelId);
+    }
+
+    /**
+     * Setter for the channel.
+     * @param channelId: the id for the required channel
+     * @return whether channel already exists or not
+     */
+    public static boolean createChannel(final String channelId) {
+        if (channels.containsKey(channelId)) {
+            return false;
+        }
+        channels.put(channelId, Channel.builder().build());
+        return true;
     }
 
     /**

@@ -46,6 +46,16 @@ public class SlackMain {
             }
         );
 
+        app.command(
+            "/process",
+            (req, ctx) -> {
+                log.info("/process command received");
+                String channelId = req.getContext().getChannelId();
+                String response = createUtils(channelId);
+                return ctx.ack(response);
+            }
+        );
+
         // command "/parse" - starts parsing
         app.command(
             "/parse",
@@ -53,12 +63,8 @@ public class SlackMain {
                 log.info("/parse command received");
                 final String channelId = req.getContext().getChannelId();
                 String response = parseUtils(channelId);
-                log.info("parseUtils response: {}", response);
-                if (response.equals(PARSING_COMPLETED)) {
-                    postResetButtonResponseAsync(response, channelId);
-                } else {
-                    postTextResponseAsync(response, channelId);
-                }
+                log.info("parseUtils response: {} in channel {}", response, channelId);
+                postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
         );
@@ -70,7 +76,7 @@ public class SlackMain {
                 log.info("/maketrie command received");
                 final String channelId = req.getContext().getChannelId();
                 String response = trieConstructionUtils(channelId);
-                log.info("trieConstructionUtils response: {}", response);
+                log.info("trieConstructionUtils response: {} in channel {}", response, channelId);
                 postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
@@ -83,7 +89,7 @@ public class SlackMain {
                 log.info("/getcount command received");
                 final String channelId = req.getContext().getChannelId();
                 String response = countUtils(req.getPayload().getText(), channelId);
-                log.info("countUtils response: {}", response);
+                log.info("countUtils response:\n {}", response);
                 postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
@@ -96,7 +102,7 @@ public class SlackMain {
                 log.info("/getnext command received");
                 final String channelId = req.getContext().getChannelId();
                 String response = getNextKeyUtils(req.getPayload().getText(), channelId);
-                log.info("getNextKeyUtils response: {}", response);
+                log.info("getNextKeyUtils response:\n {}", response);
                 postTextResponseAsync(response, channelId);
                 return ctx.ack();
             }
@@ -141,33 +147,32 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("/start command received");
                 final String channelId = req.getContext().getChannelId();
-                String response = ":wave: Welcome to the interactive session.";
-                postStartButtonResponse(response, channelId);
+                String response = createUtils(channelId);
+                if (response.equals(SESSION_IN_PROGRESS)) {
+                    response = "A session is already open in this channel.";
+                    postResetButtonResponseAsync(response, channelId);
+                } else {
+                    response = ":wave: Welcome to the interactive session.";
+                    postStartButtonResponse(response, channelId);
+                }
                 return ctx.ack();
             }
         );
 
         // blockActions - handle the interactive sessions' components' payloads
-        // blockAction "startAll" - handles the payload from the "Parse and Make Tries" button
+        // blockAction "parseAndMakeTrieAll" - handles the payload from the "Parse and Make Tries" button
         app.blockAction(
-            Pattern.compile("^buttonBlock-startAll-\\w*"),
+            Pattern.compile("^buttonBlock-parseAndMakeTrieAll-\\w*"),
             (req, ctx) -> {
                 log.info("\"Parse and Make Tries\" button clicked");
                 final String channelId = req.getPayload().getChannel().getId();
-                String response = startAllUtils(channelId);
                 String messageTs = req.getPayload().getContainer().getMessageTs();
-                if (response.equals(SESSION_IN_PROGRESS)) {
-                    log.info("Session in progress");
-                    updateResetButtonResponseAsync(response, channelId, messageTs);
-                } else {
-                    log.info("Session not in progress");
-                    ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
-                        .builder()
-                        .timestamp(messageTs)
-                        .channelId(channelId)
-                        .build();
-                    new Thread(parseAndMakeTrieView::run).start();
-                }
+                ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
+                    .builder()
+                    .timestamp(messageTs)
+                    .channelId(channelId)
+                    .build();
+                new Thread(parseAndMakeTrieView::run).start();
                 return ctx.ack();
             }
         );
@@ -260,8 +265,14 @@ public class SlackMain {
             (payload, ctx) -> {
                 log.info("AppMentionEvent received");
                 final String channelId = payload.getEvent().getChannel();
-                String response = ":wave: Welcome to the interactive session.";
-                postStartButtonResponse(response, channelId);
+                String response = createUtils(channelId);
+                if (response.equals(SESSION_IN_PROGRESS)) {
+                    response = "A session is already open in this channel.";
+                    postResetButtonResponseAsync(response, channelId);
+                } else {
+                    response = ":wave: Welcome to the interactive session.";
+                    postStartButtonResponse(response, channelId);
+                }
                 return ctx.ack();
             }
         );
