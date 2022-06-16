@@ -89,25 +89,42 @@ public class SlackUtils {
      */
     public static String parseUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
-            return PARSING_IN_PROGRESS;
-        } else if (channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
-            return PARSING_COMPLETED;
+        channel.getParseLock().readLock().lock();
+        try {
+            if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
+                return PARSING_IN_PROGRESS;
+            } else if (channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
+                return PARSING_COMPLETED;
+            }
+        } finally {
+            channel.getParseLock().readLock().unlock();
         }
 
         //TODO: ask user for input regarding file location,
         // download files from s3 link and save to local directory,
         // set dumpA and dumpB
-        channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
+        channel.getParseLock().writeLock().lock();
+        try {
+            channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
+        } finally {
+            channel.getParseLock().writeLock().unlock();
+        }
+
         Parser parser = channel.getParser();
         parser.clear();
         parser.addToParser(channel.getDumpA(), channel.getKeysA());
         parser.addToParser(channel.getDumpB(), channel.getKeysB());
         new Thread(() -> {
             parser.parse();
-            channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
+            channel.getParseLock().writeLock().lock();
+            try {
+                channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
+            } finally {
+                channel.getParseLock().writeLock().unlock();
+            }
         })
             .start();
+
         return PARSING_STARTED;
     }
 

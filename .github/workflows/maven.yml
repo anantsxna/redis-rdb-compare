@@ -5,9 +5,9 @@ name: CI build and test
 
 on:
   push:
-    branches: [ "main", "anantsxna-patch-1", "slack" ]
+    branches: [ "main", "anantsxna-patch-1", "slack", "locks-and-parallel" ]
   pull_request:
-    branches: [ "main", "anantsxna-patch-1", "slack" ]
+    branches: [ "main", "anantsxna-patch-1", "slack", "locks-and-parallel" ]
 
 jobs:
   build:
