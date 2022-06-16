@@ -4,7 +4,6 @@ import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -62,7 +61,7 @@ public class Channel {
     public enum FileStatus {
         NOT_DOWNLOADED,
         DOWNLOADING,
-        DOWNLOADED
+        DOWNLOADED,
     }
 
     @Builder.Default
@@ -104,7 +103,9 @@ public class Channel {
             );
             // TODO: what to do here
             log.error("requested channel by id " + channelId + " does not exist");
-            throw new IllegalStateException("requested channel by id " + channelId + " does not exist");
+            throw new IllegalStateException(
+                "requested channel by id " + channelId + " does not exist"
+            );
         }
         return channels.get(channelId);
     }
@@ -146,6 +147,5 @@ public class Channel {
      */
     public void resetChannel() {
         log.info("reset() called on this session");
-
     }
 }

@@ -115,7 +115,8 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("/clear command received");
                 final String channelId = req.getContext().getChannelId();
-                String response = resetSessionUtils(channelId) + " && " + deleteSessionUtils(channelId);
+                String response =
+                    resetSessionUtils(channelId) + " && " + deleteSessionUtils(channelId);
                 log.info("clearUtils response: {}", response);
                 postTextResponseAsync(response, channelId);
                 return ctx.ack();

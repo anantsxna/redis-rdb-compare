@@ -3,8 +3,7 @@ package org.example;
 import static org.example.Channel.*;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.Channel.ParsingStatus;
-import org.example.Channel.TrieStatus;
+import org.example.Channel.*;
 import org.processing.Parser;
 import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
@@ -40,7 +39,7 @@ public class SlackUtils {
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
     private static final String DOWNLOADING_NOT_COMPLETED =
-            "Downloading not completed.\nPlease wait for downloading to finish.";
+        "Downloading not completed.\nPlease wait for downloading to finish.";
 
     /**
      * Create a channel with the given channelId.
@@ -101,11 +100,11 @@ public class SlackUtils {
     public static String parseUtils(final String channelId) {
         Channel channel = getChannel(channelId);
 
-        if(!channel.getFileStatus().equals(FileStatus.DOWNLOADED)) {
+        if (!channel.getFileStatus().equals(FileStatus.DOWNLOADED)) {
             return DOWNLOADING_NOT_COMPLETED;
         }
 
-        if(channel.getExecutedParsing().compareAndSet(false, true)) {
+        if (channel.getExecutedParsing().compareAndSet(false, true)) {
             //TODO: ask user for input regarding file location,
             // download files from s3 link and save to local directory,
             // set dumpA and dumpB
@@ -121,23 +120,27 @@ public class SlackUtils {
                 parser.parse();
                 channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
                 long endTime = System.currentTimeMillis();
-                log.info("parsing completed for channel {} in {} ms", channelId, endTime - startTime);
+                log.info(
+                    "parsing completed for channel {} in {} ms",
+                    channelId,
+                    endTime - startTime
+                );
                 channel.setParsingTime(endTime - startTime);
             })
-                    .start();
+                .start();
 
             return PARSING_STARTED;
         } else {
             if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
                 return PARSING_IN_PROGRESS;
             } else if (channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
-                return PARSING_COMPLETED + " in " + channel.getParsingTime()/1000.0 + " second(s).";
-            }
-            else {
+                return (
+                    PARSING_COMPLETED + " in " + channel.getParsingTime() / 1000.0 + " second(s)."
+                );
+            } else {
                 return "parseUtils() is showing UNKNOWN behaviour: " + channel.getParsingStatus();
             }
         }
-
     }
 
     /**
@@ -149,10 +152,10 @@ public class SlackUtils {
     public static String trieConstructionUtils(final String channelId) {
         Channel channel = getChannel(channelId);
         if (!channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
-                return PARSING_NOT_COMPLETED;
+            return PARSING_NOT_COMPLETED;
         }
 
-        if(channel.getExecutedTrie().compareAndSet(false, true)) {
+        if (channel.getExecutedTrie().compareAndSet(false, true)) {
             channel.setTrieStatus(TrieStatus.CONSTRUCTING);
             log.info("trie construction started for channel {}", channelId);
             new Thread(() -> {
@@ -163,23 +166,27 @@ public class SlackUtils {
                 channel.getTrieB().takeInput();
                 long endTime = System.currentTimeMillis();
                 log.info(
-                        "Trie construction completed in {} milliseconds in channel {}",
-                        endTime - startTime,
-                        channelId
+                    "Trie construction completed in {} milliseconds in channel {}",
+                    endTime - startTime,
+                    channelId
                 );
                 channel.setMakeTrieTime(endTime - startTime);
                 channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
             })
-                    .start();
+                .start();
             return TRIE_CONSTRUCTION_STARTED;
         } else {
             if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTING)) {
                 return TRIE_CONSTRUCTION_IN_PROGRESS;
-            }
-            else if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
-                return TRIE_CONSTRUCTION_COMPLETED + " in " + channel.getMakeTrieTime()/1000.0 + " second(s).";
-            }
-            else {
+            } else if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
+                return (
+                    TRIE_CONSTRUCTION_COMPLETED +
+                    " in " +
+                    channel.getMakeTrieTime() /
+                    1000.0 +
+                    " second(s)."
+                );
+            } else {
                 return "trieConstructUtils() is showing UNKNOWN behaviour";
             }
         }
