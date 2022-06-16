@@ -86,7 +86,7 @@ public class Channel {
     @Setter
     private volatile long parsingTime = -1;
 
-    @Bulder.Default
+    @Builder.Default
     @Setter
     private volatile long makeTrieTime = -1;
 
