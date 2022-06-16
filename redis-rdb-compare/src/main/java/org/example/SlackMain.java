@@ -168,7 +168,7 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("\"Parse and Make Tries\" button clicked");
                 final String channelId = req.getPayload().getChannel().getId();
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 ProcessView processView = ProcessView
                     .builder()
                     .timestamp(messageTs)
@@ -184,10 +184,10 @@ public class SlackMain {
             Pattern.compile("^buttonBlock-queryAll-[-\\w]*"),
             (req, ctx) -> {
                 log.info("Query button clicked");
-                String actionId = req.getPayload().getActions().get(0).getActionId();
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String actionId = req.getPayload().getActions().get(0).getActionId();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
-                String response = queryAllUtils(channelId);
+                final String response = queryAllUtils(channelId);
                 if (response.equals(QUERYING_NOT_POSSIBLE)) {
                     updateResetButtonResponseAsync(response, channelId, messageTs);
                 } else {
@@ -206,10 +206,10 @@ public class SlackMain {
             Pattern.compile("^buttonBlock-resetAll-\\w*"),
             (req, ctx) -> {
                 log.info("Reset button clicked");
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
-                String information = resetSessionUtils(channelId);
-                String response = ":wave: Welcome to the interactive session.";
+                final String information = resetSessionUtils(channelId);
+                final String response = ":wave: Welcome to the interactive session.";
                 updateStartButtonResponse(information, response, channelId, messageTs);
                 return ctx.ack();
             }
@@ -220,7 +220,7 @@ public class SlackMain {
             Pattern.compile("^buttonBlock-exitAll-\\w*"),
             (req, ctx) -> {
                 log.info("Close button clicked");
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
                 deleteSessionUtils(channelId);
                 deleteStartButtonResponse(channelId, messageTs);
@@ -233,10 +233,10 @@ public class SlackMain {
             Pattern.compile("^inputBlock-countQuery-\\w*"),
             (req, ctx) -> {
                 log.info("Count of a Key input received");
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
-                String prefixKey = req.getPayload().getActions().get(0).getValue();
-                String response = countUtils(prefixKey, channelId);
+                final String prefixKey = req.getPayload().getActions().get(0).getValue();
+                final String response = countUtils(prefixKey, channelId);
                 updateQueryCountResponseAsync(response, channelId, messageTs);
                 return ctx.ack();
             }
@@ -247,10 +247,10 @@ public class SlackMain {
             Pattern.compile("^inputBlock-nextQuery-\\w*"),
             (req, ctx) -> {
                 log.info("Next Keys input received");
-                String messageTs = req.getPayload().getContainer().getMessageTs();
+                final String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
-                String prefixKey_count = req.getPayload().getActions().get(0).getValue();
-                String response = getNextKeyUtils(prefixKey_count, channelId);
+                final String prefixKey_count = req.getPayload().getActions().get(0).getValue();
+                final String response = getNextKeyUtils(prefixKey_count, channelId);
                 updateQueryNextResponseAsync(response, channelId, messageTs);
                 return ctx.ack();
             }

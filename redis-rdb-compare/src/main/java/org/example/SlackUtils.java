@@ -1,9 +1,9 @@
 package org.example;
 
 import static org.example.Channel.*;
+import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.Channel.*;
 import org.processing.Parser;
 import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
@@ -20,13 +20,13 @@ public class SlackUtils {
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String PARSING_STARTED =
-        "Parsing has started...\nPlease wait.\nUse \"/parse\" command again to check status.";
+        "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
     private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
     private static final String PARSING_COMPLETED = "Parsing completed";
     private static final String TRIES_NOT_CREATED =
         "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
     private static final String TRIE_CONSTRUCTION_STARTED =
-        "Trie construction started...\nPlease wait.\nUse \"/maketrie\" command again to check status.";
+        "Trie construction started...\nPlease wait for automatic notification when construction is over.\nOr use \"/maketrie\" command again to check status.";
     private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
         "Trie construction in progress.\nPlease wait.";
     private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
@@ -38,6 +38,8 @@ public class SlackUtils {
         "A session has been created in this channel. Ready to parse and make tries.\n";
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
+    private static final String QUERYING_POSSIBLE =
+        "Querying is possible since tries have been created.\n";
     private static final String DOWNLOADING_NOT_COMPLETED =
         "Downloading not completed.\nPlease wait for downloading to finish.";
 
@@ -64,9 +66,7 @@ public class SlackUtils {
         if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
             return QUERYING_NOT_POSSIBLE;
         }
-        //TODO: return session available message, not empty
-        // add check in parseAndMakeTrieAll blockAction accordingly
-        return "";
+        return QUERYING_POSSIBLE;
     }
 
     /**
@@ -126,6 +126,13 @@ public class SlackUtils {
                     endTime - startTime
                 );
                 channel.setParsingTime(endTime - startTime);
+                postTextResponseAsync(
+                    "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
+                    (endTime - startTime) /
+                    1000.0 +
+                    " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                    channelId
+                );
             })
                 .start();
 
@@ -172,6 +179,13 @@ public class SlackUtils {
                 );
                 channel.setMakeTrieTime(endTime - startTime);
                 channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
+                postTextResponseAsync(
+                    "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
+                    (endTime - startTime) /
+                    1000.0 +
+                    " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                    channelId
+                );
             })
                 .start();
             return TRIE_CONSTRUCTION_STARTED;
@@ -244,8 +258,8 @@ public class SlackUtils {
                 key = tokens[0];
                 count = Integer.parseInt(tokens[1]);
                 assert (tokens.length == 2);
+                assert (count > 0);
             } catch (Exception e) {
-                //TODO : expand reasons for invalid query
                 return BAD_ARGUMENTS;
             }
         }
