@@ -2,11 +2,9 @@ package org.example;
 
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,10 +25,10 @@ public class Channel {
     private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
-    private final String dumpA = "../dump-A.rdb";
+    private final String dumpA = "../dump-A-200M.rdb";
 
     @Builder.Default
-    private final String dumpB = "../dump-B.rdb";
+    private final String dumpB = "../dump-B-200M.rdb";
 
     @Builder.Default
     private final String keysA = "../keys-A.txt";
@@ -61,17 +59,37 @@ public class Channel {
         CONSTRUCTED,
     }
 
+    public enum FileStatus {
+        NOT_DOWNLOADED,
+        DOWNLOADING,
+        DOWNLOADED
+    }
+
     @Builder.Default
     @Setter
     private volatile ParsingStatus parsingStatus = ParsingStatus.NOT_STARTED;
 
     @Builder.Default
     @Setter
-    public volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
+    private volatile TrieStatus trieStatus = TrieStatus.NOT_CONSTRUCTED;
 
     @Builder.Default
-    @Getter
-    private ReadWriteLock parseLock = new ReentrantReadWriteLock();
+    @Setter
+    private volatile FileStatus fileStatus = FileStatus.DOWNLOADED; //TODO: change this later
+
+    @Builder.Default
+    private AtomicBoolean executedParsing = new AtomicBoolean(false);
+
+    @Builder.Default
+    private AtomicBoolean executedTrie = new AtomicBoolean(false);
+
+    @Builder.Default
+    @Setter
+    private volatile long parsingTime = -1;
+
+    @Bulder.Default
+    @Setter
+    private volatile long makeTrieTime = -1;
 
     /**
      * Getter for the channel.
@@ -85,10 +103,8 @@ public class Channel {
                 channelId
             );
             // TODO: what to do here
-            //            throw new IllegalStateException(
-            //                "requested channel by id " + channelId + " does not exist"
-            //            );
-            return null;
+            log.error("requested channel by id " + channelId + " does not exist");
+            throw new IllegalStateException("requested channel by id " + channelId + " does not exist");
         }
         return channels.get(channelId);
     }
@@ -111,6 +127,25 @@ public class Channel {
      * @param channelId: the id for the channel to be removed
      */
     public static void removeChannel(final String channelId) {
+        log.info("removeChannel() called");
         channels.remove(channelId);
+    }
+
+    /**
+     * Reset the data of a channel to default values.
+     * - Delete data files (.rdb) from drive. Reset dumpA, dumpB.
+     * - Delete keys files (.txt) from drive. Reset keysA, keysB.
+     * - Reset S3 links.
+     * - Reset parsing status.
+     * - Reset trie status.
+     * - Reset file status.
+     * - Reset trieA, trieB.
+     * - Reset parser
+     * - Reset executedParsing, executedTrie
+     * - Reset parsingTime, makeTrieTime
+     */
+    public void resetChannel() {
+        log.info("reset() called on this session");
+
     }
 }

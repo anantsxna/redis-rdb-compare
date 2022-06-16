@@ -11,7 +11,7 @@ import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.messaging.ParseAndMakeTrieView;
+import org.messaging.ProcessView;
 
 /**
  * Slack App that handles the following:
@@ -51,7 +51,8 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("/process command received");
                 String channelId = req.getContext().getChannelId();
-                String response = createUtils(channelId);
+                String response = createSessionUtils(channelId);
+                log.info("/process command response:\n" + response);
                 return ctx.ack(response);
             }
         );
@@ -114,7 +115,7 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("/clear command received");
                 final String channelId = req.getContext().getChannelId();
-                String response = clearUtils(channelId);
+                String response = resetSessionUtils(channelId) + " && " + deleteSessionUtils(channelId);
                 log.info("clearUtils response: {}", response);
                 postTextResponseAsync(response, channelId);
                 return ctx.ack();
@@ -147,7 +148,7 @@ public class SlackMain {
             (req, ctx) -> {
                 log.info("/start command received");
                 final String channelId = req.getContext().getChannelId();
-                String response = createUtils(channelId);
+                String response = createSessionUtils(channelId);
                 if (response.equals(SESSION_IN_PROGRESS)) {
                     response = "A session is already open in this channel.";
                     postResetButtonResponseAsync(response, channelId);
@@ -167,12 +168,12 @@ public class SlackMain {
                 log.info("\"Parse and Make Tries\" button clicked");
                 final String channelId = req.getPayload().getChannel().getId();
                 String messageTs = req.getPayload().getContainer().getMessageTs();
-                ParseAndMakeTrieView parseAndMakeTrieView = ParseAndMakeTrieView
+                ProcessView processView = ProcessView
                     .builder()
                     .timestamp(messageTs)
                     .channelId(channelId)
                     .build();
-                new Thread(parseAndMakeTrieView::run).start();
+                new Thread(processView::run).start();
                 return ctx.ack();
             }
         );
@@ -206,9 +207,8 @@ public class SlackMain {
                 log.info("Reset button clicked");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
-                clearUtils(channelId);
-                String information = "Deleted: Bot files for this channel.";
-                String response = ":wave: Welcome to the new interactive session.";
+                String information = resetSessionUtils(channelId);
+                String response = ":wave: Welcome to the interactive session.";
                 updateStartButtonResponse(information, response, channelId, messageTs);
                 return ctx.ack();
             }
@@ -221,6 +221,7 @@ public class SlackMain {
                 log.info("Close button clicked");
                 String messageTs = req.getPayload().getContainer().getMessageTs();
                 final String channelId = req.getPayload().getChannel().getId();
+                deleteSessionUtils(channelId);
                 deleteStartButtonResponse(channelId, messageTs);
                 return ctx.ack();
             }
@@ -265,7 +266,7 @@ public class SlackMain {
             (payload, ctx) -> {
                 log.info("AppMentionEvent received");
                 final String channelId = payload.getEvent().getChannel();
-                String response = createUtils(channelId);
+                String response = createSessionUtils(channelId);
                 if (response.equals(SESSION_IN_PROGRESS)) {
                     response = "A session is already open in this channel.";
                     postResetButtonResponseAsync(response, channelId);

@@ -67,7 +67,7 @@ public class NextKeyQuery extends Query {
                             .append(query.get(1).getValue() - found)
                             .append(" others...\n");
                     }
-                    result.append("time: ").append(endTime - startTime).append(" ms\n");
+                    result.append("query time: ").append(endTime - startTime).append(" ms\n");
                 } catch (Exception e) {
                     result
                         .append("No keys found for ")

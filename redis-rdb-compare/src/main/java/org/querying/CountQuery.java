@@ -34,7 +34,7 @@ public class CountQuery extends Query {
                 .append("in second database: ")
                 .append(countInB)
                 .append("\n")
-                .append("time: ")
+                .append("query time: ")
                 .append(endTime - startTime)
                 .append(" ms\n");
             log.info("Count query for key: {} in channel: {}", key, getChannelId());
