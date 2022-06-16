@@ -68,15 +68,7 @@ public class Channel {
 
     @Builder.Default
     @Getter
-    private ReadWriteLock parseLock = new ReentrantReadWriteLock();
-
-    @Builder.Default
-    @Getter
-    private Lock writeParseLock = parseLock.writeLock();
-
-    @Builder.Default
-    @Getter
-    private Lock readParseLock = parseLock.readLock();
+    private ReadWriteLock parseLock = new ReentrantReadWriteLock();;
 
     /**
      * Getter for the channel.
