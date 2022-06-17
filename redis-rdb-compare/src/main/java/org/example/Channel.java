@@ -3,12 +3,14 @@ package org.example;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.processing.Parser;
+import org.threading.SingleNameableExecutorService;
 import org.trie.QTrie;
 
 /**
@@ -89,6 +91,20 @@ public class Channel {
     @Builder.Default
     @Setter
     private volatile long makeTrieTime = -1;
+
+    @Builder.Default
+    private ExecutorService makeTrieExecutorService = SingleNameableExecutorService
+        .builder()
+        .baseName("make-trie-thread")
+        .build()
+        .getExecutorService();
+
+    @Builder.Default
+    private ExecutorService parsingExecutorService = SingleNameableExecutorService
+        .builder()
+        .baseName("parsing-thread")
+        .build()
+        .getExecutorService();
 
     public static void printChannels() {
         log.info("printing...");

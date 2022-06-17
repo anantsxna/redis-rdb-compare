@@ -112,30 +112,33 @@ public class SlackUtils {
             log.info("parsing started for channel {}", channelId);
             channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
             Parser parser = channel.getParser();
-            parser.clear();
             parser.addToParser(channel.getDumpA(), channel.getKeysA());
             parser.addToParser(channel.getDumpB(), channel.getKeysB());
-            new Thread(() -> {
-                long startTime = System.currentTimeMillis();
-                parser.parse();
-                channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
-                long endTime = System.currentTimeMillis();
-                log.info(
-                    "parsing completed for channel {} in {} ms",
-                    channelId,
-                    endTime - startTime
-                );
-                channel.setParsingTime(endTime - startTime);
-                postTextResponseAsync(
-                    "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
-                    (endTime - startTime) /
-                    1000.0 +
-                    " second(s). \uD83D\uDEA8\uD83D\uDEA8",
-                    channelId
-                );
-            })
-                .start();
+            channel
+                .getParsingExecutorService()
+                .submit(() -> {
+                    long startTime = System.currentTimeMillis();
+                    log.info("above parser.parse()");
+                    parser.parse();
+                    log.info("below parser.parse()");
+                    channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
 
+                    long endTime = System.currentTimeMillis();
+                    log.info(
+                        "parsing completed for channel {} in {} ms",
+                        channelId,
+                        endTime - startTime
+                    );
+                    channel.setParsingTime(endTime - startTime);
+                    postTextResponseAsync(
+                        "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
+                        (endTime - startTime) /
+                        1000.0 +
+                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                        channelId
+                    );
+                });
+            channel.getParsingExecutorService().shutdown();
             return PARSING_STARTED;
         } else {
             if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
@@ -165,29 +168,31 @@ public class SlackUtils {
         if (channel.getExecutedTrie().compareAndSet(false, true)) {
             channel.setTrieStatus(TrieStatus.CONSTRUCTING);
             log.info("trie construction started for channel {}", channelId);
-            new Thread(() -> {
-                long startTime = System.currentTimeMillis();
-                channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
-                channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
-                channel.getTrieA().takeInput();
-                channel.getTrieB().takeInput();
-                long endTime = System.currentTimeMillis();
-                log.info(
-                    "Trie construction completed in {} milliseconds in channel {}",
-                    endTime - startTime,
-                    channelId
-                );
-                channel.setMakeTrieTime(endTime - startTime);
-                channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
-                postTextResponseAsync(
-                    "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
-                    (endTime - startTime) /
-                    1000.0 +
-                    " second(s). \uD83D\uDEA8\uD83D\uDEA8",
-                    channelId
-                );
-            })
-                .start();
+            channel
+                .getMakeTrieExecutorService()
+                .submit(() -> {
+                    long startTime = System.currentTimeMillis();
+                    channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
+                    channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
+                    channel.getTrieA().takeInput();
+                    channel.getTrieB().takeInput();
+                    long endTime = System.currentTimeMillis();
+                    log.info(
+                        "Trie construction completed in {} milliseconds in channel {}",
+                        endTime - startTime,
+                        channelId
+                    );
+                    channel.setMakeTrieTime(endTime - startTime);
+                    channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
+                    postTextResponseAsync(
+                        "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
+                        (endTime - startTime) /
+                        1000.0 +
+                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                        channelId
+                    );
+                });
+            channel.getMakeTrieExecutorService().shutdown();
             return TRIE_CONSTRUCTION_STARTED;
         } else {
             if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTING)) {

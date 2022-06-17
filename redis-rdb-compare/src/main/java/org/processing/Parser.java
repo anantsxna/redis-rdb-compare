@@ -1,5 +1,7 @@
 package org.processing;
 
+import static java.lang.Thread.currentThread;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,9 +25,9 @@ public final class Parser {
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     @Builder.Default
-    private static final ExecutorService executor = FixedNameableExecutorService
+    private static final ExecutorService loggingExecutor = FixedNameableExecutorService
         .builder()
-        .baseName("parser-threads")
+        .baseName("logger-in-parser-threads")
         .threadsNum(2)
         .build()
         .getExecutorService();
@@ -37,18 +39,21 @@ public final class Parser {
      * @param dumpFile: write-file fpr the process
      */
     private static void watch(final Process process, final String dumpFile) {
-        executor.submit(() -> {
+        loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
-            BufferedReader input = new BufferedReader(
-                new InputStreamReader(process.getInputStream())
-            );
             String line = null;
-            try {
+            try (
+                BufferedReader input = new BufferedReader(
+                    new InputStreamReader(process.getInputStream())
+                )
+            ) {
                 while ((line = input.readLine()) != null) {
                     log.info("PYPY3!: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                log.info("{}} is closing...", currentThread().getName());
             }
         });
     }
@@ -60,18 +65,21 @@ public final class Parser {
      * @param dumpFile: write-file for the process
      */
     private static void watchErrors(final Process process, final String dumpFile) {
-        executor.submit(() -> {
+        loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
-            BufferedReader errors = new BufferedReader(
-                new InputStreamReader(process.getErrorStream())
-            );
             String line = null;
-            try {
+            try (
+                BufferedReader errors = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream())
+                )
+            ) {
                 while ((line = errors.readLine()) != null) {
                     log.error("PYPY3 Error: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                log.info("{}} is closing...", currentThread().getName());
             }
         });
     }
@@ -132,6 +140,7 @@ public final class Parser {
                 log.info("PYPY3: Process exited with status {}", exitStatus);
             }
         });
+        loggingExecutor.shutdownNow();
     }
 
     /**
