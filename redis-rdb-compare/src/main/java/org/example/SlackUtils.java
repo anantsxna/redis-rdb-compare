@@ -1,11 +1,9 @@
 package org.example;
 
-import static org.example.Channel.getChannel;
-import static org.example.Channel.removeChannel;
+import static org.example.Channel.*;
+import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.Channel.ParsingStatus;
-import org.example.Channel.TrieStatus;
 import org.processing.Parser;
 import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
@@ -22,36 +20,40 @@ public class SlackUtils {
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String PARSING_STARTED =
-        "Parsing has started...\nPlease wait.\nUse \"/parse\" command again to check status.";
+        "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
     private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
-    private static final String PARSING_COMPLETED = "Parsing completed.";
+    private static final String PARSING_COMPLETED = "Parsing completed";
     private static final String TRIES_NOT_CREATED =
         "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
     private static final String TRIE_CONSTRUCTION_STARTED =
-        "Trie construction started...\nPlease wait.\nUse \"/maketrie\" command again to check status.";
+        "Trie construction started...\nPlease wait for automatic notification when construction is over.\nOr use \"/maketrie\" command again to check status.";
     private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
         "Trie construction in progress.\nPlease wait.";
-    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed.";
+    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
     private static final String BAD_ARGUMENTS =
         "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
     private static final String SESSION_IN_PROGRESS =
         "A session is already open in this channel.\n";
+    private static final String SESSION_CREATED =
+        "A session has been created in this channel. Ready to parse and make tries.\n";
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
+    private static final String QUERYING_POSSIBLE =
+        "Querying is possible since tries have been created.\n";
+    private static final String DOWNLOADING_NOT_COMPLETED =
+        "Downloading not completed.\nPlease wait for downloading to finish.";
 
     /**
-     * Checks if the interactive session can start or not
-     * @param channelId: the channel to start the session
-     * @return SESSION_IN_PROGRESS if session cannot start, else returns empty string
+     * Create a channel with the given channelId.
+     * @param channelId: the channel to create
+     * @return true if channel was created, false if channel already exists
      */
-    public static String startAllUtils(final String channelId) {
-        Channel channel = getChannel(channelId);
-        if (!channel.getParsingStatus().equals(ParsingStatus.NOT_STARTED)) {
+    public static String createSessionUtils(final String channelId) {
+        if (createChannel(channelId)) {
+            return SESSION_CREATED;
+        } else {
             return SESSION_IN_PROGRESS;
         }
-        //TODO: return session available message, not empty
-        // add check in startAll blockAction accordingly
-        return "";
     }
 
     /**
@@ -61,12 +63,10 @@ public class SlackUtils {
      */
     public static String queryAllUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.trieStatus.equals(TrieStatus.CONSTRUCTED)) {
+        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
             return QUERYING_NOT_POSSIBLE;
         }
-        //TODO: return session available message, not empty
-        // add check in startAll blockAction accordingly
-        return "";
+        return QUERYING_POSSIBLE;
     }
 
     /**
@@ -76,9 +76,19 @@ public class SlackUtils {
      * @param channelId: the channel to clear the session in
      * @return String containing the delete-success message to be sent to the channel
      */
-    public static String clearUtils(final String channelId) {
+    public static String deleteSessionUtils(final String channelId) {
         removeChannel(channelId);
-        return "Deleted: bot files for this channel.";
+        return "Deleted: session for this channel.";
+    }
+
+    /**
+     * Resets the internal parameters of the channel(or 'session') to their default values.
+     * @param channelId: the channel to reset the session in
+     */
+    public static String resetSessionUtils(final String channelId) {
+        Channel channel = getChannel(channelId);
+        channel.resetChannel();
+        return "Channel has been reset to default values. Tries and input files deleted. Session state variables reset.";
     }
 
     /**
@@ -89,43 +99,53 @@ public class SlackUtils {
      */
     public static String parseUtils(final String channelId) {
         Channel channel = getChannel(channelId);
-        channel.getParseLock().readLock().lock();
-        try {
+
+        if (!channel.getFileStatus().equals(FileStatus.DOWNLOADED)) {
+            return DOWNLOADING_NOT_COMPLETED;
+        }
+
+        if (channel.getExecutedParsing().compareAndSet(false, true)) {
+            log.info("parsing started for channel {}", channelId);
+            channel
+                .getParsingExecutorService()
+                .submit(() -> {
+                    channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
+                    Parser parser = channel.getParser();
+                    parser.addToParser(channel.getDumpA(), channel.getKeysA());
+                    parser.addToParser(channel.getDumpB(), channel.getKeysB());
+
+                    long startTime = System.currentTimeMillis();
+                    parser.parse();
+                    channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
+                    long endTime = System.currentTimeMillis();
+
+                    log.info(
+                        "parsing completed for channel {} in {} ms",
+                        channelId,
+                        endTime - startTime
+                    );
+                    channel.setParsingTime(endTime - startTime);
+                    postTextResponseAsync(
+                        "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
+                        (endTime - startTime) /
+                        1000.0 +
+                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                        channelId
+                    );
+                });
+            channel.getParsingExecutorService().shutdown();
+            return PARSING_STARTED;
+        } else {
             if (channel.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
                 return PARSING_IN_PROGRESS;
             } else if (channel.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
-                return PARSING_COMPLETED;
+                return (
+                    PARSING_COMPLETED + " in " + channel.getParsingTime() / 1000.0 + " second(s)."
+                );
+            } else {
+                return "parseUtils() is showing UNKNOWN behaviour: " + channel.getParsingStatus();
             }
-        } finally {
-            channel.getParseLock().readLock().unlock();
         }
-
-        //TODO: ask user for input regarding file location,
-        // download files from s3 link and save to local directory,
-        // set dumpA and dumpB
-        channel.getParseLock().writeLock().lock();
-        try {
-            channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
-        } finally {
-            channel.getParseLock().writeLock().unlock();
-        }
-
-        Parser parser = channel.getParser();
-        parser.clear();
-        parser.addToParser(channel.getDumpA(), channel.getKeysA());
-        parser.addToParser(channel.getDumpB(), channel.getKeysB());
-        new Thread(() -> {
-            parser.parse();
-            channel.getParseLock().writeLock().lock();
-            try {
-                channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
-            } finally {
-                channel.getParseLock().writeLock().unlock();
-            }
-        })
-            .start();
-
-        return PARSING_STARTED;
     }
 
     /**
@@ -140,31 +160,80 @@ public class SlackUtils {
             return PARSING_NOT_COMPLETED;
         }
 
-        if (channel.trieStatus.equals(TrieStatus.CONSTRUCTING)) {
-            return TRIE_CONSTRUCTION_IN_PROGRESS;
-        }
+        if (channel.getExecutedTrie().compareAndSet(false, true)) {
+            channel.setTrieStatus(TrieStatus.CONSTRUCTING);
+            log.info("trie construction started for channel {}", channelId);
+            channel
+                .getMakeTrieExecutorService()
+                .submit(() -> {
+                    channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
+                    channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
 
-        if (channel.trieStatus.equals(TrieStatus.CONSTRUCTED)) {
-            return TRIE_CONSTRUCTION_COMPLETED;
-        }
+                    channel.getTrieMaker().addToTrieMaker(channel.getDumpA(), channel.getTrieA());
+                    channel.getTrieMaker().addToTrieMaker(channel.getDumpB(), channel.getTrieB());
 
-        channel.trieStatus = TrieStatus.CONSTRUCTING;
-        new Thread(() -> {
-            long startTime = System.currentTimeMillis();
-            channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
-            channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
-            channel.getTrieA().takeInput();
-            channel.getTrieB().takeInput();
-            long endTime = System.currentTimeMillis();
-            log.info(
-                "Trie construction completed in {} milliseconds in channel {}",
-                endTime - startTime,
-                channelId
-            );
-            channel.trieStatus = TrieStatus.CONSTRUCTED; //volatile variable write
-        })
-            .start();
-        return TRIE_CONSTRUCTION_STARTED;
+                    long startTime = System.currentTimeMillis();
+                    try {
+                        boolean terminatedWithSuccess = channel.getTrieMaker().makeTries();
+                        if (!terminatedWithSuccess) {
+                            throw new Exception("Timeout Exception");
+                        }
+                    } catch (InterruptedException e) {
+                        log.error(
+                            "trie construction interrupted due trie-initializer-threads being interrupted for channel {}",
+                            channelId
+                        );
+                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        postTextResponseAsync(
+                            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
+                            channelId
+                        );
+                        throw new RuntimeException(e);
+                    } catch (Exception e) {
+                        log.error(
+                            "trie construction interrupted due to timeout for channel {}",
+                            channelId
+                        );
+                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        postTextResponseAsync(
+                            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
+                            channelId
+                        );
+                        throw new RuntimeException(e);
+                    }
+                    long endTime = System.currentTimeMillis();
+                    log.info(
+                        "Trie construction completed in {} milliseconds in channel {}",
+                        endTime - startTime,
+                        channelId
+                    );
+                    channel.setMakeTrieTime(endTime - startTime);
+                    channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
+                    postTextResponseAsync(
+                        "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
+                        (endTime - startTime) /
+                        1000.0 +
+                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                        channelId
+                    );
+                });
+            channel.getMakeTrieExecutorService().shutdown();
+            return TRIE_CONSTRUCTION_STARTED;
+        } else {
+            if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTING)) {
+                return TRIE_CONSTRUCTION_IN_PROGRESS;
+            } else if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
+                return (
+                    TRIE_CONSTRUCTION_COMPLETED +
+                    " in " +
+                    channel.getMakeTrieTime() /
+                    1000.0 +
+                    " second(s)."
+                );
+            } else {
+                return "trieConstructUtils() is showing UNKNOWN behaviour";
+            }
+        }
     }
 
     /**
@@ -176,7 +245,7 @@ public class SlackUtils {
      */
     public static String countUtils(String text, final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.trieStatus.equals(TrieStatus.CONSTRUCTED)) {
+        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
             return TRIES_NOT_CREATED;
         } else {
             try {
@@ -210,7 +279,7 @@ public class SlackUtils {
         String key = "";
         int count = 1;
         Channel channel = getChannel(channelId);
-        if (!channel.trieStatus.equals(TrieStatus.CONSTRUCTED)) {
+        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
             return TRIES_NOT_CREATED;
         } else {
             try {
@@ -219,8 +288,8 @@ public class SlackUtils {
                 key = tokens[0];
                 count = Integer.parseInt(tokens[1]);
                 assert (tokens.length == 2);
+                assert (count > 0);
             } catch (Exception e) {
-                //TODO : expand reasons for invalid query
                 return BAD_ARGUMENTS;
             }
         }

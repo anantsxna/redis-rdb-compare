@@ -21,7 +21,7 @@ import org.trie.QTrie;
  */
 @Slf4j
 @Builder
-public class ParseAndMakeTrieView {
+public class ProcessView {
 
     @NonNull
     private final String timestamp;
@@ -44,6 +44,8 @@ public class ParseAndMakeTrieView {
      * Run the parsing and trie construction process.
      */
     public void run() {
+        //TODO: consolidate into a single view with getAndSet() with after command line interface is implemented.
+        // and maketrie and parse command are merged into one.
         //execute parse, execute maketrie, periodically update the response
         log.info("Parsing and making trie for channel " + channelId);
         channel = Channel.getChannel(channelId);
@@ -63,14 +65,14 @@ public class ParseAndMakeTrieView {
 
         channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
         channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
-        channel.trieStatus = Channel.TrieStatus.CONSTRUCTING;
+        channel.setTrieStatus(Channel.TrieStatus.CONSTRUCTING);
         log.info("Trie construction started.");
         updateResponse();
 
         channel.getTrieA().takeInput();
         channel.getTrieB().takeInput();
         makeTrieTime = System.currentTimeMillis() - startTime - parseTime;
-        channel.trieStatus = Channel.TrieStatus.CONSTRUCTED;
+        channel.setTrieStatus(Channel.TrieStatus.CONSTRUCTED);
         log.info("Trie construction completed in " + makeTrieTime + " milliseconds");
         updateResponse();
     }
@@ -101,9 +103,9 @@ public class ParseAndMakeTrieView {
         } else {
             blocks.add(TextBlock("Parsing completed."));
             blocks.add(TextBlock("Parsing time: " + parseTime + "ms"));
-            if (channel.trieStatus.equals(Channel.TrieStatus.NOT_CONSTRUCTED)) {
+            if (channel.getTrieStatus().equals(Channel.TrieStatus.NOT_CONSTRUCTED)) {
                 blocks.add(TextBlock("Tries have not begin construction yet..."));
-            } else if (channel.trieStatus.equals(Channel.TrieStatus.CONSTRUCTING)) {
+            } else if (channel.getTrieStatus().equals(Channel.TrieStatus.CONSTRUCTING)) {
                 blocks.add(TextBlock("Trie construction in progress..."));
             } else {
                 blocks.add(DividerBlock.builder().build());

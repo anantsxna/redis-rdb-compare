@@ -2,7 +2,6 @@ package org.messaging;
 
 import static com.slack.api.model.block.Blocks.actions;
 import static com.slack.api.model.block.Blocks.section;
-import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 import static com.slack.api.model.block.element.BlockElements.asElements;
 import static com.slack.api.model.block.element.BlockElements.button;
@@ -197,7 +196,7 @@ public class Blocks {
     public static LayoutBlock ImageBlock(String imageUrl, String altText) {
         return section(section ->
             section
-                .text(markdownText(altText))
+                .text(PlainTextObject.builder().text(altText).emoji(true).build())
                 .accessory(BlockElements.image(image -> image.imageUrl(imageUrl).altText(altText)))
         );
     }
@@ -207,7 +206,9 @@ public class Blocks {
      * @return a text box as a block
      */
     public static LayoutBlock TextBlock(String text) {
-        return section(section -> section.text(markdownText(text)));
+        return section(section ->
+            section.text(PlainTextObject.builder().text(text).emoji(true).build())
+        );
     }
 
     /**
@@ -218,7 +219,7 @@ public class Blocks {
     public static LayoutBlock TextImageBlock(String text, String imageUrl) {
         return section(section ->
             section
-                .text(markdownText(text))
+                .text(PlainTextObject.builder().text(text).emoji(true).build())
                 .accessory(BlockElements.image(image -> image.imageUrl(imageUrl).altText(text)))
         );
     }

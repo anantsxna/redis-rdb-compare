@@ -1,17 +1,23 @@
 package org.processing;
 
+import static java.lang.Thread.currentThread;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.threading.FixedNameableExecutorService;
 
 /**
  * Parser class.
  * Processes the .rdb file and creates a list of all the keys.
+ * Only handles the processing part of the parsing process.
+ * The input, output files are part of the Channel class that holds the Parser object.
  */
 @Slf4j
 @Builder
@@ -20,6 +26,14 @@ public final class Parser {
     @Builder.Default
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
+    @Builder.Default
+    private static final ExecutorService loggingExecutor = FixedNameableExecutorService
+        .builder()
+        .baseName("logger-in-parser-threads")
+        .threadsNum(2)
+        .build()
+        .getExecutorService();
+
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
      * Thread-safe method becuase logging is thread-safe and parameters are immutable.
@@ -27,21 +41,23 @@ public final class Parser {
      * @param dumpFile: write-file fpr the process
      */
     private static void watch(final Process process, final String dumpFile) {
-        new Thread(() -> {
+        loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
-            BufferedReader input = new BufferedReader(
-                new InputStreamReader(process.getInputStream())
-            );
             String line = null;
-            try {
+            try (
+                BufferedReader input = new BufferedReader(
+                    new InputStreamReader(process.getInputStream())
+                )
+            ) {
                 while ((line = input.readLine()) != null) {
                     log.info("PYPY3!: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                log.info("{}} is closing...", currentThread().getName());
             }
-        })
-            .start();
+        });
     }
 
     /**
@@ -51,21 +67,23 @@ public final class Parser {
      * @param dumpFile: write-file for the process
      */
     private static void watchErrors(final Process process, final String dumpFile) {
-        new Thread(() -> {
+        loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
-            BufferedReader errors = new BufferedReader(
-                new InputStreamReader(process.getErrorStream())
-            );
             String line = null;
-            try {
+            try (
+                BufferedReader errors = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream())
+                )
+            ) {
                 while ((line = errors.readLine()) != null) {
                     log.error("PYPY3 Error: {} in File {}", line, dumpFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                log.info("{}} is closing...", currentThread().getName());
             }
-        })
-            .start();
+        });
     }
 
     /**
@@ -124,6 +142,7 @@ public final class Parser {
                 log.info("PYPY3: Process exited with status {}", exitStatus);
             }
         });
+        loggingExecutor.shutdownNow();
     }
 
     /**

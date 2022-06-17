@@ -104,7 +104,7 @@ public class PostUpdate {
         postTwoButtonsWithHeaderResponseAsync(
             responseMessage,
             "Parse and Make Tries",
-            "startAll",
+            "parseAndMakeTrieAll",
             "primary",
             "Close",
             "exitAll",
@@ -130,7 +130,7 @@ public class PostUpdate {
             information,
             responseMessage,
             "Parse and Make Tries",
-            "startAll",
+            "parseAndMakeTrieAll",
             "primary",
             "Close",
             "exitAll",
