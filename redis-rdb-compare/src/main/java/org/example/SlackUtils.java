@@ -174,9 +174,26 @@ public class SlackUtils {
 
                     long startTime = System.currentTimeMillis();
                     try {
-                        channel.getTrieMaker().makeTries();
+                        boolean terminatedWithSuccess = channel.getTrieMaker().makeTries();
+                        if (!terminatedWithSuccess) {
+                            throw new Exception("Timeout Exception");
+                        }
                     } catch (InterruptedException e) {
-                        log.error("trie construction interrupted for channel {}", channelId);
+                        log.error(
+                            "trie construction interrupted due trie-initializer-threads being interrupted for channel {}",
+                            channelId
+                        );
+                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        postTextResponseAsync(
+                            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
+                            channelId
+                        );
+                        throw new RuntimeException(e);
+                    } catch (Exception e) {
+                        log.error(
+                            "trie construction interrupted due to timeout for channel {}",
+                            channelId
+                        );
                         channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
                         postTextResponseAsync(
                             "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",

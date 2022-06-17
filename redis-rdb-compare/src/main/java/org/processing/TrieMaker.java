@@ -24,7 +24,7 @@ public class TrieMaker {
     @Builder.Default
     private static final ExecutorService trieInsertionExecutorService = FixedNameableExecutorService
         .builder()
-        .baseName("logger-in-parser-threads")
+        .baseName("trie-initializer-threads")
         .threadsNum(2)
         .build()
         .getExecutorService();
