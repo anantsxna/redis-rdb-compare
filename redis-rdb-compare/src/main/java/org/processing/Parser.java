@@ -7,15 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.strategies.WorkerThreadPoolConfigProducer;
-import org.glassfish.grizzly.threadpool.FixedThreadPool;
 import org.threading.FixedNameableExecutorService;
-
-import static java.util.concurrent.Executors.newFixedThreadPool;
 
 /**
  * Parser class.
@@ -29,11 +23,13 @@ public final class Parser {
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     @Builder.Default
-    private static final ExecutorService executor = FixedNameableExecutorService.builder()
-            .baseName("parser-threads")
-            .threadsNum(2)
-            .build()
-            .getExecutorService();
+    private static final ExecutorService executor = FixedNameableExecutorService
+        .builder()
+        .baseName("parser-threads")
+        .threadsNum(2)
+        .build()
+        .getExecutorService();
+
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
      * Thread-safe method becuase logging is thread-safe and parameters are immutable.
@@ -41,7 +37,6 @@ public final class Parser {
      * @param dumpFile: write-file fpr the process
      */
     private static void watch(final Process process, final String dumpFile) {
-
         executor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
             BufferedReader input = new BufferedReader(
