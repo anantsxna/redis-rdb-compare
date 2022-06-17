@@ -4,12 +4,18 @@ import static org.example.SlackUtils.*;
 import static org.messaging.PostUpdate.*;
 
 import com.slack.api.bolt.App;
+import com.slack.api.bolt.AppConfig;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
 import com.slack.api.model.event.AppMentionEvent;
 import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
+
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.messaging.ProcessView;
 
@@ -34,7 +40,13 @@ public class SlackMain {
      * Main method for the application.
      */
     public static void main(String[] args) {
-        var app = new App();
+        var app = new App(
+            AppConfig.builder()
+                    .executorServiceProvider(DaemonThreadExecutorServiceProvider.getInstance())
+                    .signingSecret(System.getenv("SLACK_SIGNING_SECRET"))
+                    .threadPoolSize(15)
+                    .build()
+        );
 
         // command "/ping" - responds with "pong"
         app.command(
@@ -124,7 +136,7 @@ public class SlackMain {
             "/clear",
             (req, ctx) -> {
                 app.executorService().submit(() -> {
-                    log.info("/clear command received");
+                   log.info("/clear command received");
                     final String channelId = req.getContext().getChannelId();
                     String response =
                             resetSessionUtils(channelId) + " && " + deleteSessionUtils(channelId);
@@ -159,16 +171,18 @@ public class SlackMain {
         app.command(
             "/start",
             (req, ctx) -> {
-                log.info("/start command received");
-                final String channelId = req.getContext().getChannelId();
-                String response = createSessionUtils(channelId);
-                if (response.equals(SESSION_IN_PROGRESS)) {
-                    response = "A session is already open in this channel.";
-                    postResetButtonResponseAsync(response, channelId);
-                } else {
-                    response = ":wave: Welcome to the interactive session.";
-                    postStartButtonResponse(response, channelId);
-                }
+                app.executorService().submit(() -> {
+                    log.info("/start command received");
+                    final String channelId = req.getContext().getChannelId();
+                    String response = createSessionUtils(channelId);
+                    if (response.equals(SESSION_IN_PROGRESS)) {
+                        response = "A session is already open in this channel.";
+                        postResetButtonResponseAsync(response, channelId);
+                    } else {
+                        response = ":wave: Welcome to the interactive session.";
+                        postStartButtonResponse(response, channelId);
+                    }
+                });
                 return ctx.ack();
             }
         );
@@ -289,7 +303,8 @@ public class SlackMain {
         app.event(
             AppMentionEvent.class,
             (payload, ctx) -> {
-                app.executorService().submit(() -> {log.info("AppMentionEvent received");
+                app.executorService().submit(() -> {
+                    log.info("AppMentionEvent received");
                     final String channelId = payload.getEvent().getChannel();
                     String response = createSessionUtils(channelId);
                     if (response.equals(SESSION_IN_PROGRESS)) {

@@ -90,6 +90,13 @@ public class Channel {
     @Setter
     private volatile long makeTrieTime = -1;
 
+    public static void printChannels() {
+        log.info("printing...");
+        for (String channelId : channels.keySet()) {
+            log.info("Channel {}", channelId);
+        }
+    }
+
     /**
      * Getter for the channel.
      * @param channelId: the id for the required channel
@@ -113,14 +120,11 @@ public class Channel {
     /**
      * Setter for the channel.
      * @param channelId: the id for the required channel
-     * @return whether channel already exists or not
+     * @return true when new channel is created, otherwise false
      */
     public static boolean createChannel(final String channelId) {
-        if (channels.containsKey(channelId)) {
-            return false;
-        }
-        channels.put(channelId, Channel.builder().build());
-        return true;
+        Channel channel = channels.putIfAbsent(channelId, Channel.builder().build());
+        return (channel == null);
     }
 
     /**
