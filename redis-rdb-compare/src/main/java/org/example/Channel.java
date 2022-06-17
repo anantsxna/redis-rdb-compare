@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.processing.Parser;
+import org.processing.TrieMaker;
 import org.threading.SingleNameableExecutorService;
 import org.trie.QTrie;
 
@@ -47,6 +48,9 @@ public class Channel {
 
     @Builder.Default
     private volatile Parser parser = Parser.builder().build();
+
+    @Builder.Default
+    private volatile TrieMaker trieMaker = TrieMaker.builder().build();
 
     public enum ParsingStatus {
         NOT_STARTED,

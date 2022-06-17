@@ -105,25 +105,20 @@ public class SlackUtils {
         }
 
         if (channel.getExecutedParsing().compareAndSet(false, true)) {
-            //TODO: ask user for input regarding file location,
-            // download files from s3 link and save to local directory,
-            // set dumpA and dumpB
-
             log.info("parsing started for channel {}", channelId);
-            channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
-            Parser parser = channel.getParser();
-            parser.addToParser(channel.getDumpA(), channel.getKeysA());
-            parser.addToParser(channel.getDumpB(), channel.getKeysB());
             channel
                 .getParsingExecutorService()
                 .submit(() -> {
-                    long startTime = System.currentTimeMillis();
-                    log.info("above parser.parse()");
-                    parser.parse();
-                    log.info("below parser.parse()");
-                    channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
+                    channel.setParsingStatus(ParsingStatus.IN_PROGRESS);
+                    Parser parser = channel.getParser();
+                    parser.addToParser(channel.getDumpA(), channel.getKeysA());
+                    parser.addToParser(channel.getDumpB(), channel.getKeysB());
 
+                    long startTime = System.currentTimeMillis();
+                    parser.parse();
+                    channel.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
                     long endTime = System.currentTimeMillis();
+
                     log.info(
                         "parsing completed for channel {} in {} ms",
                         channelId,
@@ -171,11 +166,24 @@ public class SlackUtils {
             channel
                 .getMakeTrieExecutorService()
                 .submit(() -> {
-                    long startTime = System.currentTimeMillis();
                     channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
                     channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
-                    channel.getTrieA().takeInput();
-                    channel.getTrieB().takeInput();
+
+                    channel.getTrieMaker().addToTrieMaker(channel.getDumpA(), channel.getTrieA());
+                    channel.getTrieMaker().addToTrieMaker(channel.getDumpB(), channel.getTrieB());
+
+                    long startTime = System.currentTimeMillis();
+                    try {
+                        channel.getTrieMaker().makeTries();
+                    } catch (InterruptedException e) {
+                        log.error("trie construction interrupted for channel {}", channelId);
+                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        postTextResponseAsync(
+                            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
+                            channelId
+                        );
+                        throw new RuntimeException(e);
+                    }
                     long endTime = System.currentTimeMillis();
                     log.info(
                         "Trie construction completed in {} milliseconds in channel {}",
