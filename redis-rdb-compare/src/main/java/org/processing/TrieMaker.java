@@ -22,7 +22,7 @@ public class TrieMaker {
     private static final HashMap<String, QTrie> keysTriesPairs = new HashMap<>();
 
     @Builder.Default
-    private static final ExecutorService trieInsertionExecutorService = FixedNameableExecutorService
+    private final ExecutorService trieInsertionExecutorService = FixedNameableExecutorService
         .builder()
         .baseName("trie-initializer-threads")
         .threadsNum(2)

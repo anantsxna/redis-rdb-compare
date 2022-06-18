@@ -27,6 +27,14 @@ public class Channel {
     private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
+    private final String s3linkA =
+        "https://drive.google.com/uc?export=download&id=1GIeSFzcnXVUwWDZ-4uTl0nwXz2vUClqB";
+
+    @Builder.Default
+    private final String s3linkB =
+        "https://drive.google.com/uc?export=download&id=1D8ubAC74hykFF6_mmvdS4tjzd8h6E-Cs";
+
+    @Builder.Default
     private final String dumpA = "../dump-A-200M.rdb";
 
     @Builder.Default

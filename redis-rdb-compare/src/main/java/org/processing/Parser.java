@@ -27,7 +27,7 @@ public final class Parser {
     private static final HashMap<String, String> parsePairs = new HashMap<>();
 
     @Builder.Default
-    private static final ExecutorService loggingExecutor = FixedNameableExecutorService
+    private final ExecutorService loggingExecutor = FixedNameableExecutorService
         .builder()
         .baseName("logger-in-parser-threads")
         .threadsNum(2)
@@ -40,7 +40,11 @@ public final class Parser {
      * @param process: the process which runs the script.
      * @param dumpFile: write-file fpr the process
      */
-    private static void watch(final Process process, final String dumpFile) {
+    private void watch(final Process process, final String dumpFile) {
+        if (loggingExecutor.isShutdown()) {
+            log.error("Logger thread is shutdown");
+            return;
+        }
         loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
@@ -66,7 +70,11 @@ public final class Parser {
      * @param process: the process which runs the script
      * @param dumpFile: write-file for the process
      */
-    private static void watchErrors(final Process process, final String dumpFile) {
+    private void watchErrors(final Process process, final String dumpFile) {
+        if (loggingExecutor.isShutdown()) {
+            log.error("Logger thread is shutdown");
+            return;
+        }
         loggingExecutor.submit(() -> {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
