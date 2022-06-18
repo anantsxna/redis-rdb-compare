@@ -3,7 +3,12 @@ package org.example;
 import static org.example.Channel.*;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
+import org.processing.Downloader;
 import org.processing.Parser;
 import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
@@ -17,12 +22,22 @@ import org.trie.QTrie;
 @Slf4j
 public class SlackUtils {
 
+    private static final String DOWNLOADING_NOT_COMPLETED =
+        "Downloading not completed.\nPlease wait for downloading to finish or use \"/download\" command to start parsing..";
+    private static final String DOWNLOADING_STARTED =
+        "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
+    private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
+    private static final String DOWNLOADING_COMPLETED = "Downloading completed";
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
+    private static final String UNKNOWN_DOWNLOADING_BEHAVIOUR =
+        "downloadUtils() is showing UNKNOWN behaviour: ";
     private static final String PARSING_STARTED =
         "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
     private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
     private static final String PARSING_COMPLETED = "Parsing completed";
+    private static final String UNKNOWN_PARSING_BEHAVIOUR =
+        "parseUtils() is showing UNKNOWN behaviour: ";
     private static final String TRIES_NOT_CREATED =
         "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
     private static final String TRIE_CONSTRUCTION_STARTED =
@@ -30,6 +45,8 @@ public class SlackUtils {
     private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
         "Trie construction in progress.\nPlease wait.";
     private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
+    private static final String UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR =
+        "parseUtils() is showing UNKNOWN behaviour: ";
     private static final String BAD_ARGUMENTS =
         "Please provide proper arguments.\nRefer to \"/redis-bot-help\" for more information.";
     private static final String SESSION_IN_PROGRESS =
@@ -40,8 +57,6 @@ public class SlackUtils {
         "Querying is not possible since tries have not been created.\n";
     private static final String QUERYING_POSSIBLE =
         "Querying is possible since tries have been created.\n";
-    private static final String DOWNLOADING_NOT_COMPLETED =
-        "Downloading not completed.\nPlease wait for downloading to finish.";
 
     /**
      * Create a channel with the given channelId.
@@ -57,38 +72,88 @@ public class SlackUtils {
     }
 
     /**
-     * Checks if executing queries is possible or not
-     * @param channelId: the channel to start the session
-     * @return QUERYING_NOT_POSSIBLE if queries cannot be executed, else returns empty string
+     * Checks if the downloading is in progress or not and if not started, execute downloading in parallel
+     * This method is only invoked by the command "/download". For interactive downloading, there is no method yet.
+     * @param channelId: the channel to check the status of
+     * @return downloading status of the channel
      */
-    public static String queryAllUtils(final String channelId) {
+    public static String downloadUtils(String text, final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
-            return QUERYING_NOT_POSSIBLE;
+        URL[] urls;
+
+        try {
+            assert (!text.isEmpty());
+            assert (!text.contains(" "));
+            String[] args = text.split(" ");
+            assert (args.length == 2);
+            urls = new URL[] { new URL(args[0]), new URL(args[1]) };
+        } catch (Exception e) {
+            //TODO : expand reasons for invalid query
+            return BAD_ARGUMENTS;
         }
-        return QUERYING_POSSIBLE;
-    }
 
-    /**
-     * Clears the given channel's data by:
-     * - removing the channel from the list of channels
-     * - deleting the channel's dump file and keys files (TODO: InputRDB)
-     * @param channelId: the channel to clear the session in
-     * @return String containing the delete-success message to be sent to the channel
-     */
-    public static String deleteSessionUtils(final String channelId) {
-        removeChannel(channelId);
-        return "Deleted: session for this channel.";
-    }
+        if (channel.getExecutedDownloading().compareAndSet(false, true)) {
+            log.info("downloading started for channel {}", channelId);
+            channel
+                .getDownloadingExecutorService()
+                .submit(() -> {
+                    channel.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
+                    Downloader downloader = channel.getDownloader();
+                    downloader.addToDownloader(urls[0].toString(), channel.getDumpA());
+                    downloader.addToDownloader(urls[1].toString(), channel.getDumpB());
 
-    /**
-     * Resets the internal parameters of the channel(or 'session') to their default values.
-     * @param channelId: the channel to reset the session in
-     */
-    public static String resetSessionUtils(final String channelId) {
-        Channel channel = getChannel(channelId);
-        channel.resetChannel();
-        return "Channel has been reset to default values. Tries and input files deleted. Session state variables reset.";
+                    long startTime = System.currentTimeMillis();
+                    try {
+                        boolean terminatedWithSuccess = channel.getDownloader().download();
+                        if (!terminatedWithSuccess) {
+                            throw new InterruptedException("Timeout Exception while downloading");
+                        }
+                    } catch (InterruptedException e) {
+                        log.error(e.getMessage());
+                        log.error(
+                            "download interrupted due to FileNotFound, SecurityException or DownloadingError for channel {}",
+                            channelId
+                        );
+                        channel.setDownloadingStatus(DownloadingStatus.NOT_DOWNLOADED);
+                        postTextResponseAsync(
+                            "\uD83D\uDEA8\uD83D\uDEA8 Download failed \uD83D\uDEA8\uD83D\uDEA8",
+                            channelId
+                        );
+                        throw new RuntimeException(e);
+                    }
+                    long endTime = System.currentTimeMillis();
+                    log.info(
+                        "Download completed in {} milliseconds in channel {}",
+                        endTime - startTime,
+                        channelId
+                    );
+                    channel.setDownloadingTime(endTime - startTime);
+                    channel.setDownloadingStatus(DownloadingStatus.DOWNLOADED); //volatile variable write
+                    postTextResponseAsync(
+                        "\uD83D\uDEA8\uD83D\uDEA8 Download completed in " +
+                        (endTime - startTime) /
+                        1000.0 +
+                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
+                        channelId
+                    );
+                });
+            channel.getDownloadingExecutorService().shutdown();
+            return DOWNLOADING_STARTED;
+        } else {
+            if (channel.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADING)) {
+                return DOWNLOADING_IN_PROGRESS;
+            } else if (channel.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
+                return (
+                    DOWNLOADING_COMPLETED +
+                    " in " +
+                    channel.getDownloadingTime() /
+                    1000.0 +
+                    " second(s)."
+                );
+            } else {
+                return UNKNOWN_DOWNLOADING_BEHAVIOUR + channel.getDownloadingStatus();
+            }
+        }
     }
 
     /**
@@ -100,9 +165,11 @@ public class SlackUtils {
     public static String parseUtils(final String channelId) {
         Channel channel = getChannel(channelId);
 
-        if (!channel.getFileStatus().equals(FileStatus.DOWNLOADED)) {
+        if (!channel.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
             return DOWNLOADING_NOT_COMPLETED;
         }
+
+        log.info("/parse called after downloading completed.");
 
         if (channel.getExecutedParsing().compareAndSet(false, true)) {
             log.info("parsing started for channel {}", channelId);
@@ -143,7 +210,7 @@ public class SlackUtils {
                     PARSING_COMPLETED + " in " + channel.getParsingTime() / 1000.0 + " second(s)."
                 );
             } else {
-                return "parseUtils() is showing UNKNOWN behaviour: " + channel.getParsingStatus();
+                return UNKNOWN_PARSING_BEHAVIOUR + channel.getParsingStatus();
             }
         }
     }
@@ -160,11 +227,11 @@ public class SlackUtils {
             return PARSING_NOT_COMPLETED;
         }
 
-        if (channel.getExecutedTrie().compareAndSet(false, true)) {
-            channel.setTrieStatus(TrieStatus.CONSTRUCTING);
+        if (channel.getExecutedTrieMaking().compareAndSet(false, true)) {
+            channel.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
             log.info("trie construction started for channel {}", channelId);
             channel
-                .getMakeTrieExecutorService()
+                .getTrieMakingExecutorService()
                 .submit(() -> {
                     channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
                     channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
@@ -176,14 +243,14 @@ public class SlackUtils {
                     try {
                         boolean terminatedWithSuccess = channel.getTrieMaker().makeTries();
                         if (!terminatedWithSuccess) {
-                            throw new Exception("Timeout Exception");
+                            throw new Exception("Timeout Exception while making tries");
                         }
                     } catch (InterruptedException e) {
                         log.error(
                             "trie construction interrupted due trie-initializer-threads being interrupted for channel {}",
                             channelId
                         );
-                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        channel.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
                         postTextResponseAsync(
                             "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
                             channelId
@@ -194,7 +261,7 @@ public class SlackUtils {
                             "trie construction interrupted due to timeout for channel {}",
                             channelId
                         );
-                        channel.setTrieStatus(TrieStatus.NOT_CONSTRUCTED);
+                        channel.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
                         postTextResponseAsync(
                             "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
                             channelId
@@ -207,8 +274,8 @@ public class SlackUtils {
                         endTime - startTime,
                         channelId
                     );
-                    channel.setMakeTrieTime(endTime - startTime);
-                    channel.setTrieStatus(TrieStatus.CONSTRUCTED); //volatile variable write
+                    channel.setTrieMakingTime(endTime - startTime);
+                    channel.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
                     postTextResponseAsync(
                         "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
                         (endTime - startTime) /
@@ -217,23 +284,36 @@ public class SlackUtils {
                         channelId
                     );
                 });
-            channel.getMakeTrieExecutorService().shutdown();
+            channel.getTrieMakingExecutorService().shutdown();
             return TRIE_CONSTRUCTION_STARTED;
         } else {
-            if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTING)) {
+            if (channel.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTING)) {
                 return TRIE_CONSTRUCTION_IN_PROGRESS;
-            } else if (channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
+            } else if (channel.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                 return (
                     TRIE_CONSTRUCTION_COMPLETED +
                     " in " +
-                    channel.getMakeTrieTime() /
+                    channel.getTrieMakingTime() /
                     1000.0 +
                     " second(s)."
                 );
             } else {
-                return "trieConstructUtils() is showing UNKNOWN behaviour";
+                return UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR + channel.getTrieMakingStatus();
             }
         }
+    }
+
+    /**
+     * Checks if executing queries is possible or not
+     * @param channelId: the channel to start the session
+     * @return QUERYING_NOT_POSSIBLE if queries cannot be executed, else returns empty string
+     */
+    public static String queryAllUtils(final String channelId) {
+        Channel channel = getChannel(channelId);
+        if (!channel.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
+            return QUERYING_NOT_POSSIBLE;
+        }
+        return QUERYING_POSSIBLE;
     }
 
     /**
@@ -245,7 +325,7 @@ public class SlackUtils {
      */
     public static String countUtils(String text, final String channelId) {
         Channel channel = getChannel(channelId);
-        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
+        if (!channel.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
             return TRIES_NOT_CREATED;
         } else {
             try {
@@ -279,7 +359,7 @@ public class SlackUtils {
         String key = "";
         int count = 1;
         Channel channel = getChannel(channelId);
-        if (!channel.getTrieStatus().equals(TrieStatus.CONSTRUCTED)) {
+        if (!channel.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
             return TRIES_NOT_CREATED;
         } else {
             try {
@@ -303,5 +383,63 @@ public class SlackUtils {
             .build();
         query.execute();
         return query.result();
+    }
+
+    /**
+     * Clears the given channel's data by:
+     * - removing the channel from the list of channels
+     * - deleting the channel's dump file and keys files (TODO: InputRDB)
+     * @param channelId: the channel to clear the session in
+     * @return String containing the delete-success message to be sent to the channel
+     */
+    public static String deleteSessionUtils(final String channelId) {
+        Channel channel = getChannel(channelId);
+        try {
+            log.info("Deleting channel: " + channelId);
+            if (Files.exists(Paths.get(channel.getDumpA()))) {
+                Files.delete(Paths.get(channel.getDumpA()));
+                log.info("Deleted dump file: " + channel.getDumpA());
+            } else {
+                log.info("Cannot delete dump file. Does not exist: " + channel.getDumpA());
+            }
+
+            if (Files.exists(Paths.get(channel.getDumpB()))) {
+                Files.delete(Paths.get(channel.getDumpB()));
+                log.info("Deleted dump file: " + channel.getDumpB());
+            } else {
+                log.info("Cannot delete dump file. Does not exist: " + channel.getDumpB());
+            }
+
+            if (Files.exists(Paths.get(channel.getKeysA()))) {
+                Files.delete(Paths.get(channel.getKeysA()));
+                log.info("Deleted keys file: " + channel.getKeysA());
+            } else {
+                log.info("Cannot delete keys file. Does not exist: " + channel.getKeysA());
+            }
+
+            if (Files.exists(Paths.get(channel.getKeysB()))) {
+                Files.delete(Paths.get(channel.getKeysB()));
+                log.info("Deleted keys file: " + channel.getKeysB());
+            } else {
+                log.info("Cannot delete keys file. Does not exist: " + channel.getKeysB());
+            }
+        } catch (IOException e) {
+            log.error("Error deleting files for channel {}", channelId);
+            throw new RuntimeException(e);
+        }
+        removeChannel(channelId);
+        return "Deleted: session for this channel.";
+    }
+
+    /**
+     * Resets the internal parameters of the channel(or 'session') to their default values.
+     * Cheats by deleting the channel and creating a new session.
+     * @param channelId: the channel to reset the session in
+     */
+    public static String resetSessionUtils(final String channelId) {
+        Channel channel = getChannel(channelId);
+        deleteSessionUtils(channelId);
+        createSessionUtils(channelId);
+        return "Channel has been reset to default values. Tries and input files deleted. Session state variables reset.";
     }
 }

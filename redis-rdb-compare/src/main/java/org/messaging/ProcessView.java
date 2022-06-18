@@ -65,14 +65,14 @@ public class ProcessView {
 
         channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
         channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
-        channel.setTrieStatus(Channel.TrieStatus.CONSTRUCTING);
+        channel.setTrieMakingStatus(Channel.TrieMakingStatus.CONSTRUCTING);
         log.info("Trie construction started.");
         updateResponse();
 
         channel.getTrieA().takeInput();
         channel.getTrieB().takeInput();
         makeTrieTime = System.currentTimeMillis() - startTime - parseTime;
-        channel.setTrieStatus(Channel.TrieStatus.CONSTRUCTED);
+        channel.setTrieMakingStatus(Channel.TrieMakingStatus.CONSTRUCTED);
         log.info("Trie construction completed in " + makeTrieTime + " milliseconds");
         updateResponse();
     }
@@ -103,9 +103,11 @@ public class ProcessView {
         } else {
             blocks.add(TextBlock("Parsing completed."));
             blocks.add(TextBlock("Parsing time: " + parseTime + "ms"));
-            if (channel.getTrieStatus().equals(Channel.TrieStatus.NOT_CONSTRUCTED)) {
+            if (channel.getTrieMakingStatus().equals(Channel.TrieMakingStatus.NOT_CONSTRUCTED)) {
                 blocks.add(TextBlock("Tries have not begin construction yet..."));
-            } else if (channel.getTrieStatus().equals(Channel.TrieStatus.CONSTRUCTING)) {
+            } else if (
+                channel.getTrieMakingStatus().equals(Channel.TrieMakingStatus.CONSTRUCTING)
+            ) {
                 blocks.add(TextBlock("Trie construction in progress..."));
             } else {
                 blocks.add(DividerBlock.builder().build());

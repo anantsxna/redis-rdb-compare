@@ -1,5 +1,6 @@
 package org.example;
 
+import static org.example.Channel.getChannel;
 import static org.example.SlackUtils.*;
 import static org.messaging.PostUpdate.*;
 
@@ -70,6 +71,23 @@ public class SlackMain {
             }
         );
 
+        // command "/download" - starts parsing
+        app.command(
+            "/download",
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("/download command received");
+                        final String channelId = req.getContext().getChannelId();
+                        String response = downloadUtils(req.getPayload().getText(), channelId);
+                        log.info("downloadUtils response: {} in channel {}", response, channelId);
+                        postTextResponseAsync(response, channelId);
+                    });
+                return ctx.ack();
+            }
+        );
+
         // command "/parse" - starts parsing
         app.command(
             "/parse",
@@ -77,8 +95,11 @@ public class SlackMain {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/parse command received");
                         final String channelId = req.getContext().getChannelId();
+                        log.info(
+                            "/parse command received with key {}",
+                            getChannel(channelId).getRequestId()
+                        );
                         String response = parseUtils(channelId);
                         log.info("parseUtils response: {} in channel {}", response, channelId);
                         postTextResponseAsync(response, channelId);
@@ -151,8 +172,7 @@ public class SlackMain {
                     .submit(() -> {
                         log.info("/clear command received");
                         final String channelId = req.getContext().getChannelId();
-                        String response =
-                            resetSessionUtils(channelId) + " && " + deleteSessionUtils(channelId);
+                        String response = deleteSessionUtils(channelId);
                         log.info("clearUtils response: {}", response);
                         postTextResponseAsync(response, channelId);
                     });

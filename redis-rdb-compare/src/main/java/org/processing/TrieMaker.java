@@ -19,7 +19,7 @@ import org.trie.QTrie;
 public class TrieMaker {
 
     @Builder.Default
-    private static final HashMap<String, QTrie> keysTriesPairs = new HashMap<>();
+    private final HashMap<String, QTrie> keysTriesPairs = new HashMap<>();
 
     @Builder.Default
     private final ExecutorService trieInsertionExecutorService = FixedNameableExecutorService
