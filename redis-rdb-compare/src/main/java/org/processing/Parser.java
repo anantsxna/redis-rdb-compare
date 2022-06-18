@@ -24,19 +24,19 @@ import org.threading.FixedNameableExecutorService;
 public final class Parser {
 
     @Builder.Default
-    private static final HashMap<String, String> parsePairs = new HashMap<>();
+    private final HashMap<String, String> parsePairs = new HashMap<>();
 
     @Builder.Default
     private final ExecutorService loggingExecutor = FixedNameableExecutorService
         .builder()
         .baseName("logger-in-parser-threads")
-        .threadsNum(2)
+        .threadsNum(4)
         .build()
         .getExecutorService();
 
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
-     * Thread-safe method becuase logging is thread-safe and parameters are immutable.
+     * Thread-safe method because logging is thread-safe and parameters are immutable.
      * @param process: the process which runs the script.
      * @param dumpFile: write-file fpr the process
      */
@@ -102,6 +102,7 @@ public final class Parser {
      *
      */
     public void addToParser(String dumpFile, String keysFile) {
+        log.info("adding health, {}, {}", dumpFile, keysFile);
         parsePairs.put(dumpFile, keysFile);
     }
 

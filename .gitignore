@@ -26,6 +26,9 @@ hs_err_pid*
 /.idea/
 /redis-rdb-compare/.idea/
 
+#vscode IDE files
+/.vscode/
+
 # Redis database dumps
 *.rdb
 # extracted keys from dumps
@@ -34,4 +37,6 @@ keys*.txt
 
 # Maven target folder
 /redis-rdb-compare/target/
+
+
 
