@@ -1,10 +1,10 @@
 package org.querying;
 
-import static org.example.BotSession.getBotSession;
+import static org.example.Channel.getChannel;
 
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.example.BotSession;
+import org.example.Channel;
 
 /**
  * "/getcount [prefixKey]" query.
@@ -17,35 +17,30 @@ public class CountQuery extends Query {
 
     @Override
     public void execute() {
-        try (BotSession botSession = getBotSession(getRequestId())) {
-            try {
-                result.append(">In session ").append(getRequestId()).append("\n");
-                long startTime = System.currentTimeMillis();
-                int countInA = botSession.getTrieA().getCountForPrefix(key);
-                int countInB = botSession.getTrieB().getCountForPrefix(key);
-                long endTime = System.currentTimeMillis();
-                result
-                    .append("Total keys with prefix *")
-                    .append(key)
-                    .append("*: \n")
-                    .append(">in first database: *")
-                    .append(countInA)
-                    .append("*, ")
-                    .append("in second database: *")
-                    .append(countInB)
-                    .append("*\n")
-                    .append("`query time: ")
-                    .append(endTime - startTime)
-                    .append(" ms`\n");
-                log.info("Count query for key: {} in botSession: {}", key, getRequestId());
-            } catch (Exception e) {
-                result.append(">The key does not exist in the database.");
-            }
-            setExitCode(0);
+        try {
+            Channel channel = getChannel(getChannelId());
+            long startTime = System.currentTimeMillis();
+            int countInA = channel.getTrieA().getCountForPrefix(key);
+            int countInB = channel.getTrieB().getCountForPrefix(key);
+            long endTime = System.currentTimeMillis();
+            result
+                .append("Total keys with prefix *")
+                .append(key)
+                .append("*: \n")
+                .append(">in first database: *")
+                .append(countInA)
+                .append("*\n")
+                .append(">in second database: *")
+                .append(countInB)
+                .append("*\n")
+                .append("`query time: ")
+                .append(endTime - startTime)
+                .append(" ms`\n");
+            log.info("Count query for key: {} in channel: {}", key, getChannelId());
         } catch (Exception e) {
-            result.append(INVALID_REQUEST_ID);
-            setExitCode(0);
+            result.append(">The key does not exist in the database.");
         }
+        setExitCode(0);
     }
 
     @Override

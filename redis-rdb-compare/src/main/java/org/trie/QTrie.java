@@ -74,11 +74,13 @@ public final class QTrie {
      *
      * @param _prefix: prefix to be searched.
      * @param n: number of child nodes to be returned.
+     *
      * @return List of (n+2) pairs, where:
-     * the first pair has the total number of keys with the prefix '_prefix'.
-     * the second pair has the total number of child nodes of the node that represents the prefix '_prefix'.
-     * each of the next n pairs contains the child keys in decreasing order of their count.
-     * If the number of child nodes is less than n, List has less than (n+2) pairs.
+     *      the first pair has the total number of keys with the prefix '_prefix'.
+     *      the second pair has the total number of child nodes of the node that represents the prefix '_prefix'.
+     *      each of the next n pairs contains the child keys in decreasing order of their count.
+     *
+     *      If the number of child nodes is less than n, List has less than (n+2) pairs.
      */
     public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n)
         throws Exception {
@@ -105,9 +107,9 @@ public final class QTrie {
 
     /**
      * Returns the full key and count of a child node.
-     *
      * @param _entry: Pair<Key Suffix, child TrieNode>.
      * @param prefix: prefix of the parent node.
+     *
      * @return Pair<full key, count of the key>.
      */
     private Map.Entry<String, Integer> getKeyAndCountOutput(
@@ -122,8 +124,8 @@ public final class QTrie {
 
     /**
      * Returns the count of a node that represents the given key.
-     *
      * @param _prefix: key to be searched.
+     *
      * @return an integer representing the count of the node.
      * @throws Exception: if the key is not found in the trie.
      */
@@ -134,8 +136,8 @@ public final class QTrie {
 
     /**
      * Traverse the trie from the root node to the node that represents the given path.
-     *
      * @param path: path to be traversed.
+     *
      * @return TrieNode that represents the given path.
      * @throws Exception: if the path is not found in the trie.
      */

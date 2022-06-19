@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.processing.Downloader;
@@ -18,21 +19,23 @@ import org.threading.SingleNameableExecutorService;
 import org.trie.QTrie;
 
 /**
- * BotSession Class
- * Maps a botSession id to dumps files, keys files, a parser and tries and maintains their status.
+ * Channel Class
+ * Maps a channel id to dumps files, keys files, a parser and tries and maintains their status.
  */
 @Slf4j
 @Getter
 @Builder
-public class BotSession implements AutoCloseable {
+public class Channel {
 
     @Builder.Default
     @Getter
-    private static final ConcurrentHashMap<String, BotSession> botSessions = new ConcurrentHashMap<>(); //static map of botSession ids to requestIds
+    private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
+    @Builder.Default
     @Setter
     private URL s3linkA;
 
+    @Builder.Default
     @Setter
     private URL s3linkB;
 
@@ -47,6 +50,9 @@ public class BotSession implements AutoCloseable {
 
     @Builder.Default
     private volatile String keysB = "./.sessionFiles/keys-B-notset.txt";
+
+    @NonNull
+    private final String channelId;
 
     @Setter
     @Builder.Default
@@ -65,7 +71,8 @@ public class BotSession implements AutoCloseable {
     @Builder.Default
     private volatile Downloader downloader = Downloader.builder().build();
 
-    private final String requestId;
+    @Builder.Default
+    private final String requestId = randomAlphanumeric(10);
 
     public static String formatLink(String s3link) {
         if (s3link == null) {
@@ -75,7 +82,7 @@ public class BotSession implements AutoCloseable {
         return s3link.replace("https://", "");
     }
 
-    private BotSession setFileNames() {
+    private Channel setFileNames() {
         this.dumpA = "./.sessionFiles/dump-A-downloaded-" + this.getRequestId() + ".rdb";
         this.dumpB = "./.sessionFiles/dump-B-downloaded-" + this.getRequestId() + ".rdb";
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
@@ -155,56 +162,52 @@ public class BotSession implements AutoCloseable {
         .build()
         .getExecutorService();
 
+    public static void printChannels() {
+        log.info("printing...");
+        for (String channelId : channels.keySet()) {
+            log.info("Channel {}", channelId);
+        }
+    }
+
     /**
-     * Getter for the botSession.
-     *
-     * @param requestId: the id for the required botSession
-     * @return BotSession object
+     * Getter for the channel.
+     * @param channelId: the id for the required channel
+     * @return Channel object
      */
-    public static BotSession getBotSession(final String requestId) throws IllegalStateException {
-        if (!botSessions.containsKey(requestId)) {
+    public static Channel getChannel(final String channelId) throws IllegalStateException {
+        if (!channels.containsKey(channelId)) {
             postTextResponseAsync(
                 "Sorry, you need to create a session first by running \"/process\"",
-                requestId
+                channelId
             );
             // TODO: what to do here
-            log.error("requested botSession by id " + requestId + " does not exist");
+            log.error("requested channel by id " + channelId + " does not exist");
             throw new IllegalStateException(
-                "requested botSession by id " + requestId + " does not exist"
+                "requested channel by id " + channelId + " does not exist"
             );
         }
-        return botSessions.get(requestId);
+        return channels.get(channelId);
     }
 
     /**
-     * Setter for the botSession.
-     *
-     * @return true when new botSession is created, otherwise false
+     * Setter for the channel.
+     * @param channelId: the id for the required channel
+     * @return true when new channel is created, otherwise false
      */
-    public static String createBotSession() {
-        String requestId = randomAlphanumeric(10);
-        BotSession botSession = botSessions.putIfAbsent(
-            requestId,
-            BotSession.builder().requestId(requestId).build().setFileNames()
+    public static boolean createChannel(final String channelId) {
+        Channel channel = channels.putIfAbsent(
+            channelId,
+            Channel.builder().channelId(channelId).build().setFileNames()
         );
-        return (botSession == null) ? requestId : null;
+        return (channel == null);
     }
 
     /**
-     * Remove a botSession from the botSessions map.
-     *
-     * @param requestId: the id for the botSession to be removed
+     * Remove a channel from the channels map.
+     * @param channelId: the id for the channel to be removed
      */
-    public static void removeBotSession(final String requestId) {
-        log.info("removeBotSession() called");
-        botSessions.remove(requestId);
-    }
-
-    /**
-     * Implements AutoCloseable interface method close().
-     */
-    @Override
-    public void close() {
-        log.info("AutoClose() called");
+    public static void removeChannel(final String channelId) {
+        log.info("removeChannel() called");
+        channels.remove(channelId);
     }
 }

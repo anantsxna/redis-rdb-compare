@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.example.BotSession;
+import org.example.Channel;
 import org.processing.Parser;
 import org.trie.QTrie;
 
@@ -27,12 +27,12 @@ public class ProcessView {
     private final String timestamp;
 
     @NonNull
-    private final String requestId;
+    private final String channelId;
 
     @Builder.Default
     private final long startTime = System.currentTimeMillis();
 
-    private BotSession botSession;
+    private Channel channel;
 
     @Builder.Default
     private long parseTime = 0;
@@ -47,32 +47,32 @@ public class ProcessView {
         //TODO: consolidate into a single view with getAndSet() with after command line interface is implemented.
         // and maketrie and parse command are merged into one.
         //execute parse, execute maketrie, periodically update the response
-        log.info("Parsing and making trie for botSession " + requestId);
-        botSession = BotSession.getBotSession(requestId);
-        botSession.setParsingStatus(BotSession.ParsingStatus.IN_PROGRESS);
-        Parser parser = botSession.getParser();
+        log.info("Parsing and making trie for channel " + channelId);
+        channel = Channel.getChannel(channelId);
+        channel.setParsingStatus(Channel.ParsingStatus.IN_PROGRESS);
+        Parser parser = channel.getParser();
         parser.clear();
-        parser.addToParser(botSession.getDumpA(), botSession.getKeysA());
-        parser.addToParser(botSession.getDumpB(), botSession.getKeysB());
+        parser.addToParser(channel.getDumpA(), channel.getKeysA());
+        parser.addToParser(channel.getDumpB(), channel.getKeysB());
         log.info("Parsing completed.");
         updateResponse();
 
         parser.parse();
         parseTime = System.currentTimeMillis() - startTime;
-        botSession.setParsingStatus(BotSession.ParsingStatus.COMPLETED);
+        channel.setParsingStatus(Channel.ParsingStatus.COMPLETED);
         log.info("Parsing completed in " + parseTime + " milliseconds");
         updateResponse();
 
-        botSession.setTrieA(QTrie.builder().keysFile(botSession.getKeysA()).build());
-        botSession.setTrieB(QTrie.builder().keysFile(botSession.getKeysB()).build());
-        botSession.setTrieMakingStatus(BotSession.TrieMakingStatus.CONSTRUCTING);
+        channel.setTrieA(QTrie.builder().keysFile(channel.getKeysA()).build());
+        channel.setTrieB(QTrie.builder().keysFile(channel.getKeysB()).build());
+        channel.setTrieMakingStatus(Channel.TrieMakingStatus.CONSTRUCTING);
         log.info("Trie construction started.");
         updateResponse();
 
-        botSession.getTrieA().takeInput();
-        botSession.getTrieB().takeInput();
+        channel.getTrieA().takeInput();
+        channel.getTrieB().takeInput();
         makeTrieTime = System.currentTimeMillis() - startTime - parseTime;
-        botSession.setTrieMakingStatus(BotSession.TrieMakingStatus.CONSTRUCTED);
+        channel.setTrieMakingStatus(Channel.TrieMakingStatus.CONSTRUCTED);
         log.info("Trie construction completed in " + makeTrieTime + " milliseconds");
         updateResponse();
     }
@@ -83,7 +83,7 @@ public class ProcessView {
     public void updateResponse() {
         updateResponseSync(
             buildResponse(),
-            requestId,
+            channelId,
             "Response from parsing and making trie",
             timestamp
         );
@@ -91,25 +91,22 @@ public class ProcessView {
 
     /**
      * Constructs the response according to object state.
-     *
      * @return the response
      */
     private List<LayoutBlock> buildResponse() {
         List<LayoutBlock> blocks = new ArrayList<>();
         blocks.add(DividerBlock.builder().build());
-        if (botSession.getParsingStatus().equals(BotSession.ParsingStatus.NOT_STARTED)) {
+        if (channel.getParsingStatus().equals(Channel.ParsingStatus.NOT_STARTED)) {
             blocks.add(TextBlock("Parsing has not started yet."));
-        } else if (botSession.getParsingStatus().equals(BotSession.ParsingStatus.IN_PROGRESS)) {
+        } else if (channel.getParsingStatus().equals(Channel.ParsingStatus.IN_PROGRESS)) {
             blocks.add(TextBlock("Parsing..."));
         } else {
             blocks.add(TextBlock("Parsing completed."));
             blocks.add(TextBlock("Parsing time: " + parseTime + "ms"));
-            if (
-                botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.NOT_CONSTRUCTED)
-            ) {
+            if (channel.getTrieMakingStatus().equals(Channel.TrieMakingStatus.NOT_CONSTRUCTED)) {
                 blocks.add(TextBlock("Tries have not begin construction yet..."));
             } else if (
-                botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.CONSTRUCTING)
+                channel.getTrieMakingStatus().equals(Channel.TrieMakingStatus.CONSTRUCTING)
             ) {
                 blocks.add(TextBlock("Trie construction in progress..."));
             } else {
