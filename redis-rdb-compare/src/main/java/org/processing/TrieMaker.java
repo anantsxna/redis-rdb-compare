@@ -12,7 +12,7 @@ import org.trie.QTrie;
  * Trie Maker class.
  * Processes the keys class and makes the tries.
  * Only handles the processing part of the trie making process.
- * The input, output files are part of the Channel class that holds the TrieMaker object.
+ * The input, output files are part of the BotSession class that holds the TrieMaker object.
  */
 @Slf4j
 @Builder
@@ -34,7 +34,7 @@ public class TrieMaker {
      *
      * @param keysFile: the location of the file to get the keys, must be a .txt file.
      * @param trie: the trie to be made.
-     *
+     * 
      */
     public void addToTrieMaker(String keysFile, QTrie trie) {
         keysTriesPairs.put(keysFile, trie);

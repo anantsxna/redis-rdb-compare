@@ -24,9 +24,9 @@ public class PostUpdate {
         "https://avatars.githubusercontent.com/u/1529926?s=200&v=4";
 
     /**
-     * Post a text message to the channel.
+     * Post a text message to the botSession.
      * @param responseMessage: the message to post
-     * @param channelId: the channel to post to
+     * @param channelId: the botSession to post to
      */
     public static void postTextResponseAsync(String responseMessage, final String channelId) {
         List<LayoutBlock> blocks = new ArrayList<>();
@@ -35,9 +35,9 @@ public class PostUpdate {
     }
 
     /**
-     * Update a text message in a channel.
+     * Update a text message in a botSession.
      * @param responseMessage: the new updated text message
-     * @param channelId: the channel to update
+     * @param channelId: the botSession to update
      * @param timestamp: the timestamp of the message to update
      */
     public static void updateTextResponseAsync(
@@ -52,9 +52,9 @@ public class PostUpdate {
     }
 
     /**
-     * Post a text message and a button to reset the channel
+     * Post a text message and a button to reset the botSession
      * @param responseMessage: the message to post
-     * @param channelId: the channel to post to
+     * @param channelId: the botSession to post to
      */
     public static void postResetButtonResponseAsync(
         String responseMessage,
@@ -70,10 +70,10 @@ public class PostUpdate {
     }
 
     /**
-     * Update a message with text adn a button to reset the channel
+     * Update a message with text adn a button to reset the botSession
      * @param responseMessage: the message to update
-     * @param channelId: the channel to update
-     * @param timestamp: the timestamp of the message to update
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateResetButtonResponseAsync(
         String responseMessage,
@@ -97,8 +97,9 @@ public class PostUpdate {
 
     /**
      * Post the message at the start of an interactive session
+     *
      * @param responseMessage: the welcome message
-     * @param channelId: the channel to post to
+     * @param channelId:       the botSession to post to
      */
     public static void postStartButtonResponse(String responseMessage, final String channelId) {
         postTwoButtonsWithHeaderResponseAsync(
@@ -115,10 +116,11 @@ public class PostUpdate {
 
     /**
      * Update a given message to the start of an interactive session after deleting previous session
-     * @param information: the session has been deleted message
+     *
+     * @param information:     the session has been deleted message
      * @param responseMessage: the welcome again message
-     * @param channelId: the channel to update
-     * @param timestamp: the timestamp of the message to update
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateStartButtonResponse(
         String information,
@@ -149,11 +151,12 @@ public class PostUpdate {
 
     /**
      * Post a text message and a button
+     *
      * @param responseMessage: the message to post
-     * @param buttonText: the text of the button
-     * @param buttonValue: a keyword to name the actionId (to catch blockActions payload later)
-     * @param buttonStyle: default/primary/danger
-     * @param channelId: the channel to post to
+     * @param buttonText:      the text of the button
+     * @param buttonValue:     a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyle:     default/primary/danger
+     * @param channelId:       the botSession to post to
      */
     public static void postButtonWithTextResponseAsync(
         String responseMessage,
@@ -170,12 +173,13 @@ public class PostUpdate {
 
     /**
      * Update a message with a text message and a button
+     *
      * @param responseMessage: the new updated text message
-     * @param buttonTextA : the text of the first button
-     * @param buttonValueA: a keyword to name the actionId (to catch blockActions payload later)
-     * @param buttonStyleA: default/primary/danger
-     * @param channelId: the channel to update
-     * @param timestamp: the timestamp of the message to update
+     * @param buttonTextA      : the text of the first button
+     * @param buttonValueA:    a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyleA:    default/primary/danger
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateTwoButtonsWithTextAndHeaderResponseAsync(
         String responseMessage,
@@ -211,10 +215,10 @@ public class PostUpdate {
      * Post a text header and two buttons
      *
      * @param responseMessage: the message to post
-     * @param buttonTextA : the text of the first button
-     * @param buttonValueA: a keyword to name the actionId (to catch blockActions payload later)
-     * @param buttonStyleA: default/primary/danger
-     * @param channelId: the channel to update
+     * @param buttonTextA      : the text of the first button
+     * @param buttonValueA:    a keyword to name the actionId (to catch blockActions payload later)
+     * @param buttonStyleA:    default/primary/danger
+     * @param channelId:       the botSession to update
      */
     public static void postTwoButtonsWithHeaderResponseAsync(
         String responseMessage,
@@ -249,9 +253,10 @@ public class PostUpdate {
     /**
      * Update a message with the "/getcount" query's interactive response
      * Also displays the result of the previous query
+     *
      * @param responseMessage: the message to update
-     * @param channelId: the channel to update
-     * @param timestamp: the timestamp of the message to update
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateQueryCountResponseAsync(
         String responseMessage,
@@ -309,9 +314,10 @@ public class PostUpdate {
     /**
      * Update a message with the "/getnext" query's interactive response
      * Also displays the result of the previous query
+     *
      * @param responseMessage: the message to update
-     * @param channelId: the channel to update
-     * @param timestamp: the timestamp of the message to update
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateQueryNextResponseAsync(
         String responseMessage,
