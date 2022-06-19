@@ -20,7 +20,7 @@ import com.slack.api.model.block.element.ButtonElement;
 public class Blocks {
 
     /**
-     * @param buttonText: the text of the button
+     * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
      * @return a button
@@ -40,12 +40,12 @@ public class Blocks {
     }
 
     /**
-     * @param buttonText: the text of the button
+     * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
      * @param warningText: the warning in the confirm dialog
      * @param confirmText: the text of the confirm button
-     * @param denyText: the text of the deny button
+     * @param denyText:    the text of the deny button
      * @return a button with a confirm dialog
      */
     public static ButtonElement buttonWithConfirmationDialog(
@@ -76,7 +76,7 @@ public class Blocks {
     }
 
     /**
-     * @param buttonText: the text of the button
+     * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
      * @return button block
@@ -92,7 +92,7 @@ public class Blocks {
     }
 
     /**
-     * @param buttonTextA: the text of the first button
+     * @param buttonTextA:  the text of the first button
      * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
      * @param buttonStyleA: default/primary/danger
      * @return an action block with 2 buttons
@@ -116,12 +116,12 @@ public class Blocks {
     }
 
     /**
-     * @param buttonTextA: the text of the first button
+     * @param buttonTextA:  the text of the first button
      * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
      * @param buttonStyleA: default/primary/danger
-     * @param warningText: the warning in the confirm dialog
-     * @param confirmText: the text of the confirm button
-     * @param denyText: the text of the deny button
+     * @param warningText:  the warning in the confirm dialog
+     * @param confirmText:  the text of the confirm button
+     * @param denyText:     the text of the deny button
      * @return an action block with 3 buttons, the third button will open a confirm dialog
      */
     public static LayoutBlock ThreeButtonBlock(
@@ -157,12 +157,12 @@ public class Blocks {
     }
 
     /**
-     * @param buttonText: the text of the button
+     * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
      * @param warningText: the warning in the confirm dialog
      * @param confirmText: the text of the confirm button
-     * @param denyText: the text of the deny button
+     * @param denyText:    the text of the deny button
      * @return button element with confirm dialog
      */
     public static LayoutBlock ButtonWithConfirmBlock(
@@ -191,7 +191,7 @@ public class Blocks {
 
     /**
      * @param imageUrl: the url of the image
-     * @param altText: the alt text of the image
+     * @param altText:  the alt text of the image
      * @return an image as a block
      */
     public static LayoutBlock ImageBlock(String imageUrl, String altText) {
@@ -213,7 +213,7 @@ public class Blocks {
     }
 
     /**
-     * @param text: output text
+     * @param text:     output text
      * @param imageUrl: the url of the image
      * @return a text + image box as a block
      */

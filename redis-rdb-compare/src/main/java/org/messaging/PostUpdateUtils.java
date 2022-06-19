@@ -21,9 +21,9 @@ public class PostUpdateUtils {
     static String token = System.getenv("SLACK_BOT_TOKEN");
 
     /**
-     * Post a new message to a channel async.
+     * Post a new message to a botSession async.
      * @param layoutBlocks List of blocks that make the message body.
-     * @param channelId Channel to post to.
+     * @param channelId BotSession to post to.
      * @param responseMessage Message to post.
      */
     public static void postResponseAsync(
@@ -31,7 +31,7 @@ public class PostUpdateUtils {
         final String channelId,
         String responseMessage
     ) {
-        log.info("Posting message asynchronously in channel {}...", channelId);
+        log.info("Posting message asynchronously in botSession {}...", channelId);
         slack
             .methodsAsync(token)
             .chatPostMessage(req ->
@@ -48,8 +48,8 @@ public class PostUpdateUtils {
     }
 
     /**
-     * Delete an existing message to a channel async.
-     * @param channelId Channel to delete from.
+     * Delete an existing message to a botSession async.
+     * @param channelId BotSession to delete from.
      * @param timestamp The message to delete is determined by the timestamp parameter.
      */
     public static void deleteResponseAsync(final String channelId, String timestamp) {
@@ -68,9 +68,9 @@ public class PostUpdateUtils {
     }
 
     /**
-     * Update an existing message to a channel async.
+     * Update an existing message to a botSession async.
      * @param layoutBlocks List of blocks that make the message body.
-     * @param channelId Channel to update.
+     * @param channelId BotSession to update.
      * @param responseMessage Message text to update.
      * @param timestamp The message to update is determined by the timestamp parameter.
      */
@@ -80,7 +80,7 @@ public class PostUpdateUtils {
         String responseMessage,
         String timestamp
     ) {
-        log.info("Updating message asynchronously in channel {}...", channelId);
+        log.info("Updating message asynchronously in botSession {}...", channelId);
         slack
             .methodsAsync(token)
             .chatUpdate(req ->
@@ -97,9 +97,9 @@ public class PostUpdateUtils {
     }
 
     /**
-     * Post a new message to a channel sync.
+     * Post a new message to a botSession sync.
      * @param layoutBlocks List of blocks that make the message body.
-     * @param channelId Channel to post to.
+     * @param channelId BotSession to post to.
      * @param responseMessage Message to post.
      * @param timestamp The message to post is determined by the timestamp parameter.
      */
@@ -110,7 +110,7 @@ public class PostUpdateUtils {
         String timestamp
     ) {
         ChatUpdateResponse response = null;
-        log.info("Updating message synchronously in channel {}...", channelId);
+        log.info("Updating message synchronously in botSession {}...", channelId);
         try {
             response =
                 slack

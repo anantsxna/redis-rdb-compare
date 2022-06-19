@@ -6,6 +6,9 @@ import java.util.concurrent.ExecutorService;
 import lombok.Builder;
 import lombok.NonNull;
 
+/**
+ * Single, nameable executor service.
+ */
 @Builder
 public class SingleNameableExecutorService {
 

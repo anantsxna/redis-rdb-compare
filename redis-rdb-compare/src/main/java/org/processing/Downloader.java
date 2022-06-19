@@ -19,7 +19,7 @@ import org.threading.FixedNameableExecutorService;
  * Downloader class.
  * Processes the s3 links and downloads the .rdb files.
  * Only handles the processing part of the downloading process.
- * The input links, output files are part of the Channel class that holds the Downloader object.
+ * The input links, output files are part of the BotSession class that holds the Downloader object.
  */
 @Slf4j
 @Builder
