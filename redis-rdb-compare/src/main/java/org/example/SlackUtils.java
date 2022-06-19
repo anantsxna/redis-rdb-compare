@@ -86,7 +86,8 @@ public class SlackUtils {
             assert (!text.contains(" "));
             String[] args = text.split(" ");
             assert (args.length == 2);
-            urls = new URL[] { new URL(args[0]), new URL(args[1]) };
+            channel.setS3linkA(new URL(args[0]));
+            channel.setS3linkB(new URL(args[1]));
         } catch (Exception e) {
             //TODO : expand reasons for invalid query
             return BAD_ARGUMENTS;
@@ -99,8 +100,8 @@ public class SlackUtils {
                 .submit(() -> {
                     channel.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
                     Downloader downloader = channel.getDownloader();
-                    downloader.addToDownloader(urls[0].toString(), channel.getDumpA());
-                    downloader.addToDownloader(urls[1].toString(), channel.getDumpB());
+                    downloader.addToDownloader(channel.getS3linkA(), channel.getDumpA());
+                    downloader.addToDownloader(channel.getS3linkB(), channel.getDumpB());
 
                     long startTime = System.currentTimeMillis();
                     try {
@@ -460,16 +461,16 @@ public class SlackUtils {
                 .forEach((key, channel) -> {
                     sb
                         .append(index[0])
-                        .append(". ")
+                        .append(". RequestId:`")
                         .append(channel.getRequestId())
-                        .append(":\n>A: <")
-                        .append(channel.getS3linkA())
+                        .append("`:\n>A: <")
+                        .append(channel.getS3linkA().toString())
                         .append("|")
-                        .append(Channel.formatLink(channel.getS3linkA()))
+                        .append(Channel.formatLink(channel.getS3linkA().toString()))
                         .append(">\n>B: <")
-                        .append(channel.getS3linkA())
+                        .append(channel.getS3linkB().toString())
                         .append("|")
-                        .append(Channel.formatLink(channel.getS3linkA()))
+                        .append(Channel.formatLink(channel.getS3linkB().toString()))
                         .append(">\n\n");
                     index[0]++;
                 });

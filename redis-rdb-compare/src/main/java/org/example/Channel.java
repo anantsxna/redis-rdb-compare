@@ -3,6 +3,7 @@ package org.example;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
+import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,10 +32,12 @@ public class Channel {
     private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
-    private final String s3linkA = "link-not-set-set";
+    @Setter
+    private URL s3linkA;
 
     @Builder.Default
-    private final String s3linkB = "link-not-set-yet";
+    @Setter
+    private URL s3linkB;
 
     @Builder.Default
     private volatile String dumpA = "./.sessionFiles/dump-A-downloaded-notset.rdb";
@@ -72,6 +75,9 @@ public class Channel {
     private final String requestId = randomAlphanumeric(10);
 
     public static String formatLink(String s3link) {
+        if (s3link == null) {
+            return "link-not-set-yet";
+        }
         //TODO: fix this after getting url links
         return s3link.replace("https://", "");
     }
