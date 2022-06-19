@@ -17,9 +17,6 @@ public abstract class Query {
         GET_COUNT,
     }
 
-    protected static final String INVALID_REQUEST_ID =
-        "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
-
     @NonNull
     private final QueryType queryType;
 
@@ -32,7 +29,7 @@ public abstract class Query {
 
     @NonNull
     @Getter
-    private final String requestId;
+    private final String channelId;
 
     @Builder.Default
     StringBuilder result = new StringBuilder();

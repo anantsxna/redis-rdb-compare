@@ -73,9 +73,9 @@ public class LocalMain {
                 if (input.equals("y")) {
                     System.out.println(
                         """
-                                    Query Type? (1/2):
-                                    1. Get Count of keys that begin with a certain Prefix in both databases
-                                    2. Top 'n' key-prefixes that begin with a certain fixed string"""
+                            Query Type? (1/2):
+                            1. Get Count of keys that begin with a certain Prefix in both databases
+                            2. Top 'n' key-prefixes that begin with a certain fixed string"""
                     );
                     int queryType = Integer.parseInt(reader.readLine());
 
