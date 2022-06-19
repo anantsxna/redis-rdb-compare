@@ -3,7 +3,6 @@ package org.processing;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -27,7 +26,7 @@ import org.threading.FixedNameableExecutorService;
 public class Downloader {
 
     @Builder.Default
-    private final HashMap<String, String> downloadPairs = new HashMap<>();
+    private final HashMap<URL, String> downloadPairs = new HashMap<>();
 
     @Builder.Default
     private final ExecutorService downloadingExecutor = FixedNameableExecutorService
@@ -40,10 +39,10 @@ public class Downloader {
     /**
      * Adds the s3 link and the output file to the list.
      *
-     * @param s3Link:   the s3 link to the .rdb file.
+     * @param s3Link:   the s3 URL to the .rdb file.
      * @param dumpFile: the output file to write the .rdb file to.
      */
-    public void addToDownloader(String s3Link, String dumpFile) {
+    public void addToDownloader(URL s3Link, String dumpFile) {
         downloadPairs.put(s3Link, dumpFile);
     }
 
@@ -54,19 +53,14 @@ public class Downloader {
         AtomicBoolean downloadingSuccess = new AtomicBoolean(true);
         assert (!downloadingExecutor.isShutdown());
         log.info("download() called...");
-        downloadPairs.forEach((s3Link, dumpFile) -> {
+        downloadPairs.forEach((s3url, dumpFile) -> {
             downloadingExecutor.submit(() -> {
-                log.info("Downloading {} to {}", s3Link, dumpFile);
+                log.info("Downloading {} to {}", s3url.toString(), dumpFile);
                 //  TODO: S3Downloader.download(s3Link, dumpFile);
-                URL url = null;
-                try {
-                    url = new URL(s3Link);
-                } catch (MalformedURLException e) {
-                    log.error("Malformed URL: {}", s3Link);
-                    throw new RuntimeException(e);
-                }
                 try (
-                    ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+                    ReadableByteChannel readableByteChannel = Channels.newChannel(
+                        s3url.openStream()
+                    );
                     FileOutputStream fileOutputStream = new FileOutputStream(dumpFile)
                 ) {
                     FileChannel fileChannel = fileOutputStream.getChannel();
