@@ -12,7 +12,7 @@ import org.trie.QTrie;
  * Trie Maker class.
  * Processes the keys class and makes the tries.
  * Only handles the processing part of the trie making process.
- * The input, output files are part of the Channel class that holds the TrieMaker object.
+ * The input, output files are part of the BotSession class that holds the TrieMaker object.
  */
 @Slf4j
 @Builder

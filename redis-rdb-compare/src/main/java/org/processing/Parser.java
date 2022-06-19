@@ -17,7 +17,7 @@ import org.threading.FixedNameableExecutorService;
  * Parser class.
  * Processes the .rdb file and creates a list of all the keys.
  * Only handles the processing part of the parsing process.
- * The input, output files are part of the Channel class that holds the Parser object.
+ * The input, output files are part of the BotSession class that holds the Parser object.
  */
 @Slf4j
 @Builder
