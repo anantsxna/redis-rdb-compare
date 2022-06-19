@@ -26,19 +26,19 @@ public class CountQuery extends Query {
             result
                 .append("Total keys with prefix *")
                 .append(key)
-                .append("*: ")
-                .append("in first database: ")
+                .append("*: \n")
+                .append(">in first database: *")
                 .append(countInA)
-                .append(", ")
-                .append("in second database: ")
+                .append("*\n")
+                .append(">in second database: *")
                 .append(countInB)
-                .append("\n")
-                .append("query time: ")
+                .append("*\n")
+                .append("`query time: ")
                 .append(endTime - startTime)
-                .append(" ms\n");
+                .append(" ms`\n");
             log.info("Count query for key: {} in channel: {}", key, getChannelId());
         } catch (Exception e) {
-            result.append("The key does not exist in the database.");
+            result.append(">The key does not exist in the database.");
         }
         setExitCode(0);
     }

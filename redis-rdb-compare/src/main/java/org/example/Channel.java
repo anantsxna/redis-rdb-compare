@@ -27,15 +27,14 @@ import org.trie.QTrie;
 public class Channel {
 
     @Builder.Default
+    @Getter
     private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
     @Builder.Default
-    private final String s3linkA =
-        "https://drive.google.com/uc?export=download&id=1GIeSFzcnXVUwWDZ-4uTl0nwXz2vUClqB";
+    private final String s3linkA = "link-not-set-set";
 
     @Builder.Default
-    private final String s3linkB =
-        "https://drive.google.com/uc?export=download&id=1D8ubAC74hykFF6_mmvdS4tjzd8h6E-Cs";
+    private final String s3linkB = "link-not-set-yet";
 
     @Builder.Default
     private volatile String dumpA = "./.sessionFiles/dump-A-downloaded-notset.rdb";
@@ -71,6 +70,11 @@ public class Channel {
 
     @Builder.Default
     private final String requestId = randomAlphanumeric(10);
+
+    public static String formatLink(String s3link) {
+        //TODO: fix this after getting url links
+        return s3link.replace("https://", "");
+    }
 
     private Channel setFileNames() {
         this.dumpA = "./.sessionFiles/dump-A-downloaded-" + this.getRequestId() + ".rdb";
@@ -134,21 +138,21 @@ public class Channel {
     @Builder.Default
     private ExecutorService trieMakingExecutorService = SingleNameableExecutorService
         .builder()
-        .baseName("make-trie-thread")
+        .baseName("make-trie-caller")
         .build()
         .getExecutorService();
 
     @Builder.Default
     private ExecutorService parsingExecutorService = SingleNameableExecutorService
         .builder()
-        .baseName("parsing-thread")
+        .baseName("parsing-caller")
         .build()
         .getExecutorService();
 
     @Builder.Default
     private ExecutorService downloadingExecutorService = SingleNameableExecutorService
         .builder()
-        .baseName("downloading-thread")
+        .baseName("downloading-caller")
         .build()
         .getExecutorService();
 

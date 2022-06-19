@@ -432,6 +432,52 @@ public class SlackUtils {
     }
 
     /**
+     * Deletes all active sessions
+     * @return String containing the delete-success message to be sent to the channels
+     */
+    public static String deleteAllSessionsUtils() {
+        Channel
+            .getChannels()
+            .forEach((key, value) -> {
+                deleteSessionUtils(key);
+            });
+        return "Deleted: all sessions.";
+    }
+
+    /**
+     * List all active sessions
+     * @return String containing the list of active sessions with requestId and the s3links
+     */
+    public static String listSessionsUtils() {
+        StringBuilder sb = new StringBuilder();
+        if (Channel.getChannels().isEmpty()) {
+            sb.append(">No sessions are active.");
+        } else {
+            sb.append("Active sessions: \n\n");
+            final int[] index = { 1 };
+            Channel
+                .getChannels()
+                .forEach((key, channel) -> {
+                    sb
+                        .append(index[0])
+                        .append(". ")
+                        .append(channel.getRequestId())
+                        .append(":\n>A: <")
+                        .append(channel.getS3linkA())
+                        .append("|")
+                        .append(Channel.formatLink(channel.getS3linkA()))
+                        .append(">\n>B: <")
+                        .append(channel.getS3linkA())
+                        .append("|")
+                        .append(Channel.formatLink(channel.getS3linkA()))
+                        .append(">\n\n");
+                    index[0]++;
+                });
+        }
+        return sb.toString();
+    }
+
+    /**
      * Resets the internal parameters of the channel(or 'session') to their default values.
      * Cheats by deleting the channel and creating a new session.
      * @param channelId: the channel to reset the session in

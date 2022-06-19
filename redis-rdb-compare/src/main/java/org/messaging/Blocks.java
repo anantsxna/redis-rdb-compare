@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.composition.ConfirmationDialogObject;
+import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElements;
 import com.slack.api.model.block.element.ButtonElement;
@@ -219,7 +220,7 @@ public class Blocks {
     public static LayoutBlock TextImageBlock(String text, String imageUrl) {
         return section(section ->
             section
-                .text(PlainTextObject.builder().text(text).emoji(true).build())
+                .text(MarkdownTextObject.builder().text(text).build())
                 .accessory(BlockElements.image(image -> image.imageUrl(imageUrl).altText(text)))
         );
     }

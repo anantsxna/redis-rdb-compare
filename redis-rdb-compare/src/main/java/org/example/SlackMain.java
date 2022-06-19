@@ -12,6 +12,7 @@ import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.messaging.ProcessView;
@@ -163,7 +164,7 @@ public class SlackMain {
             }
         );
 
-        // command "/clear" - resets the data within the channel
+        // command "/clear" - resets the sessions with the given requestId
         app.command(
             "/clear",
             (req, ctx) -> {
@@ -173,7 +174,41 @@ public class SlackMain {
                         log.info("/clear command received");
                         final String channelId = req.getContext().getChannelId();
                         String response = deleteSessionUtils(channelId);
-                        log.info("clearUtils response: {}", response);
+                        log.info("deleteSessionUtils response: {}", response);
+                        postTextResponseAsync(response, channelId);
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // command "/clearall" - resets the data for all sessions
+        app.command(
+            "/clearall",
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("/clearall command received");
+                        final String channelId = req.getContext().getChannelId();
+                        String response = deleteAllSessionsUtils();
+                        log.info("deleteAllSessionsUtils response: {}", response);
+                        postTextResponseAsync(response, channelId);
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // command "/list" - lists all active sessions
+        app.command(
+            "/list",
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("/list command received");
+                        final String channelId = req.getContext().getChannelId();
+                        String response = listSessionsUtils();
+                        log.info("listSessionsUtils response: {}", response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -371,6 +406,25 @@ public class SlackMain {
                 return ctx.ack();
             }
         );
+
+        //cleanup shutdown hooks
+        Runtime
+            .getRuntime()
+            .addShutdownHook(
+                new Thread(() -> {
+                    log.info("Shutting down bot...");
+                    deleteAllSessionsUtils();
+                    app.executorService().shutdown();
+                    try {
+                        boolean exit0 = app
+                            .executorService()
+                            .awaitTermination(10, TimeUnit.SECONDS);
+                        assert !exit0 : "Executor service did not terminate within 10 seconds";
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+            );
 
         //start the app
         try {

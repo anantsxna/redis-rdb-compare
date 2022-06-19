@@ -78,22 +78,25 @@ public class Downloader {
                     }
                 } catch (FileNotFoundException e) {
                     log.error("Error in FileNotFound");
+                    log.error(e.getMessage());
                     downloadingSuccess.set(false);
                 } catch (SecurityException e) {
                     log.error("Error in Security");
+                    log.error(e.getMessage());
                     downloadingSuccess.set(false);
                 } catch (IOException e) {
                     log.error("Error in FileOutputStream");
+                    log.error(e.getMessage());
                     downloadingSuccess.set(false);
                 }
             });
         });
         downloadingExecutor.shutdown();
-        log.info(downloadingSuccess.get() ? "Downloading successful" : "Downloading failed");
         boolean awaitTerm = downloadingExecutor.awaitTermination(
             Long.MAX_VALUE, //TODO: ask sir for a value
             TimeUnit.SECONDS
         );
+        log.info(downloadingSuccess.get() ? "Downloading successful" : "Downloading failed");
         return downloadingSuccess.get() && awaitTerm;
     }
 }
