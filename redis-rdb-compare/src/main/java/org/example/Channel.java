@@ -31,11 +31,9 @@ public class Channel {
     @Getter
     private static final ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<>(); //static map of channel ids to channels
 
-    @Builder.Default
     @Setter
     private URL s3linkA;
 
-    @Builder.Default
     @Setter
     private URL s3linkB;
 

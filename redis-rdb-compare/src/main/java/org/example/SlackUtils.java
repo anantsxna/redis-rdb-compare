@@ -461,7 +461,7 @@ public class SlackUtils {
                 .forEach((key, channel) -> {
                     sb
                         .append(index[0])
-                        .append(". RequestId:`")
+                        .append(". Request Id: `")
                         .append(channel.getRequestId())
                         .append("`:\n>A: <")
                         .append(channel.getS3linkA().toString())
