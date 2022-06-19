@@ -2,7 +2,6 @@ package org.threading;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.jetbrains.annotations.NotNull;
 
 /**

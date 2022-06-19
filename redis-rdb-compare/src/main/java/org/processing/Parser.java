@@ -99,7 +99,7 @@ public final class Parser {
      *
      * @param dumpFile: the location of the dump file to parse, must be a .rdb file.
      * @param keysFile: the location of the file to store the keys, must be a .txt file.
-     * 
+     *
      */
     public void addToParser(String dumpFile, String keysFile) {
         log.info("adding health, {}, {}", dumpFile, keysFile);

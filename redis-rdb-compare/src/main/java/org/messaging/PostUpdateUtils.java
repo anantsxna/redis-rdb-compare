@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Utility class for PostUpdate.
  * Contains methods posting, updating and deleting messages asynchronously and synchronously.
- * 
+ *
  * Rigid design classes from PostUpdate invoke methods from this class to post, update and delete messages.
  */
 @Slf4j

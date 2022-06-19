@@ -34,7 +34,7 @@ public class TrieMaker {
      *
      * @param keysFile: the location of the file to get the keys, must be a .txt file.
      * @param trie: the trie to be made.
-     * 
+     *
      */
     public void addToTrieMaker(String keysFile, QTrie trie) {
         keysTriesPairs.put(keysFile, trie);
