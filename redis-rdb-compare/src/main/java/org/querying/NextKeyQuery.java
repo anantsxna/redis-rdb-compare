@@ -4,7 +4,6 @@ import static org.example.BotSession.getBotSession;
 
 import java.util.List;
 import java.util.Map;
-
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,7 @@ public class NextKeyQuery extends Query {
             BotSession botSession = getBotSession(getRequestId());
             try {
                 result.append(">In session ").append(getRequestId()).append("\n");
-                for (QTrie trie : new QTrie[]{botSession.getTrieA(), botSession.getTrieB()}) {
+                for (QTrie trie : new QTrie[] { botSession.getTrieA(), botSession.getTrieB() }) {
                     try {
                         long startTime = System.currentTimeMillis();
                         List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
@@ -46,45 +45,45 @@ public class NextKeyQuery extends Query {
                         result.append("*\n");
                         if (found < n) {
                             result
-                                    .append("`WARN: Found ")
-                                    .append(found)
-                                    .append(" prefixes only, less than the requested number (")
-                                    .append(n)
-                                    .append(")`\n");
+                                .append("`WARN: Found ")
+                                .append(found)
+                                .append(" prefixes only, less than the requested number (")
+                                .append(n)
+                                .append(")`\n");
                         }
                         result
-                                .append(">Top ")
-                                .append(found)
-                                .append(" key-prefixes that start with: \"")
-                                .append(key)
-                                .append("\": \n");
+                            .append(">Top ")
+                            .append(found)
+                            .append(" key-prefixes that start with: \"")
+                            .append(key)
+                            .append("\": \n");
                         for (int i = 2; i < query.size(); i++) {
                             result
-                                    .append(">")
-                                    .append(i - 1)
-                                    .append(". ")
-                                    .append(query.get(i).getKey())
-                                    .append(" : ")
-                                    .append(query.get(i).getValue())
-                                    .append(" key(s).\n");
+                                .append(">")
+                                .append(i - 1)
+                                .append(". ")
+                                .append(query.get(i).getKey())
+                                .append(" : ")
+                                .append(query.get(i).getValue())
+                                .append(" key(s).\n");
                         }
                         if (query.get(1).getValue() > found) {
                             result
-                                    .append(">... and ")
-                                    .append(query.get(1).getValue() - found)
-                                    .append(" others...\n");
+                                .append(">... and ")
+                                .append(query.get(1).getValue() - found)
+                                .append(" others...\n");
                         }
                         result
-                                .append("`query time: ")
-                                .append(endTime - startTime)
-                                .append(" ms`\n\n\n");
+                            .append("`query time: ")
+                            .append(endTime - startTime)
+                            .append(" ms`\n\n\n");
                     } catch (Exception e) {
                         result
-                                .append(">No keys found for ")
-                                .append(key)
-                                .append(" in ")
-                                .append(trie.getKeysFile())
-                                .append("\n");
+                            .append(">No keys found for ")
+                            .append(key)
+                            .append(" in ")
+                            .append(trie.getKeysFile())
+                            .append("\n");
                     }
                     log.info("Next query for key: {} in botSession: {}", key, getRequestId());
                 }
