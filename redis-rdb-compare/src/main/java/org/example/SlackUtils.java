@@ -76,19 +76,19 @@ public class SlackUtils {
 
         final String downloadComplete = downloadUtils(requestId + " " + text, channelId, true);
         if (!downloadComplete.contains("Downloading completed")) {
-            return DOWNLOADING_NOT_COMPLETED + " due to some error.";
+            return downloadComplete + "\n\n\n" + DOWNLOADING_NOT_COMPLETED;
         }
         postTextResponseSync(downloadComplete, channelId);
 
         final String parsingComplete = parseUtils(requestId, channelId, true);
         if (!parsingComplete.contains("Parsing completed")) {
-            return PARSING_NOT_COMPLETED + " due to some error.";
+            return parsingComplete + "\n\n\n" + PARSING_NOT_COMPLETED;
         }
         postTextResponseSync(parsingComplete, channelId);
 
         final String trieComplete = makeTrieUtils(requestId, channelId, true);
         if (!trieComplete.contains("Trie construction completed")) {
-            return TRIE_CONSTRUCTION_NOT_COMPLETED + " due to some error.";
+            return trieComplete + "\n\n\n" + TRIE_CONSTRUCTION_NOT_COMPLETED;
         }
         postTextResponseSync(trieComplete, channelId);
 
@@ -126,11 +126,11 @@ public class SlackUtils {
         BotSession botSession;
         try {
             assert (!text.isEmpty());
-            String[] args = StringUtils.split(text);
+            String[] args = text.split("\\r?\\n|\\r|\\s");
             assert (args.length == 3);
             botSession = getBotSession(args[0]);
-            botSession.setS3linkA(new URL(args[1]));
-            botSession.setS3linkB(new URL(args[2]));
+            botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
+            botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
         } catch (IllegalStateException e) {
             return INVALID_REQUEST_ID;
         } catch (Exception e) {
@@ -213,7 +213,8 @@ public class SlackUtils {
         final String channelId,
         boolean waitForCompletion
     ) {
-        try (BotSession botSession = getBotSession(requestId)) {
+        try {
+            BotSession botSession = getBotSession(requestId);
             if (!botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
                 return DOWNLOADING_NOT_COMPLETED;
             }
@@ -297,7 +298,8 @@ public class SlackUtils {
         final String channelId,
         boolean waitForCompletion
     ) {
-        try (BotSession botSession = getBotSession(requestId)) {
+        try {
+            BotSession botSession = getBotSession(requestId);
             if (!botSession.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
                 return PARSING_NOT_COMPLETED;
             }
@@ -389,7 +391,8 @@ public class SlackUtils {
             log.error(e.getMessage());
             return BAD_ARGUMENTS;
         }
-        try (BotSession botSession = getBotSession(requestId)) {
+        try {
+            BotSession botSession = getBotSession(requestId);
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                 return TRIES_NOT_CREATED;
             }
@@ -441,7 +444,8 @@ public class SlackUtils {
             return BAD_ARGUMENTS;
         }
 
-        try (BotSession botSession = getBotSession(requestId)) {
+        try {
+            BotSession botSession = getBotSession(requestId);
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                 return TRIES_NOT_CREATED;
             }
@@ -520,7 +524,7 @@ public class SlackUtils {
      */
     public static String deleteAllSessionsUtils() {
         BotSession
-            .getBotSessions()
+            .getAllBotSessions()
             .forEach((key, value) -> {
                 deleteSessionUtils(key);
             });
@@ -534,28 +538,35 @@ public class SlackUtils {
      */
     public static String listSessionsUtils() {
         StringBuilder sb = new StringBuilder();
-        if (BotSession.getBotSessions().isEmpty()) {
+        if (BotSession.getAllBotSessions().isEmpty()) {
             sb.append(">No sessions are active.");
         } else {
             sb.append("Active sessions: \n\n");
             final int[] index = { 1 };
             BotSession
-                .getBotSessions()
+                .getAllBotSessions()
                 .forEach((key, channel) -> {
                     sb
                         .append(index[0])
                         .append(". Request Id: `")
                         .append(channel.getRequestId())
                         .append("`:\n>A: <")
-                        .append(channel.getS3linkA().toString())
+                        .append(channel.getS3linkA())
                         .append("|")
-                        .append(BotSession.formatLink(channel.getS3linkA().toString()))
+                        .append(BotSession.shortenURL(channel.getS3linkA()))
                         .append(">\n>B: <")
-                        .append(channel.getS3linkB().toString())
+                        .append(channel.getS3linkB())
                         .append("|")
-                        .append(BotSession.formatLink(channel.getS3linkB().toString()))
+                        .append(BotSession.shortenURL(channel.getS3linkB()))
                         .append(">\n\n");
                     index[0]++;
+                    log.info(
+                        channel.getRequestId() +
+                        " " +
+                        channel.getS3linkA() +
+                        " " +
+                        channel.getS3linkB()
+                    );
                 });
         }
         return sb.toString();
