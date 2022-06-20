@@ -3,12 +3,14 @@ package org.example;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.processing.Downloader;
@@ -24,11 +26,11 @@ import org.trie.QTrie;
 @Slf4j
 @Getter
 @Builder
-public class BotSession implements AutoCloseable {
+public class BotSession {
 
     @Builder.Default
     @Getter
-    private static final ConcurrentHashMap<String, BotSession> botSessions = new ConcurrentHashMap<>(); //static map of botSession ids to requestIds
+    private static final ConcurrentHashMap<String, BotSession> allBotSessions = new ConcurrentHashMap<>(); //static map of botSession ids to requestIds
 
     @Setter
     private URL s3linkA;
@@ -67,12 +69,19 @@ public class BotSession implements AutoCloseable {
 
     private final String requestId;
 
-    public static String formatLink(String s3link) {
+    public static String shortenURL(URL s3link) {
         if (s3link == null) {
             return "link-not-set-yet";
         }
         //TODO: fix this after getting url links
-        return s3link.replace("https://", "");
+        return s3link.toString().replace("https://", "");
+    }
+
+    public static String elongateURL(@NonNull String s3link) {
+        if (!s3link.matches("^\\w+?://.*")) {
+            s3link = "https://" + s3link;
+        }
+        return s3link;
     }
 
     private BotSession setFileNames() {
@@ -80,6 +89,13 @@ public class BotSession implements AutoCloseable {
         this.dumpB = "./.sessionFiles/dump-B-downloaded-" + this.getRequestId() + ".rdb";
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
         this.keysB = "./.sessionFiles/keys-B-" + this.getRequestId() + ".txt";
+        try {
+            this.s3linkA = new URL("https://example.com");
+            this.s3linkB = new URL("https://example.com");
+        } catch (MalformedURLException e) {
+            log.error("Failed to initialize s3links for botSession: {}", this.getRequestId());
+            e.printStackTrace();
+        }
         return this;
     }
 
@@ -162,7 +178,7 @@ public class BotSession implements AutoCloseable {
      * @return BotSession object
      */
     public static BotSession getBotSession(final String requestId) throws IllegalStateException {
-        if (!botSessions.containsKey(requestId)) {
+        if (!allBotSessions.containsKey(requestId)) {
             postTextResponseAsync(
                 "Sorry, you need to create a session first by running \"/process\"",
                 requestId
@@ -173,7 +189,7 @@ public class BotSession implements AutoCloseable {
                 "requested botSession by id " + requestId + " does not exist"
             );
         }
-        return botSessions.get(requestId);
+        return allBotSessions.get(requestId);
     }
 
     /**
@@ -183,9 +199,9 @@ public class BotSession implements AutoCloseable {
      */
     public static String createBotSession() {
         String requestId = "#" + randomNumeric(4);
-        BotSession botSession = botSessions.putIfAbsent(
+        BotSession botSession = allBotSessions.putIfAbsent(
             requestId,
-            BotSession.builder().requestId(requestId).build().setFileNames()
+            BotSession.builder().requestId(requestId).build()
         );
         return (botSession == null) ? requestId : null;
     }
@@ -197,15 +213,7 @@ public class BotSession implements AutoCloseable {
      */
     public static void removeBotSession(final String requestId) {
         log.info("removeBotSession() called");
-        botSessions.remove(requestId);
-    }
-
-    /**
-     * Implements AutoCloseable interface method close().
-     */
-    @Override
-    public void close() {
-        log.info("AutoClose() called");
+        allBotSessions.remove(requestId);
     }
 
     /**

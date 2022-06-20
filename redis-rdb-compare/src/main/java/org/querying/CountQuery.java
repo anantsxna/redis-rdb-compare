@@ -17,7 +17,8 @@ public class CountQuery extends Query {
 
     @Override
     public void execute() {
-        try (BotSession botSession = getBotSession(getRequestId())) {
+        try {
+            BotSession botSession = getBotSession(getRequestId());
             try {
                 result.append(">In session ").append(getRequestId()).append("\n");
                 long startTime = System.currentTimeMillis();

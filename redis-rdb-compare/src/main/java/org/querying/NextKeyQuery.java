@@ -24,7 +24,8 @@ public class NextKeyQuery extends Query {
 
     @Override
     public void execute() {
-        try (BotSession botSession = getBotSession(getRequestId())) {
+        try {
+            BotSession botSession = getBotSession(getRequestId());
             try {
                 result.append(">In session ").append(getRequestId()).append("\n");
                 for (QTrie trie : new QTrie[] { botSession.getTrieA(), botSession.getTrieB() }) {
