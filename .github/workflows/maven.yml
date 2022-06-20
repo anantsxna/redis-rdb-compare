@@ -3,11 +3,7 @@
 
 name: CI build and test
 
-on:
-  push:
-    branches: [ "main", "anantsxna-patch-1", "slack", "locks-and-parallel" ]
-  pull_request:
-    branches: [ "main", "anantsxna-patch-1", "slack", "locks-and-parallel" ]
+on: ['push', 'pull_request']
 
 jobs:
   build:
@@ -36,3 +32,4 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         verbose: true
+        informational: true
