@@ -65,7 +65,7 @@ public class NextKeyQuery extends Query {
                                 .append(query.get(i).getKey())
                                 .append(" : ")
                                 .append(query.get(i).getValue())
-                                .append(" keys.\n");
+                                .append(" key(s).\n");
                         }
                         if (query.get(1).getValue() > found) {
                             result

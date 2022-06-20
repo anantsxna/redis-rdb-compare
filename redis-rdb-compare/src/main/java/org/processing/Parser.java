@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -112,9 +113,11 @@ public final class Parser {
      * <p>
      * The keys will be stored in the same order as they appear in the dump file.
      */
-    public void parse() {
+    public void parse() throws InterruptedException {
         List<Process> parseProcesses = new ArrayList<>();
-        parsePairs.forEach((dumpFile, keysFile) -> {
+        for (Map.Entry mapElement : parsePairs.entrySet()) {
+            String dumpFile = (String) mapElement.getKey();
+            String keysFile = (String) mapElement.getValue();
             String[] command = new String[] {
                 "pypy3",
                 "fast-parse.py",
@@ -129,20 +132,16 @@ public final class Parser {
             try {
                 process = pb.start();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new InterruptedException(e.getMessage());
             }
             watch(process, dumpFile);
             watchErrors(process, dumpFile);
             parseProcesses.add(process);
-        });
+        }
 
-        parseProcesses.forEach(process -> {
+        for (Process process : parseProcesses) {
             int exitStatus;
-            try {
-                exitStatus = process.waitFor();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            exitStatus = process.waitFor();
             if (exitStatus != 0) {
                 log.error("PYPY3: Process exited with status {}", exitStatus);
                 throw new RuntimeException(
@@ -151,7 +150,8 @@ public final class Parser {
             } else {
                 log.info("PYPY3: Process exited with status {}", exitStatus);
             }
-        });
+        }
+
         loggingExecutor.shutdownNow();
     }
 

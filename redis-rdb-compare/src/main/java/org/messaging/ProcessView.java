@@ -56,8 +56,12 @@ public class ProcessView {
         parser.addToParser(botSession.getDumpB(), botSession.getKeysB());
         log.info("Parsing completed.");
         updateResponse();
-
-        parser.parse();
+        try {
+            parser.parse();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
         parseTime = System.currentTimeMillis() - startTime;
         botSession.setParsingStatus(BotSession.ParsingStatus.COMPLETED);
         log.info("Parsing completed in " + parseTime + " milliseconds");

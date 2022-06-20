@@ -52,7 +52,12 @@ public class LocalMain {
         Parser parser = Parser.builder().build();
         parser.addToParser(dumpA, keysA);
         parser.addToParser(dumpB, keysB);
-        parser.parse();
+        try {
+            parser.parse();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
 
         System.out.println("Both .rdb Files Successfully parsed.");
         System.out.println("Keys from " + dumpA + " stored in: " + keysA);
