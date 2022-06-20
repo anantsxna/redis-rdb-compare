@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.processing.Parser;
 import org.trie.QTrie;
@@ -21,7 +22,7 @@ public class LocalMain {
     static String keysA = "../keys-A.txt";
     static String keysB = "../keys-B.txt";
     private static final BufferedReader reader = new BufferedReader(
-        new InputStreamReader(System.in)
+            new InputStreamReader(System.in)
     );
 
     /**
@@ -32,14 +33,14 @@ public class LocalMain {
 
         try {
             System.out.println(
-                "Enter the path of the first .rdb file (or press enter for default):"
+                    "Enter the path of the first .rdb file (or press enter for default):"
             );
             String input = reader.readLine();
             if (!input.equals("")) {
                 dumpA = input;
             }
             System.out.println(
-                "Enter the path of the second .rdb file (or press enter for default):"
+                    "Enter the path of the second .rdb file (or press enter for default):"
             );
             input = reader.readLine();
             if (!input.equals("")) {
@@ -52,7 +53,12 @@ public class LocalMain {
         Parser parser = Parser.builder().build();
         parser.addToParser(dumpA, keysA);
         parser.addToParser(dumpB, keysB);
-        parser.parse();
+        try {
+            parser.parse();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
 
         System.out.println("Both .rdb Files Successfully parsed.");
         System.out.println("Keys from " + dumpA + " stored in: " + keysA);
@@ -72,7 +78,7 @@ public class LocalMain {
                 String input = reader.readLine();
                 if (input.equals("y")) {
                     System.out.println(
-                        """
+                            """
                                     Query Type? (1/2):
                                     1. Get Count of keys that begin with a certain Prefix in both databases
                                     2. Top 'n' key-prefixes that begin with a certain fixed string"""
@@ -84,25 +90,25 @@ public class LocalMain {
                         String prefix = reader.readLine();
                         log.info("Query-1: {}", prefix);
 
-                        for (QTrie trie : new QTrie[] { trieA, trieB }) {
+                        for (QTrie trie : new QTrie[]{trieA, trieB}) {
                             try {
                                 int keyCount = trie.getCountForPrefix(prefix);
                                 System.out.println(
-                                    "Count for " +
-                                    prefix +
-                                    " in " +
-                                    trie.getKeysFile() +
-                                    ": " +
-                                    keyCount
+                                        "Count for " +
+                                                prefix +
+                                                " in " +
+                                                trie.getKeysFile() +
+                                                ": " +
+                                                keyCount
                                 );
                             } catch (Exception e) {
                                 System.out.println(
-                                    "No keys found for " + prefix + " in " + trie.getKeysFile()
+                                        "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
                                 log.error(
-                                    "Query-1: For prefix {}, Error in getCountForPrefix: {}",
-                                    prefix,
-                                    e.getMessage()
+                                        "Query-1: For prefix {}, Error in getCountForPrefix: {}",
+                                        prefix,
+                                        e.getMessage()
                                 );
                             }
                         }
@@ -113,66 +119,66 @@ public class LocalMain {
                         int n = Integer.parseInt(reader.readLine());
                         log.info("Query-2: {}, {} keys", prefix, n);
 
-                        for (QTrie trie : new QTrie[] { trieA, trieB }) {
+                        for (QTrie trie : new QTrie[]{trieA, trieB}) {
                             try {
                                 List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(
-                                    prefix,
-                                    n
+                                        prefix,
+                                        n
                                 );
                                 int found = query.size() - 2;
                                 if (found < n) {
                                     System.out.println(
-                                        "Found " +
-                                        found +
-                                        " prefixes only, less than the requested number of prefixes.\n"
+                                            "Found " +
+                                                    found +
+                                                    " prefixes only, less than the requested number of prefixes.\n"
                                     );
                                 }
                                 log.info(
-                                    "Top {} keys-prefixes with fixed prefix {} found in file {}: ",
-                                    found,
-                                    prefix,
-                                    trie.getKeysFile()
+                                        "Top {} keys-prefixes with fixed prefix {} found in file {}: ",
+                                        found,
+                                        prefix,
+                                        trie.getKeysFile()
                                 );
                                 System.out.println(
-                                    "Total keys with prefix: " +
-                                    prefix +
-                                    " in " +
-                                    trie.getKeysFile() +
-                                    ": " +
-                                    query.get(0).getValue()
+                                        "Total keys with prefix: " +
+                                                prefix +
+                                                " in " +
+                                                trie.getKeysFile() +
+                                                ": " +
+                                                query.get(0).getValue()
                                 );
                                 System.out.println(
-                                    "Top " +
-                                    found +
-                                    " key-prefixes with prefix: \"" +
-                                    prefix +
-                                    "\": "
+                                        "Top " +
+                                                found +
+                                                " key-prefixes with prefix: \"" +
+                                                prefix +
+                                                "\": "
                                 );
                                 for (int i = 2; i < query.size(); i++) {
                                     System.out.println(
-                                        (i - 1) +
-                                        ". " +
-                                        query.get(i).getKey() +
-                                        " : " +
-                                        query.get(i).getValue() +
-                                        " keys."
+                                            (i - 1) +
+                                                    ". " +
+                                                    query.get(i).getKey() +
+                                                    " : " +
+                                                    query.get(i).getValue() +
+                                                    " keys."
                                     );
                                 }
                                 if (query.get(1).getValue() > found) {
                                     System.out.println(
-                                        "... and " +
-                                        (query.get(1).getValue() - found) +
-                                        " more key-prefixes."
+                                            "... and " +
+                                                    (query.get(1).getValue() - found) +
+                                                    " more key-prefixes."
                                     );
                                 }
                             } catch (Exception e) {
                                 System.out.println(
-                                    "No keys found for " + prefix + " in " + trie.getKeysFile()
+                                        "No keys found for " + prefix + " in " + trie.getKeysFile()
                                 );
                                 log.error(
-                                    "Query-2: For fixed prefix {}, Error in topNKeyWithPrefix: {}",
-                                    prefix,
-                                    e.getMessage()
+                                        "Query-2: For fixed prefix {}, Error in topNKeyWithPrefix: {}",
+                                        prefix,
+                                        e.getMessage()
                                 );
                             }
                         }

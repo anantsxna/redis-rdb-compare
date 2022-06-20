@@ -8,7 +8,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.threading.FixedNameableExecutorService;
@@ -28,11 +30,11 @@ public final class Parser {
 
     @Builder.Default
     private final ExecutorService loggingExecutor = FixedNameableExecutorService
-        .builder()
-        .baseName("logger-in-parser-threads")
-        .threadsNum(4)
-        .build()
-        .getExecutorService();
+            .builder()
+            .baseName("logger-in-parser-threads")
+            .threadsNum(4)
+            .build()
+            .getExecutorService();
 
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
@@ -50,9 +52,9 @@ public final class Parser {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
             try (
-                BufferedReader input = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())
-                )
+                    BufferedReader input = new BufferedReader(
+                            new InputStreamReader(process.getInputStream())
+                    )
             ) {
                 while ((line = input.readLine()) != null) {
                     log.info("PYPY3!: {} in File {}", line, dumpFile);
@@ -81,9 +83,9 @@ public final class Parser {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
             try (
-                BufferedReader errors = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream())
-                )
+                    BufferedReader errors = new BufferedReader(
+                            new InputStreamReader(process.getErrorStream())
+                    )
             ) {
                 while ((line = errors.readLine()) != null) {
                     log.error("PYPY3 Error: {} in File {}", line, dumpFile);
@@ -112,15 +114,17 @@ public final class Parser {
      * <p>
      * The keys will be stored in the same order as they appear in the dump file.
      */
-    public void parse() {
+    public void parse() throws InterruptedException {
         List<Process> parseProcesses = new ArrayList<>();
-        parsePairs.forEach((dumpFile, keysFile) -> {
-            String[] command = new String[] {
-                "pypy3",
-                "fast-parse.py",
-                "--rdb=" + dumpFile,
-                "--keys=" + keysFile,
-                "--objspace-std-withsmalllong",
+        for (Map.Entry mapElement : parsePairs.entrySet()) {
+            String dumpFile = (String) mapElement.getKey();
+            String keysFile = (String) mapElement.getValue();
+            String[] command = new String[]{
+                    "pypy3",
+                    "fast-parse.py",
+                    "--rdb=" + dumpFile,
+                    "--keys=" + keysFile,
+                    "--objspace-std-withsmalllong",
             };
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
@@ -129,29 +133,27 @@ public final class Parser {
             try {
                 process = pb.start();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new InterruptedException(e.getMessage());
             }
             watch(process, dumpFile);
             watchErrors(process, dumpFile);
             parseProcesses.add(process);
-        });
+        }
 
-        parseProcesses.forEach(process -> {
+
+        for (Process process : parseProcesses) {
             int exitStatus;
-            try {
-                exitStatus = process.waitFor();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            exitStatus = process.waitFor();
             if (exitStatus != 0) {
                 log.error("PYPY3: Process exited with status {}", exitStatus);
                 throw new RuntimeException(
-                    "ERROR: Process for parsing file exited with status " + exitStatus
+                        "ERROR: Process for parsing file exited with status " + exitStatus
                 );
             } else {
                 log.info("PYPY3: Process exited with status {}", exitStatus);
             }
-        });
+        }
+
         loggingExecutor.shutdownNow();
     }
 

@@ -6,8 +6,10 @@ import static org.messaging.PostUpdateUtils.updateResponseSync;
 
 import com.slack.api.model.block.DividerBlock;
 import com.slack.api.model.block.LayoutBlock;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -56,8 +58,12 @@ public class ProcessView {
         parser.addToParser(botSession.getDumpB(), botSession.getKeysB());
         log.info("Parsing completed.");
         updateResponse();
-
-        parser.parse();
+        try {
+            parser.parse();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
         parseTime = System.currentTimeMillis() - startTime;
         botSession.setParsingStatus(BotSession.ParsingStatus.COMPLETED);
         log.info("Parsing completed in " + parseTime + " milliseconds");
@@ -82,10 +88,10 @@ public class ProcessView {
      */
     public void updateResponse() {
         updateResponseSync(
-            buildResponse(),
-            requestId,
-            "Response from parsing and making trie",
-            timestamp
+                buildResponse(),
+                requestId,
+                "Response from parsing and making trie",
+                timestamp
         );
     }
 
@@ -105,11 +111,11 @@ public class ProcessView {
             blocks.add(TextBlock("Parsing completed."));
             blocks.add(TextBlock("Parsing time: " + parseTime + "ms"));
             if (
-                botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.NOT_CONSTRUCTED)
+                    botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.NOT_CONSTRUCTED)
             ) {
                 blocks.add(TextBlock("Tries have not begin construction yet..."));
             } else if (
-                botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.CONSTRUCTING)
+                    botSession.getTrieMakingStatus().equals(BotSession.TrieMakingStatus.CONSTRUCTING)
             ) {
                 blocks.add(TextBlock("Trie construction in progress..."));
             } else {
@@ -118,20 +124,20 @@ public class ProcessView {
                 blocks.add(TextBlock("Trie construction time: " + makeTrieTime + "ms"));
                 blocks.add(DividerBlock.builder().build());
                 blocks.add(
-                    ThreeButtonBlock(
-                        "Get Count",
-                        "queryAll-count",
-                        "primary",
-                        "Get Next",
-                        "queryAll-next",
-                        "primary",
-                        "Reset",
-                        "resetAll",
-                        "danger",
-                        "Any parsed data and tries will be deleted.",
-                        "Reset",
-                        "Cancel"
-                    )
+                        ThreeButtonBlock(
+                                "Get Count",
+                                "queryAll-count",
+                                "primary",
+                                "Get Next",
+                                "queryAll-next",
+                                "primary",
+                                "Reset",
+                                "resetAll",
+                                "danger",
+                                "Any parsed data and tries will be deleted.",
+                                "Reset",
+                                "Cancel"
+                        )
                 );
                 blocks.add(DividerBlock.builder().build());
             }
