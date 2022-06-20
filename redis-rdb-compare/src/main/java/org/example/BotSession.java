@@ -207,4 +207,128 @@ public class BotSession implements AutoCloseable {
     public void close() {
         log.info("AutoClose() called");
     }
+
+    /**
+     * initiate the downloading of the dump files.
+     */
+    public String initiateDownloading() throws InterruptedException {
+        log.info("initiateDownload() called for botsession " + this.getRequestId());
+        this.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
+        Downloader downloader = this.getDownloader();
+        downloader.addToDownloader(this.getS3linkA(), this.getDumpA());
+        downloader.addToDownloader(this.getS3linkB(), this.getDumpB());
+
+        long startTime = System.currentTimeMillis();
+        try {
+            boolean terminatedWithSuccess = this.getDownloader().download();
+            if (!terminatedWithSuccess) {
+                throw new InterruptedException("Timeout Exception while downloading");
+            }
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+            log.error(
+                "download interrupted due to FileNotFound, SecurityException or DownloadingError for botSession {}",
+                requestId
+            );
+            this.setDownloadingStatus(DownloadingStatus.NOT_DOWNLOADED);
+            throw new InterruptedException(
+                "\uD83D\uDEA8\uD83D\uDEA8 Download failed \uD83D\uDEA8\uD83D\uDEA8"
+            );
+        }
+        long endTime = System.currentTimeMillis();
+        log.info(
+            "Download completed in {} milliseconds in botSession {}",
+            endTime - startTime,
+            requestId
+        );
+        this.setDownloadingTime(endTime - startTime);
+        this.setDownloadingStatus(DownloadingStatus.DOWNLOADED); //volatile variable write
+        return (
+            "\uD83D\uDEA8\uD83D\uDEA8 Downloading completed in " +
+            (endTime - startTime) /
+            1000.0 +
+            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+        );
+    }
+
+    /**
+     * initiate the parsing of the dump files.
+     */
+    public String initiateParsing() throws InterruptedException {
+        log.info("parsing started for botSession {}", getRequestId());
+        this.setParsingStatus(ParsingStatus.IN_PROGRESS);
+        Parser parser = this.getParser();
+        parser.addToParser(this.getDumpA(), this.getKeysA());
+        parser.addToParser(this.getDumpB(), this.getKeysB());
+
+        long startTime = System.currentTimeMillis();
+        parser.parse();
+        this.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
+        long endTime = System.currentTimeMillis();
+        log.info(
+            "parsing completed for botSession {} in {} ms",
+            getRequestId(),
+            endTime - startTime
+        );
+        this.setParsingTime(endTime - startTime);
+        return (
+            "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
+            (endTime - startTime) /
+            1000.0 +
+            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+        );
+    }
+
+    /**
+     * initiate the trie construction.
+     */
+    public String initiateTrieMaking() throws InterruptedException {
+        this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
+        log.info("trie construction started for botSession {}", requestId);
+        this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).build());
+        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).build());
+
+        this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
+        this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
+
+        long startTime = System.currentTimeMillis();
+        try {
+            boolean terminatedWithSuccess = this.getTrieMaker().makeTries();
+            if (!terminatedWithSuccess) {
+                throw new Exception("Timeout Exception while making tries");
+            }
+        } catch (InterruptedException e) {
+            log.error(
+                "trie construction interrupted due trie-initializer-threads being interrupted for botSession {}",
+                this.getRequestId()
+            );
+            this.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
+            throw new InterruptedException(
+                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed due trie-initializer-threads being interrupted for botSession\uD83D\uDEA8\uD83D\uDEA8"
+            );
+        } catch (Exception e) {
+            log.error(
+                "trie construction interrupted due to timeout for botSession {}",
+                this.getRequestId()
+            );
+            this.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
+            throw new InterruptedException(
+                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed due to timeout for botSession \uD83D\uDEA8\uD83D\uDEA8"
+            );
+        }
+        long endTime = System.currentTimeMillis();
+        log.info(
+            "Trie construction completed in {} milliseconds in botSession {}",
+            endTime - startTime,
+            this.getRequestId()
+        );
+        this.setTrieMakingTime(endTime - startTime);
+        this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
+        return (
+            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
+            (endTime - startTime) /
+            1000.0 +
+            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+        );
+    }
 }

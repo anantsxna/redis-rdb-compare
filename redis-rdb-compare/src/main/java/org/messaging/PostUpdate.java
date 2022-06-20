@@ -24,9 +24,10 @@ public class PostUpdate {
         "https://avatars.githubusercontent.com/u/1529926?s=200&v=4";
 
     /**
-     * Post a text message to the botSession.
+     * Post a text message to the channel.
+     *
      * @param responseMessage: the message to post
-     * @param channelId: the botSession to post to
+     * @param channelId:       the botSession to post to
      */
     public static void postTextResponseAsync(String responseMessage, final String channelId) {
         List<LayoutBlock> blocks = new ArrayList<>();
@@ -35,10 +36,23 @@ public class PostUpdate {
     }
 
     /**
+     * Post a text response to the channel
+     *
+     * @param responseMessage: the message to post
+     * @param channelId:       the botSession to post to
+     */
+    public static void postTextResponseSync(String responseMessage, final String channelId) {
+        List<LayoutBlock> blocks = new ArrayList<>();
+        blocks.add(TextImageBlock(responseMessage, REDIS_LOGO_URL));
+        postResponseSync(blocks, channelId, responseMessage);
+    }
+
+    /**
      * Update a text message in a botSession.
+     *
      * @param responseMessage: the new updated text message
-     * @param channelId: the botSession to update
-     * @param timestamp: the timestamp of the message to update
+     * @param channelId:       the botSession to update
+     * @param timestamp:       the timestamp of the message to update
      */
     public static void updateTextResponseAsync(
         String responseMessage,
@@ -53,8 +67,9 @@ public class PostUpdate {
 
     /**
      * Post a text message and a button to reset the botSession
+     *
      * @param responseMessage: the message to post
-     * @param channelId: the botSession to post to
+     * @param channelId:       the botSession to post to
      */
     public static void postResetButtonResponseAsync(
         String responseMessage,
@@ -71,6 +86,7 @@ public class PostUpdate {
 
     /**
      * Update a message with text adn a button to reset the botSession
+     *
      * @param responseMessage: the message to update
      * @param channelId:       the botSession to update
      * @param timestamp:       the timestamp of the message to update

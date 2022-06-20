@@ -2,19 +2,20 @@ package org.example;
 
 import static org.example.BotSession.*;
 import static org.messaging.PostUpdate.postTextResponseAsync;
+import static org.messaging.PostUpdate.postTextResponseSync;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.processing.Downloader;
-import org.processing.Parser;
 import org.querying.CountQuery;
 import org.querying.NextKeyQuery;
 import org.querying.Query;
-import org.trie.QTrie;
 
 /**
  * Utility class for the Slack Main class.
@@ -23,8 +24,7 @@ import org.trie.QTrie;
 @Slf4j
 public class SlackUtils {
 
-    private static final String DOWNLOADING_NOT_COMPLETED =
-        "Downloading not completed.\nPlease wait for downloading to finish or use \"/download\" command to start parsing..";
+    private static final String DOWNLOADING_NOT_COMPLETED = "Downloading not completed.";
     private static final String DOWNLOADING_STARTED =
         "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
     private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
@@ -46,6 +46,7 @@ public class SlackUtils {
     private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
         "Trie construction in progress.\nPlease wait.";
     private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
+    private static final String TRIE_CONSTRUCTION_NOT_COMPLETED = "Trie construction completed";
     private static final String UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR =
         "parseUtils() is showing UNKNOWN behaviour: ";
     private static final String BAD_ARGUMENTS =
@@ -60,6 +61,39 @@ public class SlackUtils {
         "Querying is possible since tries have been created.\n";
     private static final String INVALID_REQUEST_ID =
         "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
+    private static final String ALL_PROCESSING_DONE =
+        "Processing done. Files Downloaded, Parsed and Made into Tries. Ready to answer queries\n";
+
+    /**
+     * Create a botSession, download the files, parse the files and make tries.
+     */
+    public static String processAllUtils(final String text, final String channelId) {
+        final String requestId = createBotSession();
+        if (requestId == null) {
+            return SESSION_IN_PROGRESS;
+        }
+        postTextResponseSync(SESSION_CREATED + "\n\n\n>Your Request Id: " + requestId, channelId);
+
+        final String downloadComplete = downloadUtils(requestId + " " + text, channelId, true);
+        if (!downloadComplete.contains("Downloading completed")) {
+            return DOWNLOADING_NOT_COMPLETED + " due to some error.";
+        }
+        postTextResponseSync(downloadComplete, channelId);
+
+        final String parsingComplete = parseUtils(requestId, channelId, true);
+        if (!parsingComplete.contains("Parsing completed")) {
+            return PARSING_NOT_COMPLETED + " due to some error.";
+        }
+        postTextResponseSync(parsingComplete, channelId);
+
+        final String trieComplete = makeTrieUtils(requestId, channelId, true);
+        if (!trieComplete.contains("Trie construction completed")) {
+            return TRIE_CONSTRUCTION_NOT_COMPLETED + " due to some error.";
+        }
+        postTextResponseSync(trieComplete, channelId);
+
+        return ALL_PROCESSING_DONE + "\n\n\n>Your Request Id is: " + requestId;
+    }
 
     /**
      * Create a botSession with the given channelId.
@@ -69,7 +103,7 @@ public class SlackUtils {
     public static String createSessionUtils() {
         String requestId = createBotSession();
         if (requestId != null) {
-            return SESSION_CREATED + "\n\n\n>Your response Id: " + requestId + "";
+            return SESSION_CREATED + "\n\n\n>Your Request Id: " + requestId;
         } else {
             return SESSION_IN_PROGRESS;
         }
@@ -83,7 +117,11 @@ public class SlackUtils {
      * @param channelId : channelId of the request
      * @return downloading status of the current botSession attached to the requestId
      */
-    public static String downloadUtils(final String text, final String channelId) {
+    public static String downloadUtils(
+        final String text,
+        final String channelId,
+        boolean waitForCompletion
+    ) {
         URL[] urls;
         BotSession botSession;
         try {
@@ -100,54 +138,52 @@ public class SlackUtils {
         }
 
         String requestId = botSession.getRequestId();
+        class DownloadCallable implements Callable<String> {
+
+            @Override
+            public String call() throws Exception {
+                String response = botSession.initiateDownloading();
+                return response;
+            }
+        }
+
+        class DownloadRunnable implements Runnable {
+
+            @Override
+            public void run() {
+                try {
+                    String response = botSession.initiateDownloading();
+                    postTextResponseAsync(response, channelId);
+                } catch (Exception e) {
+                    log.error("Error in downloadRunnable", e);
+                    String response = "Error in downloadRunnable: " + e.getMessage();
+                    postTextResponseAsync(response, channelId);
+                }
+            }
+        }
 
         if (botSession.getExecutedDownloading().compareAndSet(false, true)) {
             log.info("downloading started for botSession {}", requestId);
-            botSession
-                .getDownloadingExecutorService()
-                .submit(() -> {
-                    botSession.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
-                    Downloader downloader = botSession.getDownloader();
-                    downloader.addToDownloader(botSession.getS3linkA(), botSession.getDumpA());
-                    downloader.addToDownloader(botSession.getS3linkB(), botSession.getDumpB());
-
-                    long startTime = System.currentTimeMillis();
-                    try {
-                        boolean terminatedWithSuccess = botSession.getDownloader().download();
-                        if (!terminatedWithSuccess) {
-                            throw new InterruptedException("Timeout Exception while downloading");
-                        }
-                    } catch (InterruptedException e) {
-                        log.error(e.getMessage());
-                        log.error(
-                            "download interrupted due to FileNotFound, SecurityException or DownloadingError for botSession {}",
-                            requestId
-                        );
-                        botSession.setDownloadingStatus(DownloadingStatus.NOT_DOWNLOADED);
-                        postTextResponseAsync(
-                            "\uD83D\uDEA8\uD83D\uDEA8 Download failed \uD83D\uDEA8\uD83D\uDEA8",
-                            requestId
-                        );
-                        throw new RuntimeException(e);
-                    }
-                    long endTime = System.currentTimeMillis();
-                    log.info(
-                        "Download completed in {} milliseconds in botSession {}",
-                        endTime - startTime,
-                        requestId
-                    );
-                    botSession.setDownloadingTime(endTime - startTime);
-                    botSession.setDownloadingStatus(DownloadingStatus.DOWNLOADED); //volatile variable write
-                    postTextResponseAsync(
-                        "\uD83D\uDEA8\uD83D\uDEA8 Download completed in " +
-                        (endTime - startTime) /
-                        1000.0 +
-                        " second(s). \uD83D\uDEA8\uD83D\uDEA8",
-                        channelId
-                    );
-                });
-            botSession.getDownloadingExecutorService().shutdown();
-            return DOWNLOADING_STARTED;
+            if (waitForCompletion) {
+                Future<String> downloadCallable = botSession
+                    .getDownloadingExecutorService()
+                    .submit(new DownloadCallable());
+                try {
+                    String response = downloadCallable.get();
+                    botSession.getDownloadingExecutorService().shutdown();
+                    return response;
+                } catch (InterruptedException e) {
+                    log.error("InterruptedError in downloadCallable", e);
+                    return "InterruptedError in downloadCallable: " + e.getMessage();
+                } catch (ExecutionException e) {
+                    log.error("ExecutionException in downloadCallable", e);
+                    return "ExecutionException in downloadCallable: " + e.getMessage();
+                }
+            } else {
+                botSession.getDownloadingExecutorService().submit(new DownloadRunnable());
+                botSession.getDownloadingExecutorService().shutdown();
+                return DOWNLOADING_STARTED;
+            }
         } else {
             if (botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADING)) {
                 return DOWNLOADING_IN_PROGRESS;
@@ -172,43 +208,61 @@ public class SlackUtils {
      * @param requestId: requestId of the session
      * @param channelId  : channelId of the request
      */
-    public static String parseUtils(final String requestId, final String channelId) {
+    public static String parseUtils(
+        final String requestId,
+        final String channelId,
+        boolean waitForCompletion
+    ) {
         try (BotSession botSession = getBotSession(requestId)) {
             if (!botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
                 return DOWNLOADING_NOT_COMPLETED;
             }
 
+            class ParserCallable implements Callable<String> {
+
+                @Override
+                public String call() throws Exception {
+                    String response = botSession.initiateParsing();
+                    return response;
+                }
+            }
+
+            class ParserRunnable implements Runnable {
+
+                @Override
+                public void run() {
+                    try {
+                        String response = botSession.initiateParsing();
+                        postTextResponseAsync(response, channelId);
+                    } catch (Exception e) {
+                        log.error("Error in parserRunnable", e);
+                        String response = "Error in parserRunnable: " + e.getMessage();
+                        postTextResponseAsync(response, channelId);
+                    }
+                }
+            }
+
             if (botSession.getExecutedParsing().compareAndSet(false, true)) {
-                log.info("parsing started for botSession {}", requestId);
-                botSession
-                    .getParsingExecutorService()
-                    .submit(() -> {
-                        botSession.setParsingStatus(ParsingStatus.IN_PROGRESS);
-                        Parser parser = botSession.getParser();
-                        parser.addToParser(botSession.getDumpA(), botSession.getKeysA());
-                        parser.addToParser(botSession.getDumpB(), botSession.getKeysB());
-
-                        long startTime = System.currentTimeMillis();
-                        parser.parse();
-                        botSession.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
-                        long endTime = System.currentTimeMillis();
-
-                        log.info(
-                            "parsing completed for botSession {} in {} ms",
-                            requestId,
-                            endTime - startTime
-                        );
-                        botSession.setParsingTime(endTime - startTime);
-                        postTextResponseAsync(
-                            "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
-                            (endTime - startTime) /
-                            1000.0 +
-                            " second(s). \uD83D\uDEA8\uD83D\uDEA8",
-                            channelId
-                        );
-                    });
-                botSession.getParsingExecutorService().shutdown();
-                return PARSING_STARTED;
+                if (waitForCompletion) {
+                    Future<String> parserCallable = botSession
+                        .getParsingExecutorService()
+                        .submit(new ParserCallable());
+                    try {
+                        String response = parserCallable.get();
+                        botSession.getParsingExecutorService().shutdown();
+                        return response;
+                    } catch (InterruptedException e) {
+                        log.error("InterruptedError in parserCallable", e);
+                        return "InterruptedError in parserCallable: " + e.getMessage();
+                    } catch (ExecutionException e) {
+                        log.error("ExecutionException in parserCallable", e);
+                        return "ExecutionException in parserCallable: " + e.getMessage();
+                    }
+                } else {
+                    botSession.getParsingExecutorService().submit(new ParserRunnable());
+                    botSession.getParsingExecutorService().shutdown();
+                    return PARSING_STARTED;
+                }
             } else {
                 if (botSession.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
                     return PARSING_IN_PROGRESS;
@@ -238,79 +292,61 @@ public class SlackUtils {
      * @param channelId  : channelId to post the reply
      * @return trie making status of the session (started, in progress, completed)
      */
-    public static String trieConstructionUtils(final String requestId, final String channelId) {
+    public static String makeTrieUtils(
+        final String requestId,
+        final String channelId,
+        boolean waitForCompletion
+    ) {
         try (BotSession botSession = getBotSession(requestId)) {
             if (!botSession.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
                 return PARSING_NOT_COMPLETED;
             }
 
+            class TrieMakerCallable implements Callable<String> {
+
+                @Override
+                public String call() throws Exception {
+                    String response = botSession.initiateTrieMaking();
+                    return response;
+                }
+            }
+
+            class TrieMakerRunnable implements Runnable {
+
+                @Override
+                public void run() {
+                    try {
+                        String response = botSession.initiateTrieMaking();
+                        postTextResponseAsync(response, channelId);
+                    } catch (Exception e) {
+                        log.error("Error in trieMakerRunnable", e);
+                        String response = "Error in trieMakerRunnable: " + e.getMessage();
+                        postTextResponseAsync(response, channelId);
+                    }
+                }
+            }
+
             if (botSession.getExecutedTrieMaking().compareAndSet(false, true)) {
-                botSession.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
-                log.info("trie construction started for botSession {}", requestId);
-                botSession
-                    .getTrieMakingExecutorService()
-                    .submit(() -> {
-                        botSession.setTrieA(
-                            QTrie.builder().keysFile(botSession.getKeysA()).build()
-                        );
-                        botSession.setTrieB(
-                            QTrie.builder().keysFile(botSession.getKeysB()).build()
-                        );
-
-                        botSession
-                            .getTrieMaker()
-                            .addToTrieMaker(botSession.getDumpA(), botSession.getTrieA());
-                        botSession
-                            .getTrieMaker()
-                            .addToTrieMaker(botSession.getDumpB(), botSession.getTrieB());
-
-                        long startTime = System.currentTimeMillis();
-                        try {
-                            boolean terminatedWithSuccess = botSession.getTrieMaker().makeTries();
-                            if (!terminatedWithSuccess) {
-                                throw new Exception("Timeout Exception while making tries");
-                            }
-                        } catch (InterruptedException e) {
-                            log.error(
-                                "trie construction interrupted due trie-initializer-threads being interrupted for botSession {}",
-                                channelId
-                            );
-                            botSession.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
-                            postTextResponseAsync(
-                                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
-                                channelId
-                            );
-                            throw new RuntimeException(e);
-                        } catch (Exception e) {
-                            log.error(
-                                "trie construction interrupted due to timeout for botSession {}",
-                                channelId
-                            );
-                            botSession.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
-                            postTextResponseAsync(
-                                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed \uD83D\uDEA8\uD83D\uDEA8",
-                                channelId
-                            );
-                            throw new RuntimeException(e);
-                        }
-                        long endTime = System.currentTimeMillis();
-                        log.info(
-                            "Trie construction completed in {} milliseconds in botSession {}",
-                            endTime - startTime,
-                            channelId
-                        );
-                        botSession.setTrieMakingTime(endTime - startTime);
-                        botSession.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
-                        postTextResponseAsync(
-                            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
-                            (endTime - startTime) /
-                            1000.0 +
-                            " second(s). \uD83D\uDEA8\uD83D\uDEA8",
-                            channelId
-                        );
-                    });
-                botSession.getTrieMakingExecutorService().shutdown();
-                return TRIE_CONSTRUCTION_STARTED;
+                if (waitForCompletion) {
+                    Future<String> trieMakerCallable = botSession
+                        .getTrieMakingExecutorService()
+                        .submit(new TrieMakerCallable());
+                    try {
+                        String response = trieMakerCallable.get();
+                        botSession.getTrieMakingExecutorService().shutdown();
+                        return response;
+                    } catch (InterruptedException e) {
+                        log.error("InterruptedError in trieMakerCallable", e);
+                        return "InterruptedError in trieMakerCallable: " + e.getMessage();
+                    } catch (ExecutionException e) {
+                        log.error("ExecutionException in trieMakerCallable", e);
+                        return "ExecutionException in trieMakerCallable: " + e.getMessage();
+                    }
+                } else {
+                    botSession.getTrieMakingExecutorService().submit(new TrieMakerRunnable());
+                    botSession.getTrieMakingExecutorService().shutdown();
+                    return DOWNLOADING_STARTED;
+                }
             } else {
                 if (botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTING)) {
                     return TRIE_CONSTRUCTION_IN_PROGRESS;

@@ -37,7 +37,8 @@ public final class Parser {
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
      * Thread-safe method because logging is thread-safe and parameters are immutable.
-     * @param process: the process which runs the script.
+     *
+     * @param process:  the process which runs the script.
      * @param dumpFile: write-file fpr the process
      */
     private void watch(final Process process, final String dumpFile) {
@@ -67,7 +68,8 @@ public final class Parser {
     /**
      * Runnable for thread that gathers the errors from the redis-rdb-tools python script.
      * Thread-safe method becuase logging is thread-safe and parameters are immutable.
-     * @param process: the process which runs the script
+     *
+     * @param process:  the process which runs the script
      * @param dumpFile: write-file for the process
      */
     private void watchErrors(final Process process, final String dumpFile) {
@@ -99,7 +101,6 @@ public final class Parser {
      *
      * @param dumpFile: the location of the dump file to parse, must be a .rdb file.
      * @param keysFile: the location of the file to store the keys, must be a .txt file.
-     *
      */
     public void addToParser(String dumpFile, String keysFile) {
         log.info("adding health, {}, {}", dumpFile, keysFile);
@@ -108,7 +109,7 @@ public final class Parser {
 
     /**
      * Parses the dumpFile and stores the keys in keysFile for each pair.
-     *
+     * <p>
      * The keys will be stored in the same order as they appear in the dump file.
      */
     public void parse() {

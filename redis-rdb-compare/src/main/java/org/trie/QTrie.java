@@ -73,7 +73,7 @@ public final class QTrie {
      * Returns the 'n' maximum count child nodes of a node that represents the given prefix.
      *
      * @param _prefix: prefix to be searched.
-     * @param n: number of child nodes to be returned.
+     * @param n:       number of child nodes to be returned.
      * @return List of (n+2) pairs, where:
      * the first pair has the total number of keys with the prefix '_prefix'.
      * the second pair has the total number of child nodes of the node that represents the prefix '_prefix'.

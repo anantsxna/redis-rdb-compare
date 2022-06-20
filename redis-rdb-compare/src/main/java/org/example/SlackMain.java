@@ -55,7 +55,24 @@ public class SlackMain {
             }
         );
 
-        // RE: command "/process" - opens a new bot session
+        // RE: command "/session" - opens a new bot session
+        app.command(
+            "/session",
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("/session command received");
+                        final String channelId = req.getContext().getChannelId();
+                        final String response = createSessionUtils();
+                        log.info("/session command response:\n" + response);
+                        postTextResponseAsync(response, channelId);
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // RE: command "/process" - opens a new bot session, downloads, parses, and makes tries.
         app.command(
             "/process",
             (req, ctx) -> {
@@ -64,7 +81,8 @@ public class SlackMain {
                     .submit(() -> {
                         log.info("/process command received");
                         final String channelId = req.getContext().getChannelId();
-                        final String response = createSessionUtils();
+                        final String text = req.getPayload().getText();
+                        String response = processAllUtils(text, channelId);
                         log.info("/process command response:\n" + response);
                         postTextResponseAsync(response, channelId);
                     });
@@ -82,7 +100,7 @@ public class SlackMain {
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
                         log.info("/download command received with arguments: {}", text);
-                        final String response = downloadUtils(text, channelId);
+                        final String response = downloadUtils(text, channelId, false);
                         log.info("downloadUtils response: {} in channelId {}", response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
@@ -100,7 +118,7 @@ public class SlackMain {
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
                         log.info("/parse command received");
-                        String response = parseUtils(requestId, channelId);
+                        String response = parseUtils(requestId, channelId, false);
                         log.info("parseUtils response: {} in botSession {}", response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
@@ -118,9 +136,9 @@ public class SlackMain {
                         log.info("/maketrie command received");
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
-                        String response = trieConstructionUtils(requestId, channelId);
+                        String response = makeTrieUtils(requestId, channelId, false);
                         log.info(
-                            "trieConstructionUtils response: {} in botSession {}",
+                            "makeTrieUtils() response: {} in botSession {}",
                             response,
                             channelId
                         );
@@ -226,14 +244,18 @@ public class SlackMain {
                 return ctx.ack(
                     """
                                     usage:
-                                    \t*/ping* - check if the bot if working.
-                                    \t*/start* - start interactive session.
-                                    \t*/clear* - clear all files related to the current session.
-                                    \t*/parse* - parse the input string and return the result. Input via S3 links not implemented yet.
-                                    \t*/maketrie* - create the tries and store the parsed keys inside them. Requires "/parse" to be called first.
-                                    \t*/getcount [prefix_key]* - return the count of the prefix_key inside both the tries. Requires "/maketrie" to be called first.
-                                    \t*/getnext [prefix_key] [n]* - return the most common 'n' keys that have the same prefix, 'prefix_key'. Requires "/maketrie" to be called first.
-                                    """
+                                                                        \\t*/ping* - check if the bot if working.
+                                                                        \\t*/start* - start interactive session.
+                                                                        \\t*/clear [requestId]* - clear all files related to the session.
+                                                                        \\t*/clearall* - clear all files related to all sessions.
+                                                                        \\t*/list* - list all active sessions.
+                                                                        \\t*/session* - start a new session, return a requestId.
+                                                                        \\t*/download [requestId] [s3linkA] [s3linkB]* - download files from S3links to the session.
+                                                                        \\t*/parse [requestId]* - parse the input string and return the result.\s
+                                                                        \\t*/maketrie [requestId]* - create the tries and store the parsed keys inside them. Requires "/parse" to be called first.
+                                                                        \\t*/getcount [requestId] [prefix_key]* - return the count of the prefix_key inside both the tries. Requires "/maketrie" to be called first.
+                                                                        \\t*/getnext [requestId] [prefix_key] [n]* - return the most common 'n' keys that have the same prefix, 'prefix_key'. Requires "/maketrie" to be called first.
+                                                                        """
                 );
             }
         );
