@@ -18,6 +18,8 @@ public final class QTrie {
     @Builder.Default
     private final TrieNode root = TrieNode.builder().build();
 
+    private static final String DELIMITER = ":";
+
     @NonNull
     private final String keysFile;
 
@@ -55,11 +57,13 @@ public final class QTrie {
      * @param dbKey: key to be inserted.
      */
     private void insertKey(String dbKey) {
-        StringTokenizer tokenizer = new StringTokenizer(dbKey, "/");
+        StringTokenizer tokenizer = new StringTokenizer(dbKey, DELIMITER);
+        //        log.info("Inserting key: {}", dbKey);
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
             current.addCount();
             String nextKey = tokenizer.nextToken();
+            //            log.info("Next key: {}", nextKey);
             if (tokenizer.hasMoreTokens()) {
                 if (!current.hasChild(nextKey)) {
                     current.addChild(nextKey);
@@ -82,7 +86,7 @@ public final class QTrie {
      */
     public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n)
         throws Exception {
-        final String prefix = _prefix.replaceFirst("/$", "");
+        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
 
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
         TrieNode node = traverseTrie(prefix);
@@ -115,7 +119,7 @@ public final class QTrie {
         String prefix
     ) {
         return Map.entry(
-            prefix.concat("/").concat(_entry.getKey()).concat("/*"),
+            prefix.concat(DELIMITER).concat(_entry.getKey()),
             _entry.getValue().getCount()
         );
     }
@@ -128,7 +132,7 @@ public final class QTrie {
      * @throws Exception: if the key is not found in the trie.
      */
     public Integer getCountForPrefix(String _prefix) throws Exception {
-        final String prefix = _prefix.replaceFirst("/$", "");
+        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
         return traverseTrie(prefix).getCount();
     }
 
@@ -140,7 +144,7 @@ public final class QTrie {
      * @throws Exception: if the path is not found in the trie.
      */
     private TrieNode traverseTrie(String path) throws Exception {
-        StringTokenizer tokenizer = new StringTokenizer(path, "/");
+        StringTokenizer tokenizer = new StringTokenizer(path, DELIMITER);
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
             String nextKey = tokenizer.nextToken();
