@@ -1,6 +1,6 @@
 package org.example;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import java.net.URL;
@@ -182,7 +182,7 @@ public class BotSession implements AutoCloseable {
      * @return true when new botSession is created, otherwise false
      */
     public static String createBotSession() {
-        String requestId = randomAlphanumeric(10);
+        String requestId = "#" + randomNumeric(4);
         BotSession botSession = botSessions.putIfAbsent(
             requestId,
             BotSession.builder().requestId(requestId).build().setFileNames()
