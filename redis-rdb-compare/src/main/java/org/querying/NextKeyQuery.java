@@ -27,7 +27,7 @@ public class NextKeyQuery extends Query {
         try {
             BotSession botSession = getBotSession(getRequestId());
             try {
-                result.append(">In session ").append(getRequestId()).append("\n");
+                result.append(">In session ").append(getRequestId()).append("\n\n");
                 for (QTrie trie : new QTrie[] { botSession.getTrieA(), botSession.getTrieB() }) {
                     try {
                         long startTime = System.currentTimeMillis();
@@ -43,6 +43,19 @@ public class NextKeyQuery extends Query {
                         }
                         result.append(query.get(0).getValue());
                         result.append("*\n");
+                        if (query.get(0).getValue() > 0 && found == 0) {
+                            result.append(
+                                """
+                                            ```It seems you have reached the leaf node of the trie.
+                                            This trie does not store the token on the tail-end of the parsed keys.
+                                            For ex: the key "FOO:BAR:BAZ" will be stored as:
+                                            root
+                                              |___FOO
+                                                   |___BAR```
+                                            """
+                            );
+                            continue;
+                        }
                         if (found < n) {
                             result
                                 .append("`WARN: Found ")

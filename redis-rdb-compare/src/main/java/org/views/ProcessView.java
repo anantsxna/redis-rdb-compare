@@ -40,8 +40,7 @@ public class ProcessView {
 
     private static final String REDIS_LOGO_URL =
         "https://avatars.githubusercontent.com/u/1529926?s=200&v=4";
-    private static final String SESSION_IN_PROGRESS =
-        "A session is already open in this botSession.\n";
+    private static final String SESSION_IN_PROGRESS = "A session is already open.\n";
     private static final String DOWNLOADING_NOT_COMPLETED = "Downloading not completed.";
     private static final String PARSING_NOT_COMPLETED =
         "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
@@ -49,7 +48,7 @@ public class ProcessView {
     private static final String ALL_PROCESSING_DONE =
         "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
     private static final String SESSION_CREATED =
-        "A session has been created in this botSession. Ready to parse and make tries.\n";
+        "A session has been created. Ready to parse and make tries.\n";
 
     /**
      * Run the downloading, parsing and trie construction process.
@@ -86,6 +85,7 @@ public class ProcessView {
                     REDIS_LOGO_URL
                 )
             );
+            deleteSessionUtils(requestId);
             return;
         }
 
@@ -96,6 +96,7 @@ public class ProcessView {
             updateWithAddedBlock(
                 TextImageBlock(parsingComplete + "\n\n\n" + PARSING_NOT_COMPLETED, REDIS_LOGO_URL)
             );
+            deleteSessionUtils(requestId);
             return;
         }
 
@@ -109,6 +110,8 @@ public class ProcessView {
                     REDIS_LOGO_URL
                 )
             );
+            deleteSessionUtils(requestId);
+            return;
         }
 
         updateWithAddedBlock(TextImageBlock(trieComplete, REDIS_LOGO_URL));

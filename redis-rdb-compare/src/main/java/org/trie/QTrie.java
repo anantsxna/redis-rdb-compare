@@ -2,7 +2,10 @@ package org.trie;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -57,13 +60,18 @@ public final class QTrie {
      * @param dbKey: key to be inserted.
      */
     private void insertKey(String dbKey) {
-        StringTokenizer tokenizer = new StringTokenizer(dbKey, DELIMITER);
-        //        log.info("Inserting key: {}", dbKey);
+        BotStringTokenizer tokenizer = BotStringTokenizer
+            .builder()
+            .path(dbKey)
+            .delimiter(DELIMITER)
+            .build()
+            .tokenize();
+        // log.info("Inserting key: {}", dbKey);
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
             current.addCount();
             String nextKey = tokenizer.nextToken();
-            //            log.info("Next key: {}", nextKey);
+            // log.info("Next key: {}", nextKey);
             if (tokenizer.hasMoreTokens()) {
                 if (!current.hasChild(nextKey)) {
                     current.addChild(nextKey);
@@ -144,7 +152,12 @@ public final class QTrie {
      * @throws Exception: if the path is not found in the trie.
      */
     private TrieNode traverseTrie(String path) throws Exception {
-        StringTokenizer tokenizer = new StringTokenizer(path, DELIMITER);
+        BotStringTokenizer tokenizer = BotStringTokenizer
+            .builder()
+            .path(path)
+            .delimiter(DELIMITER)
+            .build()
+            .tokenize();
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
             String nextKey = tokenizer.nextToken();

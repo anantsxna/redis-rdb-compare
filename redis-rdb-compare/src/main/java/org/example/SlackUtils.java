@@ -54,7 +54,7 @@ public class SlackUtils {
     private static final String SESSION_IN_PROGRESS =
         "Could not create session. Consider re-trying command or running /clearall if the issue persists.\n";
     private static final String SESSION_CREATED =
-        "A session has been created in this botSession. Ready to parse and make tries.\n";
+        "A session has been created. Ready to parse and make tries.\n";
     private static final String QUERYING_NOT_POSSIBLE =
         "Querying is not possible since tries have not been created.\n";
     private static final String QUERYING_POSSIBLE =
