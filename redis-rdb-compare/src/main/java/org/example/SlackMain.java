@@ -98,7 +98,11 @@ public class SlackMain {
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
                         log.info("/download command received with arguments: {}", text);
-                        final String response = downloadUtils(text, channelId, false);
+                        final String response = downloadUtils(
+                            text,
+                            channelId,
+                            WaitForCompletion.DONT_WAIT
+                        );
                         log.info("downloadUtils response: {} in channelId {}", response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
@@ -116,7 +120,11 @@ public class SlackMain {
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
                         log.info("/parse command received");
-                        String response = parseUtils(requestId, channelId, false);
+                        String response = parseUtils(
+                            requestId,
+                            channelId,
+                            WaitForCompletion.DONT_WAIT
+                        );
                         log.info("parseUtils response: {} in botSession {}", response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
@@ -134,7 +142,11 @@ public class SlackMain {
                         log.info("/maketrie command received");
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
-                        String response = makeTrieUtils(requestId, channelId, false);
+                        String response = makeTrieUtils(
+                            requestId,
+                            channelId,
+                            WaitForCompletion.DONT_WAIT
+                        );
                         log.info(
                             "makeTrieUtils() response: {} in botSession {}",
                             response,

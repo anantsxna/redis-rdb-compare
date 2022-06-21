@@ -78,7 +78,11 @@ public class ProcessView {
             )
         );
 
-        final String downloadComplete = downloadUtils(requestId + " " + userInput, channelId, true);
+        final String downloadComplete = downloadUtils(
+            requestId + " " + userInput,
+            channelId,
+            WaitForCompletion.WAIT
+        );
         if (!downloadComplete.contains("Downloading completed")) {
             updateWithAddedBlock(
                 TextImageBlock(
@@ -91,7 +95,7 @@ public class ProcessView {
 
         updateWithAddedBlock(TextImageBlock(downloadComplete, REDIS_LOGO_URL));
 
-        final String parsingComplete = parseUtils(requestId, channelId, true);
+        final String parsingComplete = parseUtils(requestId, channelId, WaitForCompletion.WAIT);
         if (!parsingComplete.contains("Parsing completed")) {
             updateWithAddedBlock(
                 TextImageBlock(parsingComplete + "\n\n\n" + PARSING_NOT_COMPLETED, REDIS_LOGO_URL)
@@ -101,7 +105,7 @@ public class ProcessView {
 
         updateWithAddedBlock(TextImageBlock(parsingComplete, REDIS_LOGO_URL));
 
-        final String trieComplete = makeTrieUtils(requestId, channelId, true);
+        final String trieComplete = makeTrieUtils(requestId, channelId, WaitForCompletion.WAIT);
         if (!trieComplete.contains("Trie construction completed")) {
             updateWithAddedBlock(
                 TextImageBlock(

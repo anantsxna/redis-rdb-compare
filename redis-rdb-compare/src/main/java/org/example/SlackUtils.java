@@ -64,6 +64,11 @@ public class SlackUtils {
     private static final String ALL_PROCESSING_DONE =
         "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
 
+    public static enum WaitForCompletion {
+        WAIT,
+        DONT_WAIT,
+    }
+
     /**
      * Create a botSession, download the files, parse the files and make tries.
      */
@@ -77,19 +82,23 @@ public class SlackUtils {
             channelId
         );
 
-        final String downloadComplete = downloadUtils(requestId + " " + text, channelId, true);
+        final String downloadComplete = downloadUtils(
+            requestId + " " + text,
+            channelId,
+            WaitForCompletion.WAIT
+        );
         if (!downloadComplete.contains("Downloading completed")) {
             return downloadComplete + "\n\n\n" + DOWNLOADING_NOT_COMPLETED;
         }
         postTextResponseSync(downloadComplete, channelId);
 
-        final String parsingComplete = parseUtils(requestId, channelId, true);
+        final String parsingComplete = parseUtils(requestId, channelId, WaitForCompletion.WAIT);
         if (!parsingComplete.contains("Parsing completed")) {
             return parsingComplete + "\n\n\n" + PARSING_NOT_COMPLETED;
         }
         postTextResponseSync(parsingComplete, channelId);
 
-        final String trieComplete = makeTrieUtils(requestId, channelId, true);
+        final String trieComplete = makeTrieUtils(requestId, channelId, WaitForCompletion.WAIT);
         if (!trieComplete.contains("Trie construction completed")) {
             return trieComplete + "\n\n\n" + TRIE_CONSTRUCTION_NOT_COMPLETED;
         }
@@ -123,7 +132,7 @@ public class SlackUtils {
     public static String downloadUtils(
         final String text,
         final String channelId,
-        boolean waitForCompletion
+        WaitForCompletion waitForCompletion
     ) {
         BotSession botSession;
         try {
@@ -171,7 +180,7 @@ public class SlackUtils {
 
         if (botSession.getExecutedDownloading().compareAndSet(false, true)) {
             log.info("downloading started for botSession {}", requestId);
-            if (waitForCompletion) {
+            if (waitForCompletion == WaitForCompletion.WAIT) {
                 Future<String> downloadCallable = botSession
                     .getDownloadingExecutorService()
                     .submit(new DownloadCallable());
@@ -218,7 +227,7 @@ public class SlackUtils {
     public static String parseUtils(
         final String requestId,
         final String channelId,
-        boolean waitForCompletion
+        WaitForCompletion waitForCompletion
     ) {
         try {
             BotSession botSession = getBotSession(requestId);
@@ -250,7 +259,7 @@ public class SlackUtils {
             }
 
             if (botSession.getExecutedParsing().compareAndSet(false, true)) {
-                if (waitForCompletion) {
+                if (waitForCompletion == WaitForCompletion.WAIT) {
                     Future<String> parserCallable = botSession
                         .getParsingExecutorService()
                         .submit(new ParserCallable());
@@ -302,7 +311,7 @@ public class SlackUtils {
     public static String makeTrieUtils(
         final String requestId,
         final String channelId,
-        boolean waitForCompletion
+        WaitForCompletion waitForCompletion
     ) {
         try {
             BotSession botSession = getBotSession(requestId);
@@ -334,7 +343,7 @@ public class SlackUtils {
             }
 
             if (botSession.getExecutedTrieMaking().compareAndSet(false, true)) {
-                if (waitForCompletion) {
+                if (waitForCompletion == WaitForCompletion.WAIT) {
                     Future<String> trieMakerCallable = botSession
                         .getTrieMakingExecutorService()
                         .submit(new TrieMakerCallable());
