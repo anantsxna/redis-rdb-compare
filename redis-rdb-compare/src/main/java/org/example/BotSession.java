@@ -69,14 +69,6 @@ public class BotSession {
 
     private final String requestId;
 
-    public static String shortenURL(URL s3link) {
-        if (s3link == null) {
-            return "link-not-set-yet";
-        }
-        //TODO: fix this after getting url links
-        return s3link.toString().replace("https://", "");
-    }
-
     public static String elongateURL(@NonNull String s3link) {
         if (!s3link.matches("^\\w+?://.*")) {
             s3link = "https://" + s3link;
@@ -183,7 +175,6 @@ public class BotSession {
                 "Sorry, you need to create a session first by running \"/process\"",
                 requestId
             );
-            // TODO: what to do here
             log.error("requested botSession by id " + requestId + " does not exist");
             throw new IllegalStateException(
                 "requested botSession by id " + requestId + " does not exist"
@@ -193,15 +184,15 @@ public class BotSession {
     }
 
     /**
-     * Setter for the botSession.
+     * Setter for the botSession. Synchronised so that 2 sessions don't get the same id
      *
      * @return true when new botSession is created, otherwise false
      */
-    public static String createBotSession() {
-        String requestId = "#" + randomNumeric(4);
+    public static synchronized String createBotSession() {
+        String requestId = "#" + randomNumeric(6);
         BotSession botSession = allBotSessions.putIfAbsent(
             requestId,
-            BotSession.builder().requestId(requestId).build()
+            BotSession.builder().requestId(requestId).build().setFileNames()
         );
         return (botSession == null) ? requestId : null;
     }
@@ -220,7 +211,7 @@ public class BotSession {
      * initiate the downloading of the dump files.
      */
     public String initiateDownloading() throws InterruptedException {
-        log.info("initiateDownload() called for botsession " + this.getRequestId());
+        log.info("initiateDownload() called for bot session " + this.getRequestId());
         this.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
         Downloader downloader = this.getDownloader();
         downloader.addToDownloader(this.getS3linkA(), this.getDumpA());
@@ -303,7 +294,7 @@ public class BotSession {
         try {
             boolean terminatedWithSuccess = this.getTrieMaker().makeTries();
             if (!terminatedWithSuccess) {
-                throw new Exception("Timeout Exception while making tries");
+                throw new Exception("Exception while making tries");
             }
         } catch (InterruptedException e) {
             log.error(

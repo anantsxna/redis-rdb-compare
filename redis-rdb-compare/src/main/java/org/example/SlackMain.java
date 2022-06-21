@@ -1,7 +1,8 @@
 package org.example;
 
 import static org.example.SlackUtils.*;
-import static org.messaging.PostUpdate.*;
+import static org.messaging.PostUpdate.postTextResponseAsync;
+import static org.messaging.PostUpdateUtils.deleteResponseAsync;
 
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.AppConfig;
@@ -14,7 +15,9 @@ import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.messaging.ProcessView;
+import org.views.MenuView;
+import org.views.ProcessView;
+import org.views.QueryView;
 
 /**
  * Slack App that handles the following:
@@ -27,11 +30,6 @@ import org.messaging.ProcessView;
  */
 @Slf4j
 public class SlackMain {
-
-    private static final String SESSION_IN_PROGRESS =
-        "A session is already open in this botSession.\n";
-    private static final String QUERYING_NOT_POSSIBLE =
-        "Querying is not possible since tries have not been created.\n";
 
     /**
      * Main method for the application.
@@ -158,7 +156,7 @@ public class SlackMain {
                         log.info("/getcount command received");
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
-                        String response = countUtils(text, channelId);
+                        String response = countUtils(text);
                         log.info("countUtils response:\n {}", response);
                         postTextResponseAsync(response, channelId);
                     });
@@ -166,7 +164,7 @@ public class SlackMain {
             }
         );
 
-        // RE: command "/getnext [prefixKey] [n]" - gets 'n' keys with the prefixKey in all tries
+        // RE: command "/getnext [requestId] [prefixKey] [n]" - gets 'n' keys with the prefixKey in all tries
         app.command(
             "/getnext",
             (req, ctx) -> {
@@ -176,7 +174,7 @@ public class SlackMain {
                         log.info("/getnext command received");
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
-                        String response = getNextKeyUtils(text, channelId);
+                        String response = getNextKeyUtils(text);
                         log.info("getNextKeyUtils response:\n {}", response);
                         postTextResponseAsync(response, channelId);
                     });
@@ -184,7 +182,7 @@ public class SlackMain {
             }
         );
 
-        // RE: command "/clear" - resets the sessions with the given requestId
+        // RE: command "/clear [requestId]" - resets the sessions with the given requestId
         app.command(
             "/clear",
             (req, ctx) -> {
@@ -260,146 +258,174 @@ public class SlackMain {
             }
         );
 
-        // command "/start" - starts interactive session
+        // command "/menu" - starts interactive session
         app.command(
-            "/start",
+            "/menu",
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/start command received");
+                        log.info("/ menu command received");
                         final String channelId = req.getContext().getChannelId();
-                        String response = createSessionUtils();
-                        if (response.equals(SESSION_IN_PROGRESS)) {
-                            response = "A session is already open in this botSession.";
-                            postResetButtonResponseAsync(response, channelId);
-                        } else {
-                            response = ":wave: Welcome to the interactive session.";
-                            postStartButtonResponse(response, channelId);
-                        }
+                        MenuView menuView = MenuView
+                            .builder()
+                            .channelId(channelId)
+                            .messageTs(null)
+                            .build();
+                        menuView.start();
                     });
                 return ctx.ack();
             }
         );
 
-        // blockActions - handle the interactive sessions' components' payloads
-        // blockAction "parseAndMakeTrieAll" - handles the payload from the "Parse and Make Tries" button
+        // blockAction - clicked 'Close' button
         app.blockAction(
-            Pattern.compile("^buttonBlock-parseAndMakeTrieAll-\\w*"),
+            Pattern.compile("^buttonBlock-delete-message-\\w*"),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("\"Parse and Make Tries\" button clicked");
+                        log.info("\"Close\" button clicked on HomeView");
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
+                        deleteResponseAsync(channelId, messageTs);
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // blockAction - clicked 'Delete Session' button
+        app.blockAction(
+            Pattern.compile("^buttonBlock-delete-session-\\w*"),
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("\"Close\" button clicked on HomeView");
+                        final String channelId = req.getPayload().getChannel().getId();
+                        final String messageTs = req.getPayload().getContainer().getMessageTs();
+                        final String requestId = req.getPayload().getMessage().getText();
+                        deleteSessionUtils(requestId);
+                        MenuView menuView = MenuView
+                            .builder()
+                            .channelId(channelId)
+                            .messageTs(messageTs)
+                            .build();
+                        menuView.start();
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // blockAction - clicked 'New Session' button
+        app.blockAction(
+            Pattern.compile("^buttonBlock-create-new-session-\\w*"),
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("In Main, \"Create New\" button clicked on HomeView");
+                        final String channelId = req.getPayload().getChannel().getId();
+                        final String messageTs = req.getPayload().getContainer().getMessageTs();
+                        MenuView menuView = MenuView
+                            .builder()
+                            .channelId(channelId)
+                            .messageTs(messageTs)
+                            .build();
+                        menuView.start();
+                    });
+                return ctx.ack();
+            }
+        );
+
+        // blockAction - clicked Enter after adding links
+        app.blockAction(
+            Pattern.compile("^inputBlock-process-\\w*"),
+            (req, ctx) -> {
+                app
+                    .executorService()
+                    .submit(() -> {
+                        log.info("In Main, Option selected in MenuView");
+                        final String channelId = req.getPayload().getChannel().getId();
+                        final String messageTs = req.getPayload().getContainer().getMessageTs();
+                        final String userInput = req.getPayload().getActions().get(0).getValue();
                         ProcessView processView = ProcessView
                             .builder()
-                            .timestamp(messageTs)
-                            .requestId(channelId)
+                            .channelId(channelId)
+                            .messageTs(messageTs)
+                            .userInput(userInput)
                             .build();
-                        new Thread(processView::run).start();
+                        processView.start();
                     });
                 return ctx.ack();
             }
         );
 
-        // blockAction "queryAll" - handles the payload from the "Get Next" and "Get Count" buttons
+        // blockAction - clicked Query button or selected a session from the main menu
         app.blockAction(
-            Pattern.compile("^buttonBlock-queryAll-[-\\w]*"),
+            Pattern.compile("^buttonBlock-query-view-[-\\w]*"),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("Query button clicked");
+                        log.info("In Main, Starting up QueryView");
+                        final String channelId = req.getPayload().getChannel().getId();
+                        final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String actionId = req.getPayload().getActions().get(0).getActionId();
-                        final String messageTs = req.getPayload().getContainer().getMessageTs();
-                        final String channelId = req.getPayload().getChannel().getId();
-                        final String response = queryAllUtils(channelId);
-                        if (response.equals(QUERYING_NOT_POSSIBLE)) {
-                            updateResetButtonResponseAsync(response, channelId, messageTs);
+                        String requestId;
+                        String queryText = "";
+
+                        if (actionId.contains("click")) {
+                            requestId = req.getPayload().getMessage().getText();
+                        } else if (actionId.contains("select")) {
+                            requestId =
+                                req.getPayload().getActions().get(0).getSelectedOption().getValue();
+                        } else if (actionId.contains("getcount-request")) {
+                            requestId = req.getPayload().getMessage().getText();
+                        } else if (actionId.contains("getnext-request")) {
+                            requestId = req.getPayload().getMessage().getText();
+                        } else if (actionId.contains("getcount-response")) {
+                            requestId = req.getPayload().getMessage().getText();
+                            queryText = req.getPayload().getActions().get(0).getValue();
+                        } else if (actionId.contains("getnext-response")) {
+                            requestId = req.getPayload().getMessage().getText();
+                            queryText = req.getPayload().getActions().get(0).getValue();
                         } else {
-                            if (actionId.startsWith("buttonBlock-queryAll-count")) {
-                                updateQueryCountResponseAsync(response, channelId, messageTs);
-                            } else {
-                                updateQueryNextResponseAsync(response, channelId, messageTs);
-                            }
+                            requestId = "No active processed requests";
                         }
-                    });
-                return ctx.ack();
-            }
-        );
 
-        // blockAction "resetAll" - handles the payload from the "Reset" button
-        app.blockAction(
-            Pattern.compile("^buttonBlock-resetAll-\\w*"),
-            (req, ctx) -> {
-                app
-                    .executorService()
-                    .submit(() -> {
-                        log.info("Reset button clicked");
-                        final String messageTs = req.getPayload().getContainer().getMessageTs();
-                        final String channelId = req.getPayload().getChannel().getId();
-                        final String information = resetSessionUtils(channelId);
-                        final String response = ":wave: Welcome to the interactive session.";
-                        updateStartButtonResponse(information, response, channelId, messageTs);
-                    });
-                return ctx.ack();
-            }
-        );
+                        log.info("In Main, requestId: " + requestId);
+                        log.info("In Main, queryText: " + queryText);
+                        log.info("In Main, actionId: " + actionId);
 
-        // blockAction "exitAll" - handles the payload from the "Close" button
-        app.blockAction(
-            Pattern.compile("^buttonBlock-exitAll-\\w*"),
-            (req, ctx) -> {
-                app
-                    .executorService()
-                    .submit(() -> {
-                        log.info("Close button clicked");
-                        final String messageTs = req.getPayload().getContainer().getMessageTs();
-                        final String channelId = req.getPayload().getChannel().getId();
-                        deleteSessionUtils(channelId);
-                        deleteStartButtonResponse(channelId, messageTs);
-                    });
-                return ctx.ack();
-            }
-        );
+                        if (requestId.equals("No active processed requests")) {
+                            log.info("In Main, No active processed requests button clicked");
+                            return;
+                        }
 
-        // blockAction "countQuery" - handles the payload from the "Count of a Key" input
-        app.blockAction(
-            Pattern.compile("^inputBlock-countQuery-\\w*"),
-            (req, ctx) -> {
-                app
-                    .executorService()
-                    .submit(() -> {
-                        log.info("Count of a Key input received");
-                        final String messageTs = req.getPayload().getContainer().getMessageTs();
-                        final String channelId = req.getPayload().getChannel().getId();
-                        final String prefixKey = req.getPayload().getActions().get(0).getValue();
-                        final String response = countUtils(prefixKey, channelId);
-                        updateQueryCountResponseAsync(response, channelId, messageTs);
-                    });
-                return ctx.ack();
-            }
-        );
+                        QueryView queryView = QueryView
+                            .builder()
+                            .channelId(channelId)
+                            .messageTs(messageTs)
+                            .requestId(requestId)
+                            .build();
 
-        // blockAction "nextQuery" - handles the payload from the "Next Keys" input
-        app.blockAction(
-            Pattern.compile("^inputBlock-nextQuery-\\w*"),
-            (req, ctx) -> {
-                app
-                    .executorService()
-                    .submit(() -> {
-                        log.info("Next Keys input received");
-                        final String messageTs = req.getPayload().getContainer().getMessageTs();
-                        final String channelId = req.getPayload().getChannel().getId();
-                        final String prefixKey_count = req
-                            .getPayload()
-                            .getActions()
-                            .get(0)
-                            .getValue();
-                        final String response = getNextKeyUtils(prefixKey_count, channelId);
-                        updateQueryNextResponseAsync(response, channelId, messageTs);
+                        QueryView.ViewType viewType;
+                        if (actionId.contains("getcount-request")) {
+                            viewType = QueryView.ViewType.GET_COUNT_REQUEST;
+                        } else if (actionId.contains("getnext-request")) {
+                            viewType = QueryView.ViewType.GET_NEXT_REQUEST;
+                        } else if (actionId.contains("getcount-response")) {
+                            viewType = QueryView.ViewType.GET_COUNT_RESPONSE;
+                        } else if (actionId.contains("getnext-response")) {
+                            viewType = QueryView.ViewType.GET_NEXT_RESPONSE;
+                        } else {
+                            viewType = QueryView.ViewType.NO_QUERY;
+                        }
+
+                        log.info("In Main, viewType: " + viewType);
+
+                        queryView.start(viewType, queryText);
                     });
                 return ctx.ack();
             }
@@ -419,14 +445,12 @@ public class SlackMain {
                     .submit(() -> {
                         log.info("AppMentionEvent received");
                         final String channelId = payload.getEvent().getChannel();
-                        String response = createSessionUtils();
-                        if (response.equals(SESSION_IN_PROGRESS)) {
-                            response = "A session is already open in this botSession.";
-                            postResetButtonResponseAsync(response, channelId);
-                        } else {
-                            response = ":wave: Welcome to the interactive session.";
-                            postStartButtonResponse(response, channelId);
-                        }
+                        MenuView menuView = MenuView
+                            .builder()
+                            .channelId(channelId)
+                            .messageTs(null)
+                            .build();
+                        menuView.start();
                     });
                 return ctx.ack();
             }

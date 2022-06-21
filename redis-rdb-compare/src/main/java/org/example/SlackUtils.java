@@ -29,10 +29,10 @@ public class SlackUtils {
         "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
     private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
     private static final String DOWNLOADING_COMPLETED = "Downloading completed";
-    private static final String PARSING_NOT_COMPLETED =
-        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String UNKNOWN_DOWNLOADING_BEHAVIOUR =
         "downloadUtils() is showing UNKNOWN behaviour: ";
+    private static final String PARSING_NOT_COMPLETED =
+        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
     private static final String PARSING_STARTED =
         "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
     private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
@@ -52,7 +52,7 @@ public class SlackUtils {
     private static final String BAD_ARGUMENTS =
         "INVALID ARGUMENTS.\nRefer to \"/redis-bot-help\" for more information.";
     private static final String SESSION_IN_PROGRESS =
-        "A session is already open in this botSession.\n";
+        "Could not create session. Consider re-trying command or running /clearall if the issue persists.\n";
     private static final String SESSION_CREATED =
         "A session has been created in this botSession. Ready to parse and make tries.\n";
     private static final String QUERYING_NOT_POSSIBLE =
@@ -62,7 +62,7 @@ public class SlackUtils {
     private static final String INVALID_REQUEST_ID =
         "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
     private static final String ALL_PROCESSING_DONE =
-        "Processing done. Files Downloaded, Parsed and Made into Tries. Ready to answer queries\n";
+        "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
 
     /**
      * Create a botSession, download the files, parse the files and make tries.
@@ -72,7 +72,10 @@ public class SlackUtils {
         if (requestId == null) {
             return SESSION_IN_PROGRESS;
         }
-        postTextResponseSync(SESSION_CREATED + "\n\n\n>Your Request Id: " + requestId, channelId);
+        postTextResponseSync(
+            SESSION_CREATED + "\n\n\n>Generated Request Id: " + requestId,
+            channelId
+        );
 
         final String downloadComplete = downloadUtils(requestId + " " + text, channelId, true);
         if (!downloadComplete.contains("Downloading completed")) {
@@ -103,7 +106,7 @@ public class SlackUtils {
     public static String createSessionUtils() {
         String requestId = createBotSession();
         if (requestId != null) {
-            return SESSION_CREATED + "\n\n\n>Your Request Id: " + requestId;
+            return SESSION_CREATED + "\n\n\n>Generated Request Id: " + requestId;
         } else {
             return SESSION_IN_PROGRESS;
         }
@@ -122,7 +125,6 @@ public class SlackUtils {
         final String channelId,
         boolean waitForCompletion
     ) {
-        URL[] urls;
         BotSession botSession;
         try {
             assert (!text.isEmpty());
@@ -131,6 +133,12 @@ public class SlackUtils {
             botSession = getBotSession(args[0]);
             botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
             botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
+            log.info(
+                "Downloading files from S3 links: " +
+                botSession.getS3linkA() +
+                " and " +
+                botSession.getS3linkB()
+            );
         } catch (IllegalStateException e) {
             return INVALID_REQUEST_ID;
         } catch (Exception e) {
@@ -142,8 +150,7 @@ public class SlackUtils {
 
             @Override
             public String call() throws Exception {
-                String response = botSession.initiateDownloading();
-                return response;
+                return botSession.initiateDownloading();
             }
         }
 
@@ -223,8 +230,7 @@ public class SlackUtils {
 
                 @Override
                 public String call() throws Exception {
-                    String response = botSession.initiateParsing();
-                    return response;
+                    return botSession.initiateParsing();
                 }
             }
 
@@ -308,8 +314,7 @@ public class SlackUtils {
 
                 @Override
                 public String call() throws Exception {
-                    String response = botSession.initiateTrieMaking();
-                    return response;
+                    return botSession.initiateTrieMaking();
                 }
             }
 
@@ -374,11 +379,10 @@ public class SlackUtils {
      * - Check if the "/getcount" query can execute or not
      * - Check if the query arguments are valid or not
      *
-     * @param text:      the query arguments
-     * @param channelId: the botSession to check the status of
+     * @param text: the query arguments
      * @return String containing the query result or error message
      */
-    public static String countUtils(final String text, final String channelId) {
+    public static String countUtils(final String text) {
         String requestId;
         String prefixKey;
         try {
@@ -415,11 +419,10 @@ public class SlackUtils {
      * - Check if the "/getcount" query can execute or not
      * - Check if the query arguments are valid or not
      *
-     * @param text:      [requestId] [prefixKey] [count]
-     * @param channelId: the botSession to check the status of
+     * @param text: [requestId] [prefixKey] [count]
      * @return String containing the query result or error message
      */
-    public static String getNextKeyUtils(String text, final String channelId) {
+    public static String getNextKeyUtils(String text) {
         String requestId;
         String prefixKey;
         int count;
@@ -453,7 +456,7 @@ public class SlackUtils {
                 .builder()
                 .key(prefixKey)
                 .n(count)
-                .queryType(NextKeyQuery.QueryType.TOP_K_CHILDREN)
+                .queryType(NextKeyQuery.QueryType.GET_NEXT)
                 .requestId(requestId)
                 .build();
             query.execute();
@@ -523,11 +526,7 @@ public class SlackUtils {
      * @return String containing the delete-success message to be sent to the channels
      */
     public static String deleteAllSessionsUtils() {
-        BotSession
-            .getAllBotSessions()
-            .forEach((key, value) -> {
-                deleteSessionUtils(key);
-            });
+        BotSession.getAllBotSessions().forEach((key, value) -> deleteSessionUtils(key));
         return "Deleted: all sessions.";
     }
 
@@ -553,26 +552,17 @@ public class SlackUtils {
                         .append("`:\n>A: <")
                         .append(channel.getS3linkA())
                         .append("|")
-                        .append(BotSession.shortenURL(channel.getS3linkA()))
+                        .append(channel.getS3linkA())
                         .append(">\n>B: <")
                         .append(channel.getS3linkB())
                         .append("|")
-                        .append(BotSession.shortenURL(channel.getS3linkB()))
+                        .append(channel.getS3linkB())
                         .append(">\n\n");
                     index[0]++;
-                    log.info(
-                        channel.getRequestId() +
-                        " " +
-                        channel.getS3linkA() +
-                        " " +
-                        channel.getS3linkB()
-                    );
                 });
         }
         return sb.toString();
     }
-
-    // not fixed below
 
     /**
      * Checks if executing queries is possible or not
