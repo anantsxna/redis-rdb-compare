@@ -157,6 +157,38 @@ public class Blocks {
     }
 
     /**
+     * @param buttonTextA:  the text of the first button
+     * @param buttonValueA: the value used to make the actionId of the payload the first button will send back
+     * @param buttonStyleA: default/primary/danger
+     * @return an action block with 4 buttons, the third button will open a confirm dialog
+     */
+    public static LayoutBlock FourButtonBlock(
+        String buttonTextA,
+        String buttonValueA,
+        String buttonStyleA,
+        String buttonTextB,
+        String buttonValueB,
+        String buttonStyleB,
+        String buttonTextC,
+        String buttonValueC,
+        String buttonStyleC,
+        String buttonTextD,
+        String buttonValueD,
+        String buttonStyleD
+    ) {
+        return actions(actions ->
+            actions.elements(
+                asElements(
+                    buttonElement(buttonTextA, buttonValueA, buttonStyleA),
+                    buttonElement(buttonTextB, buttonValueB, buttonStyleB),
+                    buttonElement(buttonTextC, buttonValueC, buttonStyleC),
+                    buttonElement(buttonTextD, buttonValueD, buttonStyleD)
+                )
+            )
+        );
+    }
+
+    /**
      * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
      * @param buttonStyle: default/primary/danger
@@ -207,9 +239,7 @@ public class Blocks {
      * @return a text box as a block
      */
     public static LayoutBlock TextBlock(String text) {
-        return section(section ->
-            section.text(PlainTextObject.builder().text(text).emoji(true).build())
-        );
+        return section(section -> section.text(MarkdownTextObject.builder().text(text).build()));
     }
 
     /**

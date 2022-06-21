@@ -19,6 +19,9 @@ import org.trie.QTrie;
 public class TrieMaker {
 
     @Builder.Default
+    public static final int TIMEOUT_SECONDS = 300;
+
+    @Builder.Default
     private final HashMap<String, QTrie> keysTriesPairs = new HashMap<>();
 
     @Builder.Default
@@ -50,9 +53,6 @@ public class TrieMaker {
             });
         });
         trieInsertionExecutorService.shutdown();
-        return trieInsertionExecutorService.awaitTermination(
-            Long.MAX_VALUE, //TODO: ask sir for a value
-            TimeUnit.SECONDS
-        );
+        return trieInsertionExecutorService.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 }

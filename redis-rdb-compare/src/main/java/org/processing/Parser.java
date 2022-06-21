@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.threading.FixedNameableExecutorService;
@@ -23,6 +24,9 @@ import org.threading.FixedNameableExecutorService;
 @Slf4j
 @Builder
 public final class Parser {
+
+    @Builder.Default
+    public static final int TIMEOUT_SECONDS = 300;
 
     @Builder.Default
     private final HashMap<String, String> parsePairs = new HashMap<>();
@@ -140,15 +144,18 @@ public final class Parser {
         }
 
         for (Process process : parseProcesses) {
-            int exitStatus;
-            exitStatus = process.waitFor();
-            if (exitStatus != 0) {
-                log.error("PYPY3: Process exited with status {}", exitStatus);
-                throw new RuntimeException(
-                    "ERROR: Process for parsing file exited with status " + exitStatus
+            boolean exitStatus;
+            exitStatus = process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            log.error(
+                exitStatus
+                    ? "PYPY3 ParsingProcess exited normally"
+                    : "PYPY3 Parsing Process timed out after {} seconds",
+                TIMEOUT_SECONDS
+            );
+            if (!exitStatus) {
+                throw new InterruptedException(
+                    "PYPY3 Parsing Process timed out after " + TIMEOUT_SECONDS + " seconds"
                 );
-            } else {
-                log.info("PYPY3: Process exited with status {}", exitStatus);
             }
         }
 

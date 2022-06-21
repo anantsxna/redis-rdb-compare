@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 public abstract class Query {
 
     public enum QueryType {
-        TOP_K_CHILDREN,
+        GET_NEXT,
         GET_COUNT,
     }
 
