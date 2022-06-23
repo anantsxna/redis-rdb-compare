@@ -1,11 +1,18 @@
 version: "3.3"
 
-
-
 services: 
-  ubuntu:
+  redis-slack-bot:
     build: 
       context: ./
-      target: ubuntu-build
+      target: redis-build
     ports:
       - 80:80
+    image:
+      redis-slack-bot-image
+    container_name: 
+      redis-slack-bot-container
+    restart:
+      unless-stopped
+    env_file:
+      - .env
+    
