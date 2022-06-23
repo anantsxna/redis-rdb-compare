@@ -35,6 +35,9 @@ public class Main {
      * Main method for the application.
      */
     public static void main(String[] args) {
+        log.info(System.getenv("SLACK_SIGNING_SECRET"));
+        log.info(System.getenv("SLACK_BOT_TOKEN"));
+        log.info(System.getenv("SLACK_APP_TOKEN"));
         var app = new App(
             AppConfig
                 .builder()

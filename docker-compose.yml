@@ -1,0 +1,11 @@
+version: "3.3"
+
+
+
+services: 
+  ubuntu:
+    build: 
+      context: ./
+      target: ubuntu-build
+    ports:
+      - 80:80

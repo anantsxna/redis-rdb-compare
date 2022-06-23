@@ -18,6 +18,7 @@ public class BotStringTokenizer {
     @Builder.Default
     private final List<String> tokens = new ArrayList<>();
 
+    @Builder.Default
     private int index = 0;
 
     @NonNull

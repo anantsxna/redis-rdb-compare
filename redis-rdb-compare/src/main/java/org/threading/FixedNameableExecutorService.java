@@ -15,8 +15,8 @@ public class FixedNameableExecutorService {
     @NonNull
     private final String baseName;
 
-    @NonNull
-    private final int threadsNum;
+    @Builder.Default
+    private final int threadsNum = 1;
 
     public ExecutorService getExecutorService() {
         return newFixedThreadPool(threadsNum, new NameableThreadFactory(baseName));

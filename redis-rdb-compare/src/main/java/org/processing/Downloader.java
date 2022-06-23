@@ -57,14 +57,18 @@ public class Downloader {
             downloadingExecutor.submit(() -> {
                 log.info("Downloading {} to {}", s3url.toString(), dumpFile);
                 //  TODO: S3Downloader.download(s3Link, dumpFile);
-                try (
-                    ReadableByteChannel readableByteChannel = Channels.newChannel(
-                        s3url.openStream()
-                    );
-                    FileOutputStream fileOutputStream = new FileOutputStream(dumpFile)
-                ) {
-                    FileChannel fileChannel = fileOutputStream.getChannel();
+                ReadableByteChannel readableByteChannel = null;
+                try {
+                    readableByteChannel = Channels.newChannel(s3url.openStream());
+                } catch (IOException e) {
+                    log.error("Error in ReadableByteChannel");
+                    log.error(e.getMessage());
+                    downloadingSuccess.set(false);
+                    return;
+                }
+                try (FileOutputStream fileOutputStream = new FileOutputStream(dumpFile)) {
                     try {
+                        FileChannel fileChannel = fileOutputStream.getChannel();
                         fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
                     } catch (IOException e) {
                         log.error("Error in transferFrom");

@@ -38,5 +38,9 @@ keys*.txt
 # Maven target folder
 /redis-rdb-compare/target/
 
+#venv
+/redis-rdb-compare/my-venv/
+
+
 
 
