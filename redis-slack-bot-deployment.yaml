@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: redis-slack-bot
+  name: redis-slack-bot
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      io.kompose.service: redis-slack-bot
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: redis-slack-bot
+    spec:
+      containers:
+        - env:
+            - name: SLACK_APP_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  key: SLACK_APP_TOKEN
+                  name: env
+            - name: SLACK_BOT_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  key: SLACK_BOT_TOKEN
+                  name: env
+            - name: SLACK_SIGNING_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  key: SLACK_SIGNING_SECRET
+                  name: env
+          image: loudmouth01/public-redis-slack-bot-repo
+          name: redis-slack-bot-container
+          ports:
+            - containerPort: 80
+          resources: {}
+      restartPolicy: Always
+status: {}

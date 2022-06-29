@@ -494,6 +494,11 @@ public class Main {
             SocketModeApp socketModeApp = new SocketModeApp(app);
             log.info("App started. Hello World.");
             socketModeApp.start();
+        } catch (OutOfMemoryError e) {
+            log.error("Out of memory error: " + e.getMessage());
+            log.error("Stopping bot...");
+            deleteAllSessionsUtils();
+            app.executorService().shutdownNow();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

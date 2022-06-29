@@ -123,7 +123,7 @@ public final class Parser {
             String dumpFile = (String) mapElement.getKey();
             String keysFile = (String) mapElement.getValue();
             String[] command = new String[] {
-                "my-venv/bin/python3",
+                "python3",
                 "fast-parse.py",
                 "--rdb=" + dumpFile,
                 "--keys=" + keysFile,
