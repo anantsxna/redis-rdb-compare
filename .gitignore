@@ -44,4 +44,5 @@ keys*.txt
 #env
 .env
 
-
+#ENV-CONFIG
+env-configmap.yaml

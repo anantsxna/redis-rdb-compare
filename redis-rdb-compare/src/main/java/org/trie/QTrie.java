@@ -41,13 +41,20 @@ public final class QTrie {
         ) {
             log.info("Reading keys from file: {}", keysFile);
             String line;
-            int i = 0;
+            //            int i = 0;
             while ((line = reader.readLine()) != null) {
                 insertKey(line);
-                i++;
-                if (i % 100000 == 0) {
-                    log.info("Read " + i + " keys.");
-                }
+                //                i++;
+                //                if (i % 10000 == 0 && keysFile.contains("A")) {
+                //                    log.info("{} {}", i, nodesCreated);
+                //                    log.info("Read " + i + " keys.");
+                //                }
+                //                int finalI = i;
+                //                stops.forEach(stop -> {
+                //                    if (finalI == stop) {
+                //                        log.info("@ nodes created: {} {}", finalI, nodesCreated);
+                //                    }
+                //                });
             }
         } catch (Exception e) {
             e.printStackTrace();

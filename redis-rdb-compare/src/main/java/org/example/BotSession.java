@@ -322,6 +322,7 @@ public class BotSession {
             this.getRequestId()
         );
         this.setTrieMakingTime(endTime - startTime);
+        // log.info("time measures: {} {} {} {}", this.getRequestId(), this.getDownloadingTime() / 1000.0, this.getParsingTime() / 1000.0, this.getTrieMakingTime() / 1000.0);
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
         return (
             "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
