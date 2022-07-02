@@ -61,7 +61,7 @@ public class MenuView {
         blocks.add(DividerBlock.builder().build());
 
         String placeholder = "Select a Request Id";
-        if (BotSession.getAllBotSessions().isEmpty()) placeholder = "No active processed requests";
+        if (BotSession.getAllBotSessions().isEmpty()) placeholder = "No active requests";
 
         blocks.add(
             ActionsBlock
@@ -149,7 +149,7 @@ public class MenuView {
             options.add(
                 OptionObject
                     .builder()
-                    .text(PlainTextObject.builder().text("No active processed requests").build())
+                    .text(PlainTextObject.builder().text("No active requests").build())
                     .build()
             );
         }

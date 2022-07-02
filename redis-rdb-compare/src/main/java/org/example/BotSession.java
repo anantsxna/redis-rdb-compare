@@ -1,6 +1,7 @@
 package org.example;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
+import static org.example.Main.props;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import java.net.MalformedURLException;
@@ -39,16 +40,16 @@ public class BotSession {
     private URL s3linkB;
 
     @Builder.Default
-    private volatile String dumpA = "./.sessionFiles/dump-A-downloaded-notset.rdb";
+    private volatile String dumpA = props.getProperty("DEFAULT_DUMP_A");
 
     @Builder.Default
-    private volatile String dumpB = "./.sessionFiles/dump-B-downloaded-notset.rdb";
+    private volatile String dumpB = props.getProperty("DEFAULT_DUMP_B");
 
     @Builder.Default
-    private volatile String keysA = "./.sessionFiles/keys-A-notset.txt";
+    private volatile String keysA = props.getProperty("DEFAULT_KEYS_A");
 
     @Builder.Default
-    private volatile String keysB = "./.sessionFiles/keys-B-notset.txt";
+    private volatile String keysB = props.getProperty("DEFAULT_KEYS_B");
 
     @Setter
     @Builder.Default
@@ -70,7 +71,7 @@ public class BotSession {
     private final String requestId;
 
     public static String elongateURL(@NonNull String s3link) {
-        if (!s3link.matches("^\\w+?://.*")) {
+        if (!s3link.matches(props.getProperty("INCOMPLETE_URL_REGEX"))) {
             s3link = "https://" + s3link;
         }
         return s3link;
@@ -82,10 +83,10 @@ public class BotSession {
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
         this.keysB = "./.sessionFiles/keys-B-" + this.getRequestId() + ".txt";
         try {
-            this.s3linkA = new URL("https://example.com");
-            this.s3linkB = new URL("https://example.com");
+            this.s3linkA = new URL(props.getProperty("DEFAULT_S3_LINK"));
+            this.s3linkB = new URL(props.getProperty("DEFAULT_S3_LINK"));
         } catch (MalformedURLException e) {
-            log.error("Failed to initialize s3links for botSession: {}", this.getRequestId());
+            log.error(props.getProperty("S3_LINK_NOT_INITIALIZED"), this.getRequestId());
             e.printStackTrace();
         }
         return this;
@@ -171,13 +172,9 @@ public class BotSession {
      */
     public static BotSession getBotSession(final String requestId) throws IllegalStateException {
         if (!allBotSessions.containsKey(requestId)) {
-            postTextResponseAsync(
-                "Sorry, you need to create a session first by running \"/process\"",
-                requestId
-            );
-            log.error("requested botSession by id " + requestId + " does not exist");
+            postTextResponseAsync(props.getProperty("BOT_SESSION_NOT_FOUND"), requestId);
             throw new IllegalStateException(
-                "requested botSession by id " + requestId + " does not exist"
+                props.getProperty("BOT_SESSION_DOES_NOT_EXIST") + requestId
             );
         }
         return allBotSessions.get(requestId);
@@ -203,7 +200,7 @@ public class BotSession {
      * @param requestId: the id for the botSession to be removed
      */
     public static void removeBotSession(final String requestId) {
-        log.info("removeBotSession() called");
+        log.info(props.getProperty("REMOVING_BOT_SESSION"), requestId);
         allBotSessions.remove(requestId);
     }
 
@@ -211,7 +208,7 @@ public class BotSession {
      * initiate the downloading of the dump files.
      */
     public String initiateDownloading() throws InterruptedException {
-        log.info("initiateDownload() called for bot session " + this.getRequestId());
+        log.info(props.getProperty("DOWNLOAD_INITIATE"), this.getRequestId());
         this.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
         Downloader downloader = this.getDownloader();
         downloader.addToDownloader(this.getS3linkA(), this.getDumpA());
@@ -221,32 +218,23 @@ public class BotSession {
         try {
             boolean terminatedWithSuccess = this.getDownloader().download();
             if (!terminatedWithSuccess) {
-                throw new InterruptedException("Timeout Exception while downloading");
+                throw new InterruptedException(props.getProperty("DOWNLOAD_TIMEOUT"));
             }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
-            log.error(
-                "download interrupted due to FileNotFound, SecurityException or DownloadingError for botSession {}",
-                requestId
-            );
+            log.error(props.getProperty("DOWNLOAD_ERROR"), requestId);
             this.setDownloadingStatus(DownloadingStatus.NOT_DOWNLOADED);
-            throw new InterruptedException(
-                "\uD83D\uDEA8\uD83D\uDEA8 Download failed \uD83D\uDEA8\uD83D\uDEA8"
-            );
+            throw new InterruptedException(props.getProperty("DOWNLOAD_FAILED"));
         }
         long endTime = System.currentTimeMillis();
-        log.info(
-            "Download completed in {} milliseconds in botSession {}",
-            endTime - startTime,
-            requestId
-        );
+        log.info(props.getProperty("DOWNLOAD_SUCCESS"), endTime - startTime, requestId);
         this.setDownloadingTime(endTime - startTime);
         this.setDownloadingStatus(DownloadingStatus.DOWNLOADED); //volatile variable write
         return (
-            "\uD83D\uDEA8\uD83D\uDEA8 Downloading completed in " +
+            props.getProperty("DOWNLOAD_COMPLETE_A") +
             (endTime - startTime) /
             1000.0 +
-            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+            props.getProperty("DOWNLOAD_COMPLETE_B")
         );
     }
 
@@ -254,7 +242,7 @@ public class BotSession {
      * initiate the parsing of the dump files.
      */
     public String initiateParsing() throws InterruptedException {
-        log.info("parsing started for botSession {}", getRequestId());
+        log.info(props.getProperty("PARSE_INITIATE"), getRequestId());
         this.setParsingStatus(ParsingStatus.IN_PROGRESS);
         Parser parser = this.getParser();
         parser.addToParser(this.getDumpA(), this.getKeysA());
@@ -264,17 +252,13 @@ public class BotSession {
         parser.parse();
         this.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
         long endTime = System.currentTimeMillis();
-        log.info(
-            "parsing completed for botSession {} in {} ms",
-            getRequestId(),
-            endTime - startTime
-        );
+        log.info(props.getProperty("PARSE_SUCCESS"), getRequestId(), endTime - startTime);
         this.setParsingTime(endTime - startTime);
         return (
-            "\uD83D\uDEA8\uD83D\uDEA8 Parsing completed in " +
+            props.getProperty("PARSE_COMPLETE_A") +
             (endTime - startTime) /
             1000.0 +
-            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+            props.getProperty("PARSE_COMPLETE_B")
         );
     }
 
@@ -283,7 +267,7 @@ public class BotSession {
      */
     public String initiateTrieMaking() throws InterruptedException {
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
-        log.info("trie construction started for botSession {}", requestId);
+        log.info(props.getProperty("MAKE_TRIE_INITIATE"), requestId);
         this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).build());
         this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).build());
 
@@ -294,41 +278,25 @@ public class BotSession {
         try {
             boolean terminatedWithSuccess = this.getTrieMaker().makeTries();
             if (!terminatedWithSuccess) {
-                throw new Exception("Exception while making tries");
+                throw new Exception(props.getProperty("MAKE_TRIE_EXCEPTION"));
             }
         } catch (InterruptedException e) {
-            log.error(
-                "trie construction interrupted due trie-initializer-threads being interrupted for botSession {}",
-                this.getRequestId()
-            );
             this.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
-            throw new InterruptedException(
-                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed due trie-initializer-threads being interrupted for botSession\uD83D\uDEA8\uD83D\uDEA8"
-            );
+            throw new InterruptedException(props.getProperty("MAKE_TRIE_INTERRUPTED") + requestId);
         } catch (Exception e) {
-            log.error(
-                "trie construction interrupted due to timeout for botSession {}",
-                this.getRequestId()
-            );
             this.setTrieMakingStatus(TrieMakingStatus.NOT_CONSTRUCTED);
-            throw new InterruptedException(
-                "\uD83D\uDEA8\uD83D\uDEA8 Trie construction failed due to timeout for botSession \uD83D\uDEA8\uD83D\uDEA8"
-            );
+            throw new InterruptedException(props.getProperty("MAKE_TRIE_TIMEOUT"));
         }
         long endTime = System.currentTimeMillis();
-        log.info(
-            "Trie construction completed in {} milliseconds in botSession {}",
-            endTime - startTime,
-            this.getRequestId()
-        );
+        log.info(props.getProperty("MAKE_TRIE_SUCCESS"), endTime - startTime, this.getRequestId());
         this.setTrieMakingTime(endTime - startTime);
         // log.info("time measures: {} {} {} {}", this.getRequestId(), this.getDownloadingTime() / 1000.0, this.getParsingTime() / 1000.0, this.getTrieMakingTime() / 1000.0);
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
         return (
-            "\uD83D\uDEA8\uD83D\uDEA8 Trie construction completed in " +
+            props.getProperty("MAKE_TRIE_COMPLETE_A") +
             (endTime - startTime) /
             1000.0 +
-            " second(s). \uD83D\uDEA8\uD83D\uDEA8"
+            props.getProperty("MAKE_TRIE_COMPLETE_B")
         );
     }
 }

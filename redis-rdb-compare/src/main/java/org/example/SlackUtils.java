@@ -1,6 +1,7 @@
 package org.example;
 
 import static org.example.BotSession.*;
+import static org.example.Main.props;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 import static org.messaging.PostUpdate.postTextResponseSync;
 
@@ -24,45 +25,45 @@ import org.querying.Query;
 @Slf4j
 public class SlackUtils {
 
-    private static final String DOWNLOADING_NOT_COMPLETED = "Downloading not completed.";
-    private static final String DOWNLOADING_STARTED =
-        "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
-    private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
-    private static final String DOWNLOADING_COMPLETED = "Downloading completed";
-    private static final String UNKNOWN_DOWNLOADING_BEHAVIOUR =
-        "downloadUtils() is showing UNKNOWN behaviour: ";
-    private static final String PARSING_NOT_COMPLETED =
-        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
-    private static final String PARSING_STARTED =
-        "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
-    private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
-    private static final String PARSING_COMPLETED = "Parsing completed";
-    private static final String UNKNOWN_PARSING_BEHAVIOUR =
-        "parseUtils() is showing UNKNOWN behaviour: ";
-    private static final String TRIES_NOT_CREATED =
-        "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
-    private static final String TRIE_CONSTRUCTION_STARTED =
-        "Trie construction started...\nPlease wait for automatic notification when construction is over.\nOr use \"/maketrie\" command again to check status.";
-    private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
-        "Trie construction in progress.\nPlease wait.";
-    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
-    private static final String TRIE_CONSTRUCTION_NOT_COMPLETED = "Trie construction completed";
-    private static final String UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR =
-        "parseUtils() is showing UNKNOWN behaviour: ";
-    private static final String BAD_ARGUMENTS =
-        "INVALID ARGUMENTS.\nRefer to \"/redis-bot-help\" for more information.";
-    private static final String SESSION_IN_PROGRESS =
-        "Could not create session. Consider re-trying command or running /clearall if the issue persists.\n";
-    private static final String SESSION_CREATED =
-        "A session has been created. Ready to parse and make tries.\n";
-    private static final String QUERYING_NOT_POSSIBLE =
-        "Querying is not possible since tries have not been created.\n";
-    private static final String QUERYING_POSSIBLE =
-        "Querying is possible since tries have been created.\n";
-    private static final String INVALID_REQUEST_ID =
-        "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
-    private static final String ALL_PROCESSING_DONE =
-        "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
+    //    private static final String DOWNLOADING_NOT_COMPLETED = "Downloading not completed.";
+    //    private static final String DOWNLOADING_STARTED =
+    //        "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
+    //    private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
+    //    private static final String DOWNLOADING_COMPLETED = "Downloading completed";
+    //    private static final String UNKNOWN_DOWNLOADING_BEHAVIOUR =
+    //        "downloadUtils() is showing UNKNOWN behaviour: ";
+    //    private static final String PARSING_NOT_COMPLETED =
+    //        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
+    //    private static final String PARSING_STARTED =
+    //        "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
+    //    private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
+    //    private static final String PARSING_COMPLETED = "Parsing completed";
+    //    private static final String UNKNOWN_PARSING_BEHAVIOUR =
+    //        "parseUtils() is showing UNKNOWN behaviour: ";
+    //    private static final String TRIES_NOT_CREATED =
+    //        "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
+    //    private static final String TRIE_CONSTRUCTION_STARTED =
+    //        "Trie construction started...\nPlease wait for automatic notification when construction is over.\nOr use \"/maketrie\" command again to check status.";
+    //    private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
+    //        "Trie construction in progress.\nPlease wait.";
+    //    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
+    //    private static final String TRIE_CONSTRUCTION_NOT_COMPLETED = "Trie construction not completed";
+    //    private static final String UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR =
+    //        "trieConstructionUtils() is showing UNKNOWN behaviour: ";
+    //    private static final String BAD_ARGUMENTS =
+    //        "INVALID ARGUMENTS.\nRefer to \"/redis-bot-help\" for more information.";
+    //    private static final String SESSION_IN_PROGRESS =
+    //        "Could not create session. Consider re-trying command or running /clearall if the issue persists.\n";
+    //    private static final String SESSION_CREATED =
+    //        "A session has been created. Ready to parse and make tries.\n";
+    //    private static final String QUERYING_NOT_POSSIBLE =
+    //        "Querying is not possible since tries have not been created.\n";
+    //    private static final String QUERYING_POSSIBLE =
+    //        "Querying is possible since tries have been created.\n";
+    //    private static final String INVALID_REQUEST_ID =
+    //        "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
+    //    private static final String ALL_PROCESSING_DONE =
+    //        "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
 
     /**
      * Create a botSession, download the files, parse the files and make tries.
@@ -70,32 +71,29 @@ public class SlackUtils {
     public static String processAllUtils(final String text, final String channelId) {
         final String requestId = createBotSession();
         if (requestId == null) {
-            return SESSION_IN_PROGRESS;
+            return props.getProperty("SESSION_IN_PROGRESS");
         }
-        postTextResponseSync(
-            SESSION_CREATED + "\n\n\n>Generated Request Id: " + requestId,
-            channelId
-        );
+        postTextResponseSync(props.getProperty("SESSION_CREATED") + requestId, channelId);
 
         final String downloadComplete = downloadUtils(requestId + " " + text, channelId, true);
-        if (!downloadComplete.contains("Downloading completed")) {
-            return downloadComplete + "\n\n\n" + DOWNLOADING_NOT_COMPLETED;
+        if (!downloadComplete.contains(props.getProperty("DOWNLOADING_COMPLETED"))) {
+            return downloadComplete + "\n\n\n" + props.getProperty("DOWNLOADING_NOT_COMPLETED");
         }
         postTextResponseSync(downloadComplete, channelId);
 
         final String parsingComplete = parseUtils(requestId, channelId, true);
-        if (!parsingComplete.contains("Parsing completed")) {
-            return parsingComplete + "\n\n\n" + PARSING_NOT_COMPLETED;
+        if (!parsingComplete.contains(props.getProperty("PARSING_COMPLETED"))) {
+            return parsingComplete + "\n\n\n" + props.getProperty("PARSING_NOT_COMPLETED");
         }
         postTextResponseSync(parsingComplete, channelId);
 
         final String trieComplete = makeTrieUtils(requestId, channelId, true);
-        if (!trieComplete.contains("Trie construction completed")) {
-            return trieComplete + "\n\n\n" + TRIE_CONSTRUCTION_NOT_COMPLETED;
+        if (!trieComplete.contains(props.getProperty("TRIE_CONSTRUCTION_COMPLETED"))) {
+            return trieComplete + "\n\n\n" + props.getProperty("TRIE_CONSTRUCTION_NOT_COMPLETED");
         }
         postTextResponseSync(trieComplete, channelId);
 
-        return ALL_PROCESSING_DONE + "\n\n\n>Your Request Id is: " + requestId;
+        return props.getProperty("ALL_PROCESSING_DONE") + "\n\n\n>Your Request Id is: " + requestId;
     }
 
     /**
@@ -106,9 +104,11 @@ public class SlackUtils {
     public static String createSessionUtils() {
         String requestId = createBotSession();
         if (requestId != null) {
-            return SESSION_CREATED + "\n\n\n>Generated Request Id: " + requestId;
+            return (
+                props.getProperty("SESSION_CREATED") + "\n\n\n>Generated Request Id: " + requestId
+            );
         } else {
-            return SESSION_IN_PROGRESS;
+            return props.getProperty("SESSION_IN_PROGRESS");
         }
     }
 
@@ -140,9 +140,9 @@ public class SlackUtils {
                 botSession.getS3linkB()
             );
         } catch (IllegalStateException e) {
-            return INVALID_REQUEST_ID;
+            return props.getProperty("INVALID_REQUEST_ID");
         } catch (Exception e) {
-            return BAD_ARGUMENTS;
+            return props.getProperty("BAD_ARGUMENTS");
         }
 
         String requestId = botSession.getRequestId();
@@ -162,15 +162,16 @@ public class SlackUtils {
                     String response = botSession.initiateDownloading();
                     postTextResponseAsync(response, channelId);
                 } catch (Exception e) {
-                    log.error("Error in downloadRunnable", e);
-                    String response = "Error in downloadRunnable: " + e.getMessage();
+                    log.error(props.getProperty("DOWNLOADING_RUNNABLE_ERROR") + e);
+                    String response =
+                        props.getProperty("DOWNLOADING_RUNNABLE_ERROR") + e.getMessage();
                     postTextResponseAsync(response, channelId);
                 }
             }
         }
 
         if (botSession.getExecutedDownloading().compareAndSet(false, true)) {
-            log.info("downloading started for botSession {}", requestId);
+            log.info(props.getProperty("DOWNLOADING_INITIATED"), requestId);
             if (waitForCompletion) {
                 Future<String> downloadCallable = botSession
                     .getDownloadingExecutorService()
@@ -180,30 +181,35 @@ public class SlackUtils {
                     botSession.getDownloadingExecutorService().shutdown();
                     return response;
                 } catch (InterruptedException e) {
-                    log.error("InterruptedError in downloadCallable", e);
-                    return "InterruptedError in downloadCallable: " + e.getMessage();
+                    log.error(props.getProperty("DOWNLOADING_CALLABLE_ERROR_INTERRUPT") + e);
+                    return (
+                        props.getProperty("DOWNLOADING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
+                    );
                 } catch (ExecutionException e) {
-                    log.error("ExecutionException in downloadCallable", e);
-                    return "ExecutionException in downloadCallable: " + e.getMessage();
+                    log.error(props.getProperty("DOWNLOADING_CALLABLE_ERROR_EXEC") + e);
+                    return props.getProperty("DOWNLOADING_CALLABLE_ERROR_EXEC") + e.getMessage();
                 }
             } else {
                 botSession.getDownloadingExecutorService().submit(new DownloadRunnable());
                 botSession.getDownloadingExecutorService().shutdown();
-                return DOWNLOADING_STARTED;
+                return props.getProperty("DOWNLOADING_STARTED");
             }
         } else {
             if (botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADING)) {
-                return DOWNLOADING_IN_PROGRESS;
+                return props.getProperty("DOWNLOADING_IN_PROGRESS");
             } else if (botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
                 return (
-                    DOWNLOADING_COMPLETED +
+                    props.getProperty("DOWNLOADING_COMPLETED") +
                     " in " +
                     botSession.getDownloadingTime() /
                     1000.0 +
                     " second(s)."
                 );
             } else {
-                return UNKNOWN_DOWNLOADING_BEHAVIOUR + botSession.getDownloadingStatus();
+                return (
+                    props.getProperty("UNKNOWN_DOWNLOADING_BEHAVIOUR") +
+                    botSession.getDownloadingStatus()
+                );
             }
         }
     }
@@ -223,7 +229,7 @@ public class SlackUtils {
         try {
             BotSession botSession = getBotSession(requestId);
             if (!botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
-                return DOWNLOADING_NOT_COMPLETED;
+                return props.getProperty("DOWNLOADING_NOT_COMPLETED");
             }
 
             class ParserCallable implements Callable<String> {
@@ -242,8 +248,9 @@ public class SlackUtils {
                         String response = botSession.initiateParsing();
                         postTextResponseAsync(response, channelId);
                     } catch (Exception e) {
-                        log.error("Error in parserRunnable", e);
-                        String response = "Error in parserRunnable: " + e.getMessage();
+                        log.error(props.getProperty("PARSING_RUNNABLE_ERROR") + e);
+                        String response =
+                            props.getProperty("PARSING_RUNNABLE_ERROR") + e.getMessage();
                         postTextResponseAsync(response, channelId);
                     }
                 }
@@ -259,35 +266,40 @@ public class SlackUtils {
                         botSession.getParsingExecutorService().shutdown();
                         return response;
                     } catch (InterruptedException e) {
-                        log.error("InterruptedError in parserCallable", e);
-                        return "InterruptedError in parserCallable: " + e.getMessage();
+                        log.error(props.getProperty("PARSING_CALLABLE_ERROR_INTERRUPT") + e);
+                        return (
+                            props.getProperty("PARSING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
+                        );
                     } catch (ExecutionException e) {
-                        log.error("ExecutionException in parserCallable", e);
-                        return "ExecutionException in parserCallable: " + e.getMessage();
+                        log.error(props.getProperty("PARSING_CALLABLE_ERROR_EXEC") + e);
+                        return props.getProperty("PARSING_CALLABLE_ERROR_EXEC") + e.getMessage();
                     }
                 } else {
                     botSession.getParsingExecutorService().submit(new ParserRunnable());
                     botSession.getParsingExecutorService().shutdown();
-                    return PARSING_STARTED;
+                    return props.getProperty("PARSING_STARTED");
                 }
             } else {
                 if (botSession.getParsingStatus().equals(ParsingStatus.IN_PROGRESS)) {
-                    return PARSING_IN_PROGRESS;
+                    return props.getProperty("PARSING_IN_PROGRESS");
                 } else if (botSession.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
                     return (
-                        PARSING_COMPLETED +
+                        props.getProperty("PARSING_COMPLETED") +
                         " in " +
                         botSession.getParsingTime() /
                         1000.0 +
                         " second(s)."
                     );
                 } else {
-                    return UNKNOWN_PARSING_BEHAVIOUR + botSession.getParsingStatus();
+                    return (
+                        props.getProperty("UNKNOWN_PARSING_BEHAVIOUR") +
+                        botSession.getParsingStatus()
+                    );
                 }
             }
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return INVALID_REQUEST_ID;
+            return props.getProperty("INVALID_REQUEST_ID");
         }
     }
 
@@ -307,7 +319,7 @@ public class SlackUtils {
         try {
             BotSession botSession = getBotSession(requestId);
             if (!botSession.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
-                return PARSING_NOT_COMPLETED;
+                return props.getProperty("PARSING_NOT_COMPLETED");
             }
 
             class TrieMakerCallable implements Callable<String> {
@@ -326,8 +338,9 @@ public class SlackUtils {
                         String response = botSession.initiateTrieMaking();
                         postTextResponseAsync(response, channelId);
                     } catch (Exception e) {
-                        log.error("Error in trieMakerRunnable", e);
-                        String response = "Error in trieMakerRunnable: " + e.getMessage();
+                        log.error(props.getProperty("TRIE_CONSTRUCTION_RUNNABLE_ERROR") + e);
+                        String response =
+                            props.getProperty("TRIE_CONSTRUCTION_RUNNABLE_ERROR") + e.getMessage();
                         postTextResponseAsync(response, channelId);
                     }
                 }
@@ -343,35 +356,46 @@ public class SlackUtils {
                         botSession.getTrieMakingExecutorService().shutdown();
                         return response;
                     } catch (InterruptedException e) {
-                        log.error("InterruptedError in trieMakerCallable", e);
-                        return "InterruptedError in trieMakerCallable: " + e.getMessage();
+                        log.error(
+                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") + e
+                        );
+                        return (
+                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") +
+                            e.getMessage()
+                        );
                     } catch (ExecutionException e) {
-                        log.error("ExecutionException in trieMakerCallable", e);
-                        return "ExecutionException in trieMakerCallable: " + e.getMessage();
+                        log.error(props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_EXEC") + e);
+                        return (
+                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_EXEC") +
+                            e.getMessage()
+                        );
                     }
                 } else {
                     botSession.getTrieMakingExecutorService().submit(new TrieMakerRunnable());
                     botSession.getTrieMakingExecutorService().shutdown();
-                    return DOWNLOADING_STARTED;
+                    return props.getProperty("TRIE_CONSTRUCTION_STARTED");
                 }
             } else {
                 if (botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTING)) {
-                    return TRIE_CONSTRUCTION_IN_PROGRESS;
+                    return props.getProperty("TRIE_CONSTRUCTION_IN_PROGRESS");
                 } else if (botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                     return (
-                        TRIE_CONSTRUCTION_COMPLETED +
+                        props.getProperty("TRIE_CONSTRUCTION_COMPLETED") +
                         " in " +
                         botSession.getTrieMakingTime() /
                         1000.0 +
                         " second(s)."
                     );
                 } else {
-                    return UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR + botSession.getTrieMakingStatus();
+                    return (
+                        props.getProperty("UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR") +
+                        botSession.getTrieMakingStatus()
+                    );
                 }
             }
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return INVALID_REQUEST_ID;
+            return props.getProperty("INVALID_REQUEST_ID");
         }
     }
 
@@ -393,14 +417,14 @@ public class SlackUtils {
             prefixKey = queryArgs[1];
         } catch (Exception e) {
             log.error(e.getMessage());
-            return BAD_ARGUMENTS;
+            return props.getProperty("BAD_ARGUMENTS");
         }
         try {
             BotSession botSession = getBotSession(requestId);
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
-                return TRIES_NOT_CREATED;
+                return props.getProperty("TRIES_NOT_CREATED");
             }
-            log.info("Counting for key: " + prefixKey);
+            log.info(props.getProperty("GETCOUNT_QUERY"), prefixKey);
             Query query = CountQuery
                 .builder()
                 .key(prefixKey)
@@ -411,7 +435,7 @@ public class SlackUtils {
             return query.result();
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return INVALID_REQUEST_ID;
+            return props.getProperty("INVALID_REQUEST_ID");
         }
     }
 
@@ -434,7 +458,7 @@ public class SlackUtils {
             prefixKey = tokens[1];
             count = Integer.parseInt(tokens[2]);
             log.info(
-                "Getting next key for key: " +
+                props.getProperty("GETNEXT_QUERY") +
                 prefixKey +
                 " count: " +
                 count +
@@ -444,13 +468,13 @@ public class SlackUtils {
             assert count > 0;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return BAD_ARGUMENTS;
+            return props.getProperty("BAD_ARGUMENTS");
         }
 
         try {
             BotSession botSession = getBotSession(requestId);
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
-                return TRIES_NOT_CREATED;
+                return props.getProperty("TRIES_NOT_CREATED");
             }
             Query query = NextKeyQuery
                 .builder()
@@ -463,7 +487,7 @@ public class SlackUtils {
             return query.result();
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return INVALID_REQUEST_ID;
+            return props.getProperty("INVALID_REQUEST_ID");
         }
     }
 
@@ -480,44 +504,44 @@ public class SlackUtils {
         try {
             botSession = getBotSession(requestId);
         } catch (Exception e) {
-            log.error("Error in deleting session for botSession {}", requestId);
-            return BAD_ARGUMENTS;
+            log.error(props.getProperty("DELETING_ERROR"), requestId);
+            return props.getProperty("BAD_ARGUMENTS");
         }
         try {
-            log.info("Deleting botSession: " + requestId);
+            log.info(props.getProperty("DELETING_INITIATE"), requestId);
             if (Files.exists(Paths.get(botSession.getDumpA()))) {
                 Files.delete(Paths.get(botSession.getDumpA()));
-                log.info("Deleted dump file: " + botSession.getDumpA());
+                log.info(props.getProperty("DELETING_DUMP_SUCCESS"), botSession.getDumpA());
             } else {
-                log.info("Cannot delete dump file. Does not exist: " + botSession.getDumpA());
+                log.info(props.getProperty("DELETING_DUMP_ERROR"), botSession.getDumpA());
             }
 
             if (Files.exists(Paths.get(botSession.getDumpB()))) {
                 Files.delete(Paths.get(botSession.getDumpB()));
-                log.info("Deleted dump file: " + botSession.getDumpB());
+                log.info(props.getProperty("DELETING_DUMP_SUCCESS"), botSession.getDumpB());
             } else {
-                log.info("Cannot delete dump file. Does not exist: " + botSession.getDumpB());
+                log.info(props.getProperty("DELETING_DUMP_ERROR"), botSession.getDumpB());
             }
 
             if (Files.exists(Paths.get(botSession.getKeysA()))) {
                 Files.delete(Paths.get(botSession.getKeysA()));
-                log.info("Deleted keys file: " + botSession.getKeysA());
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
             } else {
-                log.info("Cannot delete keys file. Does not exist: " + botSession.getKeysA());
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
             }
 
             if (Files.exists(Paths.get(botSession.getKeysB()))) {
                 Files.delete(Paths.get(botSession.getKeysB()));
-                log.info("Deleted keys file: " + botSession.getKeysB());
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysB());
             } else {
-                log.info("Cannot delete keys file. Does not exist: " + botSession.getKeysB());
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysB());
             }
         } catch (IOException e) {
-            log.error("Error deleting files for botSession {}", requestId);
+            log.error(props.getProperty("DELETING_ERROR"), requestId);
             throw new RuntimeException(e);
         }
         removeBotSession(requestId);
-        return "Deleted: session for Response Id: " + requestId;
+        return props.getProperty("DELETING_SUCCESS") + requestId;
     }
 
     /**
@@ -527,7 +551,7 @@ public class SlackUtils {
      */
     public static String deleteAllSessionsUtils() {
         BotSession.getAllBotSessions().forEach((key, value) -> deleteSessionUtils(key));
-        return "Deleted: all sessions.";
+        return props.getProperty("DELETING_ALL_SUCCESS");
     }
 
     /**
@@ -573,24 +597,8 @@ public class SlackUtils {
     public static String queryAllUtils(final String channelId) {
         BotSession botSession = getBotSession(channelId);
         if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
-            return QUERYING_NOT_POSSIBLE;
+            return props.getProperty("QUERYING_NOT_POSSIBLE");
         }
-        return QUERYING_POSSIBLE;
-    }
-
-    /**
-     * Resets the internal parameters of the botSession(or 'session') to their default values.
-     * Cheats by deleting the botSession and creating a new session.
-     *
-     * @param channelId: the botSession to reset the session in
-     */
-    public static String resetSessionUtils(final String channelId) {
-        BotSession botSession = getBotSession(channelId);
-        deleteSessionUtils(channelId);
-        String newRequestId = createSessionUtils();
-        return (
-            "BotSession has been reset to default values. Tries and input files deleted. Session state variables reset.\n\n\n>New response Id: " +
-            newRequestId
-        );
+        return props.getProperty("QUERYING_POSSIBLE");
     }
 }

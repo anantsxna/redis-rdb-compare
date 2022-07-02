@@ -12,6 +12,8 @@ import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
+import java.io.FileInputStream;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,22 @@ import org.views.QueryView;
  */
 @Slf4j
 public class Main {
+
+    private static String rootPath = Thread
+        .currentThread()
+        .getContextClassLoader()
+        .getResource("")
+        .getPath();
+    private static String appConfigPath = rootPath + "application.properties";
+    public static Properties props = new Properties();
+
+    static {
+        try {
+            props.load(new FileInputStream(appConfigPath));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Main method for the application.
@@ -51,8 +69,8 @@ public class Main {
         app.command(
             "/ping",
             (req, ctx) -> {
-                log.info("/ping command received");
-                return ctx.ack(":wave: Pong");
+                log.info(props.getProperty("PING_RECEIVED"));
+                return ctx.ack(props.getProperty("PING_RESPONSE"));
             }
         );
 
@@ -63,10 +81,10 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/session command received");
+                        log.info(props.getProperty("SESSION_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String response = createSessionUtils();
-                        log.info("/session command response:\n" + response);
+                        log.info(props.getProperty("SESSION_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -80,11 +98,11 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/process command received");
+                        log.info(props.getProperty("PROCESS_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
                         String response = processAllUtils(text, channelId);
-                        log.info("/process command response:\n" + response);
+                        log.info(props.getProperty("PROCESS_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -100,9 +118,9 @@ public class Main {
                     .submit(() -> {
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
-                        log.info("/download command received with arguments: {}", text);
+                        log.info(props.getProperty("DOWNLOAD_RECEIVED"), text);
                         final String response = downloadUtils(text, channelId, false);
-                        log.info("downloadUtils response: {} in channelId {}", response, channelId);
+                        log.info(props.getProperty("DOWNLOAD_RESPONSE"), response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -118,9 +136,9 @@ public class Main {
                     .submit(() -> {
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
-                        log.info("/parse command received");
+                        log.info(props.getProperty("PARSE_RECEIVED"));
                         String response = parseUtils(requestId, channelId, false);
-                        log.info("parseUtils response: {} in botSession {}", response, channelId);
+                        log.info(props.getProperty("PARSE_RESPONSE"), response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -134,15 +152,11 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/maketrie command received");
+                        log.info(props.getProperty("MAKETRIE_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String requestId = req.getPayload().getText();
                         String response = makeTrieUtils(requestId, channelId, false);
-                        log.info(
-                            "makeTrieUtils() response: {} in botSession {}",
-                            response,
-                            channelId
-                        );
+                        log.info(props.getProperty("MAKETRIE_RESPONSE"), response, channelId);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -156,11 +170,11 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/getcount command received");
+                        log.info(props.getProperty("GETCOUNT_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
                         String response = countUtils(text);
-                        log.info("countUtils response:\n {}", response);
+                        log.info(props.getProperty("GETCOUNT_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -174,11 +188,11 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/getnext command received");
+                        log.info(props.getProperty("GETNEXT_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
                         String response = getNextKeyUtils(text);
-                        log.info("getNextKeyUtils response:\n {}", response);
+                        log.info(props.getProperty("GETNEXT_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -192,11 +206,11 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/clear command received");
+                        log.info(props.getProperty("CLEAR_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         String requestId = req.getPayload().getText();
                         String response = deleteSessionUtils(requestId);
-                        log.info("deleteSessionUtils response: {}", response);
+                        log.info(props.getProperty("CLEAR_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -210,10 +224,10 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/clearall command received");
+                        log.info(props.getProperty("CLEARALL_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         String response = deleteAllSessionsUtils();
-                        log.info("deleteAllSessionsUtils response: {}", response);
+                        log.info(props.getProperty("CLEARALL_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -227,10 +241,10 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/list command received");
+                        log.info(props.getProperty("LIST_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         String response = listSessionsUtils();
-                        log.info("listSessionsUtils response: {}", response);
+                        log.info(props.getProperty("LIST_RESPONSE"), response);
                         postTextResponseAsync(response, channelId);
                     });
                 return ctx.ack();
@@ -241,34 +255,8 @@ public class Main {
         app.command(
             "/redis-bot-help",
             (req, ctx) -> {
-                log.info("/redis-bot-help command received");
-                return ctx.ack(
-                    """
-                                    usage:
-                                            */ping* 
-                                                    - check if the bot if working.
-                                            */menu* 
-                                                    - start interactive session.
-                                            */clear [requestId]* 
-                                                    - clear all files related to the session.
-                                            */clearall* 
-                                                    - clear all files related to all sessions.
-                                            */list* 
-                                                    - list all active sessions.
-                                            */session* 
-                                                    - start a new session, return a requestId.
-                                            */download [requestId] [s3linkA] [s3linkB]* 
-                                                    - download files from S3links to the session.
-                                            */parse [requestId]* 
-                                                    - parse the input string and return the result.\s
-                                            */maketrie [requestId]*
-                                                    - create the tries and store the parsed keys inside them. Requires "/parse" to be called first.
-                                            */getcount [requestId] [prefix_key]* 
-                                                    - return the count of the prefix_key inside both the tries. Requires "/maketrie" to be called first.
-                                            */getnext [requestId] [prefix_key] [n]* 
-                                                    - return the most common 'n' keys that have the same prefix, 'prefix_key'. Requires "/maketrie" to be called first.
-                                                                        """
-                );
+                log.info(props.getProperty("HELP_RECEIVED"));
+                return ctx.ack(props.getProperty("HELP_RESPONSE"));
             }
         );
 
@@ -279,7 +267,7 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("/menu command received");
+                        log.info(props.getProperty("MENU_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         MenuView menuView = MenuView
                             .builder()
@@ -294,12 +282,12 @@ public class Main {
 
         // blockAction - clicked 'Close' button
         app.blockAction(
-            Pattern.compile("^buttonBlock-delete-message-\\w*"),
+            Pattern.compile(props.getProperty("CLOSE_BUTTON_PATTERN")),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("\"Close\" button clicked on HomeView");
+                        log.info(props.getProperty("CLOSE_BUTTON_CLICKED"));
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         deleteResponseAsync(channelId, messageTs);
@@ -310,12 +298,12 @@ public class Main {
 
         // blockAction - clicked 'Delete Session' button
         app.blockAction(
-            Pattern.compile("^buttonBlock-delete-session-\\w*"),
+            Pattern.compile(props.getProperty("DELETE_SESSION_BUTTON_PATTERN")),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("\"Close\" button clicked on HomeView");
+                        log.info(props.getProperty("DELETE_SESSION_BUTTON_CLICKED"));
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String requestId = req.getPayload().getMessage().getText();
@@ -333,12 +321,12 @@ public class Main {
 
         // blockAction - clicked 'New Session' button
         app.blockAction(
-            Pattern.compile("^buttonBlock-create-new-session-\\w*"),
+            Pattern.compile(props.getProperty("NEW_SESSION_BUTTON_PATTERN")),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("In Main, \"Create New\" button clicked on HomeView");
+                        log.info(props.getProperty("NEW_SESSION_BUTTON_CLICKED"));
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         MenuView menuView = MenuView
@@ -354,12 +342,12 @@ public class Main {
 
         // blockAction - clicked Enter after adding links
         app.blockAction(
-            Pattern.compile("^inputBlock-process-\\w*"),
+            Pattern.compile(props.getProperty("LINKS_INPUT")),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("In Main, Option selected in MenuView");
+                        log.info(props.getProperty("LINKS_INPUT_ENTERED"));
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String userInput = req.getPayload().getActions().get(0).getValue();
@@ -377,12 +365,12 @@ public class Main {
 
         // blockAction - clicked Query button or selected a session from the main menu
         app.blockAction(
-            Pattern.compile("^buttonBlock-query-view-[-\\w]*"),
+            Pattern.compile(props.getProperty("QUERY_INPUT")),
             (req, ctx) -> {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("In Main, Starting up QueryView");
+                        log.info(props.getProperty("QUERY_INPUT_ENTERED"));
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String actionId = req.getPayload().getActions().get(0).getActionId();
@@ -405,15 +393,11 @@ public class Main {
                             requestId = req.getPayload().getMessage().getText();
                             queryText = req.getPayload().getActions().get(0).getValue();
                         } else {
-                            requestId = "No active processed requests";
+                            requestId = props.getProperty("NO_ACTIVE_REQUESTS");
                         }
 
-                        log.info("In Main, requestId: " + requestId);
-                        log.info("In Main, queryText: " + queryText);
-                        log.info("In Main, actionId: " + actionId);
-
-                        if (requestId.equals("No active processed requests")) {
-                            log.info("In Main, No active processed requests button clicked");
+                        if (requestId.equals(props.getProperty("NO_ACTIVE_REQUESTS"))) {
+                            log.info(props.getProperty("NO_ACTIVE_REQUESTS"));
                             return;
                         }
 
@@ -437,7 +421,7 @@ public class Main {
                             viewType = QueryView.ViewType.NO_QUERY;
                         }
 
-                        log.info("In Main, viewType: " + viewType);
+                        log.info(props.getProperty("RENDER_QUERY_VIEW") + viewType);
 
                         queryView.start(viewType, queryText);
                     });
@@ -457,7 +441,7 @@ public class Main {
                 app
                     .executorService()
                     .submit(() -> {
-                        log.info("AppMentionEvent received");
+                        log.info(props.getProperty("APP_MENTION_RECEIVED"));
                         final String channelId = payload.getEvent().getChannel();
                         MenuView menuView = MenuView
                             .builder()
@@ -475,14 +459,14 @@ public class Main {
             .getRuntime()
             .addShutdownHook(
                 new Thread(() -> {
-                    log.info("Shutting down bot...");
+                    log.info(props.getProperty("SHUTDOWN_HOOK_STARTED"));
                     deleteAllSessionsUtils();
                     app.executorService().shutdown();
                     try {
                         boolean exit0 = app
                             .executorService()
                             .awaitTermination(10, TimeUnit.SECONDS);
-                        assert !exit0 : "Executor service did not terminate within 10 seconds";
+                        assert !exit0 : props.getProperty("SHUTDOWN_HOOK_FAILED");
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -492,11 +476,10 @@ public class Main {
         //start the app
         try {
             SocketModeApp socketModeApp = new SocketModeApp(app);
-            log.info("App started. Hello World.");
+            log.info(props.getProperty("APP_STARTED"));
             socketModeApp.start();
         } catch (OutOfMemoryError e) {
-            log.error("Out of memory error: " + e.getMessage());
-            log.error("Stopping bot...");
+            log.error(props.getProperty("OUT_OF_MEMORY"), e.getMessage());
             deleteAllSessionsUtils();
             app.executorService().shutdownNow();
         } catch (Exception e) {
