@@ -12,7 +12,6 @@ import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
-import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -33,17 +32,16 @@ import org.views.QueryView;
 @Slf4j
 public class Main {
 
-    private static final String rootPath = Thread
-        .currentThread()
-        .getContextClassLoader()
-        .getResource("")
-        .getPath();
-    private static final String appConfigPath = rootPath + "application.properties";
     public static Properties props = new Properties();
 
     static {
         try {
-            props.load(new FileInputStream(appConfigPath));
+            props.load(
+                Thread
+                    .currentThread()
+                    .getContextClassLoader()
+                    .getResourceAsStream("application.properties")
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,6 +51,7 @@ public class Main {
      * Main method for the application.
      */
     public static void main(String[] args) {
+        log.info("author is: {}", props.getProperty("AUTHOR"));
         log.info(System.getenv("SLACK_SIGNING_SECRET"));
         log.info(System.getenv("SLACK_BOT_TOKEN"));
         log.info(System.getenv("SLACK_APP_TOKEN"));

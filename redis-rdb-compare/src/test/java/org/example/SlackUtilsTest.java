@@ -3,7 +3,6 @@ package org.example;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.FileInputStream;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -11,18 +10,16 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 public class SlackUtilsTest {
 
-    private static final String rootPath = Thread
-        .currentThread()
-        .getContextClassLoader()
-        .getResource("")
-        .getPath();
-    private static final String appConfigPath = rootPath + "application.properties";
-
     public static Properties props = new Properties();
 
     static {
         try {
-            props.load(new FileInputStream(appConfigPath));
+            props.load(
+                Thread
+                    .currentThread()
+                    .getContextClassLoader()
+                    .getResourceAsStream("application.properties")
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

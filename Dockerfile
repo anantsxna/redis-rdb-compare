@@ -19,6 +19,8 @@ RUN apt-get update && \
         mkdir /home/.sessionFiles
 COPY ./redis-rdb-compare/fast-parse.py /home/.
 COPY ./redis-rdb-compare/target/redis-rdb-compare-1.0-SNAPSHOT.jar /home/.
+# COPY ./redis-rdb-compare/src/main/resources/application.properties /home/.
+
 
 ENV SLACK_BOT_TOKEN ${SLACK_BOT_TOKEN}
 ENV SLACK_APP_TOKEN ${SLACK_APP_TOKEN}
