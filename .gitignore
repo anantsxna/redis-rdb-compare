@@ -35,6 +35,9 @@ hs_err_pid*
 keys*.txt
 .DS_Store
 
+# sample test files
+/redis-rdb-compare/src/test/resources/testKeysFile.txt
+
 # Maven target folder
 /redis-rdb-compare/target/
 
@@ -46,3 +49,4 @@ keys*.txt
 
 #ENV-CONFIG
 env-configmap.yaml
+
