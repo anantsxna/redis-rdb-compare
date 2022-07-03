@@ -1,5 +1,7 @@
 package org.trie;
 
+import static org.example.Main.props;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
@@ -12,7 +14,7 @@ public class BotStringTokenizer {
 
     @NonNull
     @Builder.Default
-    private final String delimiter = ":";
+    private final String delimiter = props.getProperty("DELIMITER");
 
     @NonNull
     @Builder.Default

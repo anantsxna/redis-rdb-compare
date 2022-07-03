@@ -2,13 +2,13 @@ package org.trie;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.Main;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -19,9 +19,16 @@ import org.jetbrains.annotations.NotNull;
 public final class QTrie {
 
     @Builder.Default
+    @Getter
     private final TrieNode root = TrieNode.builder().build();
 
-    private static final String DELIMITER = ":";
+    @Builder.Default
+    private final Properties props = Main.props;
+
+    @Getter
+    @Setter
+    @Builder.Default
+    private static String DELIMITER = ":";
 
     @NonNull
     private final String keysFile;
@@ -35,6 +42,7 @@ public final class QTrie {
      * Reads keys from file and inserts them into trie.
      */
     public void takeInput() {
+        DELIMITER = props.getProperty("DELIMITER");
         try (
             FileReader fileReader = new FileReader(keysFile);
             BufferedReader reader = new BufferedReader(fileReader)
@@ -66,7 +74,7 @@ public final class QTrie {
      *
      * @param dbKey: key to be inserted.
      */
-    private void insertKey(String dbKey) {
+    public void insertKey(String dbKey) {
         BotStringTokenizer tokenizer = BotStringTokenizer
             .builder()
             .path(dbKey)
@@ -78,7 +86,7 @@ public final class QTrie {
         while (tokenizer.hasMoreTokens()) {
             current.addCount();
             String nextKey = tokenizer.nextToken();
-            // log.info("Next key: {}", nextKey);
+            //            log.info("Next key: {}", nextKey);
             if (tokenizer.hasMoreTokens()) {
                 if (!current.hasChild(nextKey)) {
                     current.addChild(nextKey);

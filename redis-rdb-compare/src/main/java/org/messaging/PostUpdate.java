@@ -1,6 +1,7 @@
 package org.messaging;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.example.Main.props;
 import static org.messaging.Blocks.*;
 import static org.messaging.PostUpdateUtils.*;
 
@@ -20,9 +21,6 @@ import java.util.List;
  */
 public class PostUpdate {
 
-    private static final String REDIS_LOGO_URL =
-        "https://avatars.githubusercontent.com/u/1529926?s=200&v=4";
-
     /**
      * Post a text message to the channel.
      *
@@ -31,7 +29,7 @@ public class PostUpdate {
      */
     public static void postTextResponseAsync(String responseMessage, final String channelId) {
         List<LayoutBlock> blocks = new ArrayList<>();
-        blocks.add(TextImageBlock(responseMessage, REDIS_LOGO_URL));
+        blocks.add(TextImageBlock(responseMessage, props.getProperty("REDIS_LOGO_URL")));
         postResponseAsync(blocks, channelId, responseMessage);
     }
 
@@ -43,7 +41,7 @@ public class PostUpdate {
      */
     public static void postTextResponseSync(String responseMessage, final String channelId) {
         List<LayoutBlock> blocks = new ArrayList<>();
-        blocks.add(TextImageBlock(responseMessage, REDIS_LOGO_URL));
+        blocks.add(TextImageBlock(responseMessage, props.getProperty("REDIS_LOGO_URL")));
         postResponseSync(blocks, channelId, responseMessage);
     }
 
@@ -61,7 +59,7 @@ public class PostUpdate {
     ) {
         List<LayoutBlock> blocks = new ArrayList<>();
         blocks.add(TextBlock(responseMessage));
-        blocks.add(TextImageBlock(responseMessage, REDIS_LOGO_URL));
+        blocks.add(TextImageBlock(responseMessage, props.getProperty("REDIS_LOGO_URL")));
         updateResponseAsync(blocks, channelId, responseMessage, timestamp);
     }
 
@@ -77,9 +75,9 @@ public class PostUpdate {
     ) {
         postButtonWithTextResponseAsync(
             responseMessage,
-            "Reset Bot and Start Fresh?",
-            "resetAll",
-            "danger",
+            props.getProperty("RESET_AND_START_FRESH"),
+            props.getProperty("RESET_BUTTON"),
+            props.getProperty("DANGER_STYLE"),
             channelId
         );
     }
@@ -100,9 +98,9 @@ public class PostUpdate {
         blocks.add(TextBlock(responseMessage));
         blocks.add(
             ButtonWithConfirmBlock(
-                "Reset Bot and Start Fresh?",
-                "resetAll",
-                "danger",
+                props.getProperty("RESET_AND_START_FRESH"),
+                props.getProperty("RESET_BUTTON"),
+                props.getProperty("DANGER_STYLE"),
                 "The parsed data and tries will be deleted.",
                 "Reset",
                 "Cancel"

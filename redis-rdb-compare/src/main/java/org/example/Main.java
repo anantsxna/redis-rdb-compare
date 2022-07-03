@@ -33,12 +33,12 @@ import org.views.QueryView;
 @Slf4j
 public class Main {
 
-    private static String rootPath = Thread
+    private static final String rootPath = Thread
         .currentThread()
         .getContextClassLoader()
         .getResource("")
         .getPath();
-    private static String appConfigPath = rootPath + "application.properties";
+    private static final String appConfigPath = rootPath + "application.properties";
     public static Properties props = new Properties();
 
     static {

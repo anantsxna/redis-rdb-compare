@@ -25,46 +25,6 @@ import org.querying.Query;
 @Slf4j
 public class SlackUtils {
 
-    //    private static final String DOWNLOADING_NOT_COMPLETED = "Downloading not completed.";
-    //    private static final String DOWNLOADING_STARTED =
-    //        "Downloading has started...\nPlease wait for automatic notification when downloading is done.\nOr use \"/download\" command again to check status.";
-    //    private static final String DOWNLOADING_IN_PROGRESS = "Downloading in progress.\nPlease wait.";
-    //    private static final String DOWNLOADING_COMPLETED = "Downloading completed";
-    //    private static final String UNKNOWN_DOWNLOADING_BEHAVIOUR =
-    //        "downloadUtils() is showing UNKNOWN behaviour: ";
-    //    private static final String PARSING_NOT_COMPLETED =
-    //        "Parsing not done. Please wait for parsing to finish or use \"/parse\" command to start parsing.";
-    //    private static final String PARSING_STARTED =
-    //        "Parsing has started...\nPlease wait for automatic notification when parsing is done.\nOr use \"/parse\" command again to check status.";
-    //    private static final String PARSING_IN_PROGRESS = "Parsing in progress.\nPlease wait.";
-    //    private static final String PARSING_COMPLETED = "Parsing completed";
-    //    private static final String UNKNOWN_PARSING_BEHAVIOUR =
-    //        "parseUtils() is showing UNKNOWN behaviour: ";
-    //    private static final String TRIES_NOT_CREATED =
-    //        "Tries not created.\nPlease wait for tries to be created\nOr use \"/maketrie\" command to start creating tries.";
-    //    private static final String TRIE_CONSTRUCTION_STARTED =
-    //        "Trie construction started...\nPlease wait for automatic notification when construction is over.\nOr use \"/maketrie\" command again to check status.";
-    //    private static final String TRIE_CONSTRUCTION_IN_PROGRESS =
-    //        "Trie construction in progress.\nPlease wait.";
-    //    private static final String TRIE_CONSTRUCTION_COMPLETED = "Trie construction completed";
-    //    private static final String TRIE_CONSTRUCTION_NOT_COMPLETED = "Trie construction not completed";
-    //    private static final String UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR =
-    //        "trieConstructionUtils() is showing UNKNOWN behaviour: ";
-    //    private static final String BAD_ARGUMENTS =
-    //        "INVALID ARGUMENTS.\nRefer to \"/redis-bot-help\" for more information.";
-    //    private static final String SESSION_IN_PROGRESS =
-    //        "Could not create session. Consider re-trying command or running /clearall if the issue persists.\n";
-    //    private static final String SESSION_CREATED =
-    //        "A session has been created. Ready to parse and make tries.\n";
-    //    private static final String QUERYING_NOT_POSSIBLE =
-    //        "Querying is not possible since tries have not been created.\n";
-    //    private static final String QUERYING_POSSIBLE =
-    //        "Querying is possible since tries have been created.\n";
-    //    private static final String INVALID_REQUEST_ID =
-    //        "Invalid Request Id. Use \"/list\" to see all active Request Ids.";
-    //    private static final String ALL_PROCESSING_DONE =
-    //        "Processing done. Files Downloaded, Parsed and Made into Tries.\nReady to answer queries.\n";
-
     /**
      * Create a botSession, download the files, parse the files and make tries.
      */

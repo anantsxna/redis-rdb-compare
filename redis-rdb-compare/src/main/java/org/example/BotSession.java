@@ -77,7 +77,7 @@ public class BotSession {
         return s3link;
     }
 
-    private BotSession setFileNames() {
+    BotSession setFileNames() {
         this.dumpA = "./.sessionFiles/dump-A-downloaded-" + this.getRequestId() + ".rdb";
         this.dumpB = "./.sessionFiles/dump-B-downloaded-" + this.getRequestId() + ".rdb";
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
