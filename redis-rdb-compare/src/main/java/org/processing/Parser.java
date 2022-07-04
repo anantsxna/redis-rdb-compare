@@ -1,6 +1,7 @@
 package org.processing;
 
 import static java.lang.Thread.currentThread;
+import static org.example.Main.props;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,7 +27,9 @@ import org.threading.FixedNameableExecutorService;
 public final class Parser {
 
     @Builder.Default
-    public static final int TIMEOUT_SECONDS = 300;
+    public static final long PARSING_TIMEOUT_SECONDS = Integer.parseInt(
+        props.getProperty("PARSING_TIMEOUT_SECONDS")
+    );
 
     @Builder.Default
     private final HashMap<String, String> parsePairs = new HashMap<>();
@@ -145,16 +148,16 @@ public final class Parser {
 
         for (Process process : parseProcesses) {
             boolean exitStatus;
-            exitStatus = process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            exitStatus = process.waitFor(PARSING_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             log.error(
                 exitStatus
                     ? "PYPY3 ParsingProcess exited normally"
                     : "PYPY3 Parsing Process timed out after {} seconds",
-                TIMEOUT_SECONDS
+                PARSING_TIMEOUT_SECONDS
             );
             if (!exitStatus) {
                 throw new InterruptedException(
-                    "PYPY3 Parsing Process timed out after " + TIMEOUT_SECONDS + " seconds"
+                    "PYPY3 Parsing Process timed out after " + PARSING_TIMEOUT_SECONDS + " seconds"
                 );
             }
         }
