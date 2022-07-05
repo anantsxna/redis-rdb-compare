@@ -28,11 +28,13 @@ public class SlackUtilsTest {
     @Test
     public void createSessionTest() {
         String requestId = "#" + randomNumeric(6);
+        log.info("requestId: {}", requestId);
         final BotSession botSession = BotSession
             .builder()
             .requestId(requestId)
             .build()
             .setFileNames();
         assertNotNull(requestId);
+        assertNotNull(botSession);
     }
 }
