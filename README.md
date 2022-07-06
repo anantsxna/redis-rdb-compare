@@ -15,6 +15,42 @@
 A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb files to extract the keys and answers queries via a slack bot.
 
 ## Installation Guide
+
+### For deployment purpose
+
+- Since the repository depends on submodules, use the `--recurse-submodules` while cloning.
+  ```
+  git clone --recurse-submodules git@github.com:anantsxna/redis-rdb-compare.git
+  ```
+
+- Build, Test and Package the .JAR file 
+  ```
+  mvn clean install
+  ```
+
+- `cd` inside the project root directory, locate the `Dockerfile` and `docker-compose.yml` and create a `.env` file with the following fields:
+  ```
+  SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+  SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+  SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+  ```
+  
+- Now, run the following commands:
+  To run the project in a local docker container.
+  ```
+  docker compose build
+  docker compose up
+  ```
+ 
+  To run the project in a local Kubernetes cluster, install `minikube`, `kubectl` and `kompose` and run the following commands:
+  ```
+  kompose convert
+  minikube start
+  kubectl apply -f redis-slack-bot-deployment.yaml -f redis-slack-bot-service.yaml -f env-configmap.yaml 
+  ```
+  
+### For development purpose
+
 - Since the repository depends on submodules, use the `--recurse-submodules` while cloning.
   ```
   git clone --recurse-submodules git@github.com:anantsxna/redis-rdb-compare.git
