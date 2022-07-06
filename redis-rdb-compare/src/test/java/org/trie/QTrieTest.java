@@ -30,13 +30,12 @@ public class QTrieTest {
         QTrie.setDELIMITER(props.getProperty("DELIMITER"));
         assertEquals(QTrie.getDELIMITER(), ":");
     }
-
-    @Test
-    public void initTest() {
-        QTrie trie = QTrie.builder().keysFile("./src/test/resources/testKeysFile.txt").build();
-        assertEquals(trie.getRoot().getCount(), 0);
-        trie.takeInput();
-        //        trie.insertKey("hello:bye");
-        assertEquals(trie.getRoot().getCount(), 7956);
-    }
+    //    @Test
+    //    public void initTest() {
+    //        QTrie trie = QTrie.builder().keysFile("./src/test/resources/testKeysFile.txt").build();
+    //        assertEquals(trie.getRoot().getCount(), 0);
+    //        trie.takeInput();
+    //        //        trie.insertKey("hello:bye");
+    //        assertEquals(trie.getRoot().getCount(), 7956);
+    //    }
 }

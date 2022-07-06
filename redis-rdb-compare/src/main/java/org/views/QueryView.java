@@ -3,8 +3,8 @@ package org.views;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.example.SlackUtils.countUtils;
 import static org.example.SlackUtils.getNextKeyUtils;
-import static org.messaging.Blocks.FourButtonBlock;
 import static org.messaging.Blocks.TextImageBlock;
+import static org.messaging.Blocks.ThreeButtonBlock;
 import static org.messaging.PostUpdateUtils.updateResponseAsync;
 
 import com.slack.api.model.block.DividerBlock;
@@ -63,7 +63,6 @@ public class QueryView {
      */
     public void start(ViewType viewType, String queryText) {
         log.info("QueryView for channel " + channelId);
-
         blocks.add(
             HeaderBlock
                 .builder()
@@ -84,7 +83,9 @@ public class QueryView {
         if (viewType == ViewType.GET_NEXT_REQUEST) {
             inputActionId = "buttonBlock-query-view-getnext-response-" + randomAlphanumeric(10);
             inputPlaceHolder = "[Prefix Key] [Count of Keys]\n\nEx. 'HTTPSESSION 10'";
-        } else if (viewType == ViewType.GET_COUNT_REQUEST) {
+        } else if (
+            viewType == ViewType.GET_COUNT_REQUEST || viewType == ViewType.GET_COUNT_RESPONSE
+        ) {
             inputActionId = "buttonBlock-query-view-getcount-response-" + randomAlphanumeric(10);
             inputPlaceHolder = "[Prefix Key]\n\nEx. 'HTTPSESSION'";
         }
@@ -97,41 +98,36 @@ public class QueryView {
                     .build()
             );
 
-            if (viewType == ViewType.GET_NEXT_REQUEST || viewType == ViewType.GET_COUNT_REQUEST) {
-                blocks.add(
-                    InputBlock
-                        .builder()
-                        .label(PlainTextObject.builder().text("Insert key to search: ").build())
-                        .optional(false)
-                        .dispatchAction(true)
-                        .element(
-                            PlainTextInputElement
-                                .builder()
-                                .actionId(inputActionId)
-                                .placeholder(
-                                    PlainTextObject.builder().text(inputPlaceHolder).build()
-                                )
-                                .multiline(true)
-                                .build()
-                        )
-                        .build()
-                );
-            } else if (viewType == ViewType.GET_COUNT_RESPONSE) {
+            if (viewType == ViewType.GET_COUNT_RESPONSE || viewType == ViewType.GET_COUNT_REQUEST) {
                 blocks.add(TextImageBlock(countUtils(requestId + " " + queryText), REDIS_LOGO_URL));
             } else if (viewType == ViewType.GET_NEXT_RESPONSE) {
                 blocks.add(
                     TextImageBlock(getNextKeyUtils(requestId + " " + queryText), REDIS_LOGO_URL)
                 );
             }
+
+            blocks.add(
+                InputBlock
+                    .builder()
+                    .label(PlainTextObject.builder().text("Insert key to search: ").build())
+                    .optional(false)
+                    .dispatchAction(true)
+                    .element(
+                        PlainTextInputElement
+                            .builder()
+                            .actionId(inputActionId)
+                            .placeholder(PlainTextObject.builder().text(inputPlaceHolder).build())
+                            .multiline(true)
+                            .build()
+                    )
+                    .build()
+            );
         }
 
         blocks.add(
-            FourButtonBlock(
+            ThreeButtonBlock(
                 "Get Count",
                 "query-view-getcount-request",
-                "primary",
-                "Get Next",
-                "query-view-getnext-request",
                 "primary",
                 "Delete Session",
                 "delete-session",

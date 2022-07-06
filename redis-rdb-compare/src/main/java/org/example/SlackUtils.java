@@ -5,7 +5,7 @@ import static org.example.Main.props;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 import static org.messaging.PostUpdate.postTextResponseSync;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -369,18 +369,26 @@ public class SlackUtils {
     public static String countUtils(final String text) {
         String requestId;
         String prefixKey;
+        Integer head;
+        log.info("countutils: " + text);
         try {
             assert !text.isEmpty();
             String[] queryArgs = text.split(" ");
-            assert queryArgs.length == 2;
+            assert queryArgs.length == 2 || queryArgs.length == 3;
             requestId = queryArgs[0];
             prefixKey = queryArgs[1];
+            if (queryArgs.length == 3) {
+                head = Integer.parseInt(queryArgs[2]);
+            } else {
+                head = 5;
+            }
         } catch (Exception e) {
             log.error(e.getMessage());
             return props.getProperty("BAD_ARGUMENTS");
         }
         try {
             BotSession botSession = getBotSession(requestId);
+            assert botSession != null;
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                 return props.getProperty("TRIES_NOT_CREATED");
             }
@@ -389,6 +397,7 @@ public class SlackUtils {
                 .builder()
                 .key(prefixKey)
                 .queryType(Query.QueryType.GET_COUNT)
+                .head(head)
                 .requestId(requestId)
                 .build();
             query.execute();
@@ -397,6 +406,54 @@ public class SlackUtils {
             log.error(e.getMessage());
             return props.getProperty("INVALID_REQUEST_ID");
         }
+    }
+
+    public static String getDiffUtils(String text) {
+        String requestId = text;
+        BotSession botSession = getBotSession(requestId);
+        String fileA = botSession.getKeysA() + "sorted.txt";
+        String fileB = botSession.getKeysB() + "sorted.txt";
+
+        try (
+            FileReader fileReaderA = new FileReader(fileA);
+            BufferedReader readerA = new BufferedReader(fileReaderA);
+            FileReader fileReaderB = new FileReader(fileB);
+            BufferedReader readerB = new BufferedReader(fileReaderB);
+            FileWriter fileWriter = new FileWriter("./.sessionFiles/diff-" + requestId + ".txt");
+            BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            while (true) {
+                String lineA = readerA.readLine();
+                String lineB = readerB.readLine();
+                if (lineA == null && lineB == null) {
+                    break;
+                } else if (lineA == null) {
+                    writer.write(lineB + "\n");
+                    lineB = readerB.readLine();
+                } else if (lineB == null) {
+                    writer.write(lineA + "\n");
+                    lineA = readerA.readLine();
+                } else if (lineA != null && lineB != null) {
+                    int comp = lineA.compareTo(lineB);
+                    if (comp == 0) {
+                        lineA = readerA.readLine();
+                        lineB = readerB.readLine();
+                    } else if (comp < 0) {
+                        writer.write(lineA + "\n");
+                        lineA = readerA.readLine();
+                    } else if (comp > 0) {
+                        writer.write(lineB + "\n");
+                        lineB = readerB.readLine();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return props.getProperty("INVALID_REQUEST_ID");
+        }
+
+        log.info("DIFF_DONE");
+        return "DIFF_DONE";
     }
 
     /**
@@ -495,6 +552,27 @@ public class SlackUtils {
                 log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysB());
             } else {
                 log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysB());
+            }
+
+            if (Files.exists(Paths.get(botSession.getKeysA() + "sorted.txt"))) {
+                Files.delete(Paths.get(botSession.getKeysA() + "sorted.txt"));
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
+            }
+
+            if (Files.exists(Paths.get(botSession.getKeysB() + "sorted.txt"))) {
+                Files.delete(Paths.get(botSession.getKeysB() + "sorted.txt"));
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysB());
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysB());
+            }
+
+            if (Files.exists(Paths.get("./.sessionFiles/diff-" + requestId + ".txt"))) {
+                Files.delete(Paths.get("./.sessionFiles/diff-" + requestId + ".txt"));
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
             }
         } catch (IOException e) {
             log.error(props.getProperty("DELETING_ERROR"), requestId);

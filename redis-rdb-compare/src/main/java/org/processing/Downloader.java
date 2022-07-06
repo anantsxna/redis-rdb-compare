@@ -1,5 +1,16 @@
 package org.processing;
 
+import static org.example.Main.props;
+
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ResponseHeaderOverrides;
+import com.amazonaws.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,8 +18,12 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Builder;
@@ -24,6 +39,10 @@ import org.threading.FixedNameableExecutorService;
 @Slf4j
 @Builder
 public class Downloader {
+
+    private static final long DOWNLOAD_TIMEOUT_SECONDS = Integer.parseInt(
+        props.getProperty("DOWNLOAD_TIMEOUT_SECONDS")
+    );
 
     @Builder.Default
     private final HashMap<URL, String> downloadPairs = new HashMap<>();
@@ -46,6 +65,98 @@ public class Downloader {
         downloadPairs.put(s3Link, dumpFile);
     }
 
+    @Builder
+    private record PublicURLDownloaderTask(URL s3url, String dumpFile) implements Callable<String> {
+        @Override
+        public String call() {
+            log.info("Public URL Downloading {} to {}", s3url.toString(), dumpFile);
+            ReadableByteChannel readableByteChannel = null;
+            try {
+                readableByteChannel = Channels.newChannel(s3url.openStream());
+            } catch (IOException e) {
+                log.error("Error in ReadableByteChannel");
+                log.error(e.getMessage());
+                return props.getProperty("DOWNLOAD_ERROR");
+            }
+            try (FileOutputStream fileOutputStream = new FileOutputStream(dumpFile)) {
+                try {
+                    FileChannel fileChannel = fileOutputStream.getChannel();
+                    fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                } catch (IOException e) {
+                    log.error("Error in transferFrom");
+                    return props.getProperty("DOWNLOAD_ERROR");
+                }
+            } catch (FileNotFoundException e) {
+                log.error("Error in FileNotFound");
+                log.error(e.getMessage());
+                return props.getProperty("DOWNLOAD_ERROR");
+            } catch (SecurityException e) {
+                log.error("Error in Security");
+                log.error(e.getMessage());
+                return props.getProperty("DOWNLOAD_ERROR");
+            } catch (IOException e) {
+                log.error("Error in FileOutputStream");
+                log.error(e.getMessage());
+                return props.getProperty("DOWNLOAD_ERROR");
+            }
+            return props.getProperty("DOWNLOAD_SUCCESS");
+        }
+    }
+
+    @Builder
+    private record S3DownloaderTask(URL s3url, String dumpFile) implements Callable<String> {
+        @Override
+        public String call() throws IOException {
+            log.info("S3 URL Downloading {} to {}", s3url.toString(), dumpFile);
+            Regions clientRegion = Regions.DEFAULT_REGION;
+            String bucketName = "*** Bucket name ***";
+            String key = "*** Object key ***";
+
+            S3Object fullObject = null, objectPortion = null, headerOverrideObject = null;
+            try {
+                AmazonS3 s3Client = AmazonS3ClientBuilder
+                    .standard()
+                    .withRegion(clientRegion)
+                    .withCredentials(new ProfileCredentialsProvider())
+                    .build();
+
+                // Get an entire object, overriding the specified response headers, and print the object's content.
+                ResponseHeaderOverrides headerOverrides = new ResponseHeaderOverrides()
+                    .withCacheControl("No-cache")
+                    .withContentDisposition("attachment; filename=" + dumpFile);
+                GetObjectRequest getObjectRequestHeaderOverride = new GetObjectRequest(
+                    bucketName,
+                    key
+                )
+                    .withResponseHeaders(headerOverrides);
+                headerOverrideObject = s3Client.getObject(getObjectRequestHeaderOverride);
+                //                displayTextInputStream(headerOverrideObject.getObjectContent());
+            } catch (AmazonServiceException e) {
+                // The call was transmitted successfully, but Amazon S3 couldn't process
+                // it, so it returned an error response.
+                e.printStackTrace();
+                return props.getProperty("DOWNLOAD_ERROR");
+            } catch (SdkClientException e) {
+                // Amazon S3 couldn't be contacted for a response, or the client
+                // couldn't parse the response from Amazon S3.
+                e.printStackTrace();
+                return props.getProperty("DOWNLOAD_ERROR");
+            } finally {
+                // To ensure that the network connection doesn't remain open, close any open input streams.
+                if (fullObject != null) {
+                    fullObject.close();
+                }
+                if (objectPortion != null) {
+                    objectPortion.close();
+                }
+                if (headerOverrideObject != null) {
+                    headerOverrideObject.close();
+                }
+            }
+            return props.getProperty("DOWNLOAD_SUCCESS");
+        }
+    }
+
     /**
      * Downloads the .rdb files.
      */
@@ -53,48 +164,32 @@ public class Downloader {
         AtomicBoolean downloadingSuccess = new AtomicBoolean(true);
         assert (!downloadingExecutor.isShutdown());
         log.info("download() called...");
+
+        List<PublicURLDownloaderTask> taskList = new ArrayList<>();
         downloadPairs.forEach((s3url, dumpFile) -> {
-            downloadingExecutor.submit(() -> {
-                log.info("Downloading {} to {}", s3url.toString(), dumpFile);
-                //  TODO: S3Downloader.download(s3Link, dumpFile);
-                ReadableByteChannel readableByteChannel = null;
-                try {
-                    readableByteChannel = Channels.newChannel(s3url.openStream());
-                } catch (IOException e) {
-                    log.error("Error in ReadableByteChannel");
-                    log.error(e.getMessage());
-                    downloadingSuccess.set(false);
-                    return;
-                }
-                try (FileOutputStream fileOutputStream = new FileOutputStream(dumpFile)) {
-                    try {
-                        FileChannel fileChannel = fileOutputStream.getChannel();
-                        fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-                    } catch (IOException e) {
-                        log.error("Error in transferFrom");
-                        downloadingSuccess.set(false);
-                    }
-                } catch (FileNotFoundException e) {
-                    log.error("Error in FileNotFound");
-                    log.error(e.getMessage());
-                    downloadingSuccess.set(false);
-                } catch (SecurityException e) {
-                    log.error("Error in Security");
-                    log.error(e.getMessage());
-                    downloadingSuccess.set(false);
-                } catch (IOException e) {
-                    log.error("Error in FileOutputStream");
-                    log.error(e.getMessage());
-                    downloadingSuccess.set(false);
-                }
-            });
+            taskList.add(PublicURLDownloaderTask.builder().dumpFile(dumpFile).s3url(s3url).build());
         });
-        downloadingExecutor.shutdown();
-        boolean awaitTerm = downloadingExecutor.awaitTermination(
-            Long.MAX_VALUE, //TODO: ask sir for a value
+
+        List<Future<String>> futures = downloadingExecutor.invokeAll(
+            taskList,
+            DOWNLOAD_TIMEOUT_SECONDS,
             TimeUnit.SECONDS
         );
+        futures.forEach(future -> {
+            try {
+                String result = future.get();
+                if (!result.equals(props.getProperty("DOWNLOAD_SUCCESS"))) {
+                    downloadingSuccess.set(false);
+                }
+            } catch (Exception e) {
+                log.error("Error in download()");
+                log.error(e.getMessage());
+                downloadingSuccess.set(false);
+            }
+        });
+
+        downloadingExecutor.shutdownNow();
         log.info(downloadingSuccess.get() ? "Downloading successful" : "Downloading failed");
-        return downloadingSuccess.get() && awaitTerm;
+        return downloadingSuccess.get();
     }
 }
