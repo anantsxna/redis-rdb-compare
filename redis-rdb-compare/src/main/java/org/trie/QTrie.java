@@ -3,7 +3,6 @@ package org.trie;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -46,8 +45,8 @@ public final class QTrie {
     public void takeInput() {
         DELIMITER = props.getProperty("DELIMITER");
         try (
-                FileReader fileReader = new FileReader(keysFile);
-                BufferedReader reader = new BufferedReader(fileReader)
+            FileReader fileReader = new FileReader(keysFile);
+            BufferedReader reader = new BufferedReader(fileReader)
         ) {
             log.info("Reading keys from file: {}", keysFile);
             String line;
@@ -78,11 +77,11 @@ public final class QTrie {
      */
     public void insertKey(String dbKey) {
         BotStringTokenizer tokenizer = BotStringTokenizer
-                .builder()
-                .path(dbKey)
-                .delimiter(DELIMITER)
-                .build()
-                .tokenize();
+            .builder()
+            .path(dbKey)
+            .delimiter(DELIMITER)
+            .build()
+            .tokenize();
         // log.info("Inserting key: {}", dbKey);
         TrieNode current = root;
 
@@ -119,7 +118,7 @@ public final class QTrie {
      * If the number of child nodes is less than n, List has less than (n+2) pairs.
      */
     public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n)
-            throws Exception {
+        throws Exception {
         final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
 
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
@@ -130,16 +129,16 @@ public final class QTrie {
 
         result.add(new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount()));
         result.add(
-                new AbstractMap.SimpleEntry<>(prefix + " total children", node.getChildrenCount())
+            new AbstractMap.SimpleEntry<>(prefix + " total children", node.getChildrenCount())
         );
 
         node
-                .getChildren()
-                .entrySet()
-                .stream()
-                .sorted((e1, e2) -> e2.getValue().getCount() - e1.getValue().getCount())
-                .limit(n)
-                .forEach(e -> result.add(getKeyAndCountOutput(e, prefix)));
+            .getChildren()
+            .entrySet()
+            .stream()
+            .sorted((e1, e2) -> e2.getValue().getCount() - e1.getValue().getCount())
+            .limit(n)
+            .forEach(e -> result.add(getKeyAndCountOutput(e, prefix)));
 
         return result;
     }
@@ -154,11 +153,11 @@ public final class QTrie {
         }
         Set<String> children = new HashSet<>();
         node
-                .getChildren()
-                .keySet()
-                .forEach(child -> {
-                    children.add(prefix + DELIMITER + child);
-                });
+            .getChildren()
+            .keySet()
+            .forEach(child -> {
+                children.add(prefix + DELIMITER + child);
+            });
 
         return children;
     }
@@ -171,12 +170,12 @@ public final class QTrie {
      * @return Pair<full key, count of the key>.
      */
     private Map.Entry<String, Integer> getKeyAndCountOutput(
-            Map.Entry<String, TrieNode> _entry,
-            String prefix
+        Map.Entry<String, TrieNode> _entry,
+        String prefix
     ) {
         return Map.entry(
-                prefix.concat(DELIMITER).concat(_entry.getKey()),
-                _entry.getValue().getCount()
+            prefix.concat(DELIMITER).concat(_entry.getKey()),
+            _entry.getValue().getCount()
         );
     }
 
@@ -205,11 +204,11 @@ public final class QTrie {
      */
     private TrieNode traverseTrie(String path) {
         BotStringTokenizer tokenizer = BotStringTokenizer
-                .builder()
-                .path(path)
-                .delimiter(DELIMITER)
-                .build()
-                .tokenize();
+            .builder()
+            .path(path)
+            .delimiter(DELIMITER)
+            .build()
+            .tokenize();
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
             String nextKey = tokenizer.nextToken();
