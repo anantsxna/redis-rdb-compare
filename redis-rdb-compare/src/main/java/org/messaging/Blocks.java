@@ -162,7 +162,7 @@ public class Blocks {
      * @param buttonStyleA: default/primary/danger
      * @return an action block with 4 buttons, the third button will open a confirm dialog
      */
-    public static LayoutBlock FourButtonBlock(
+    public static LayoutBlock ThreeButtonBlock(
         String buttonTextA,
         String buttonValueA,
         String buttonStyleA,
@@ -171,18 +171,14 @@ public class Blocks {
         String buttonStyleB,
         String buttonTextC,
         String buttonValueC,
-        String buttonStyleC,
-        String buttonTextD,
-        String buttonValueD,
-        String buttonStyleD
+        String buttonStyleC
     ) {
         return actions(actions ->
             actions.elements(
                 asElements(
                     buttonElement(buttonTextA, buttonValueA, buttonStyleA),
                     buttonElement(buttonTextB, buttonValueB, buttonStyleB),
-                    buttonElement(buttonTextC, buttonValueC, buttonStyleC),
-                    buttonElement(buttonTextD, buttonValueD, buttonStyleD)
+                    buttonElement(buttonTextC, buttonValueC, buttonStyleC)
                 )
             )
         );

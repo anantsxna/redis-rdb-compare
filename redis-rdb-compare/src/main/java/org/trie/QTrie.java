@@ -9,7 +9,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.Main;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Trie class.
@@ -33,10 +32,8 @@ public final class QTrie {
     @NonNull
     private final String keysFile;
 
-    @NotNull
-    public String getKeysFile() {
-        return keysFile;
-    }
+    @NonNull
+    private final String requestId;
 
     /**
      * Reads keys from file and inserts them into trie.
@@ -83,6 +80,14 @@ public final class QTrie {
             .tokenize();
         // log.info("Inserting key: {}", dbKey);
         TrieNode current = root;
+
+        //        String startsWith = tokenizer.startsWith();
+        //        if (startsWith != null) {
+        //            BotSession botSession = BotSession.getBotSession(requestId);
+        //            assert botSession != null;
+        //            botSession.getParentKeys().add(startsWith);
+        //        }
+
         while (tokenizer.hasMoreTokens()) {
             current.addCount();
             String nextKey = tokenizer.nextToken();
@@ -113,6 +118,9 @@ public final class QTrie {
 
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
         TrieNode node = traverseTrie(prefix);
+        if (node == null) {
+            throw new Exception("Prefix not found.");
+        }
 
         result.add(new AbstractMap.SimpleEntry<>(prefix + " total keys", node.getCount()));
         result.add(
@@ -128,6 +136,25 @@ public final class QTrie {
             .forEach(e -> result.add(getKeyAndCountOutput(e, prefix)));
 
         return result;
+    }
+
+    public Set<String> getChildren(String prefix) {
+        if (prefix.compareTo("") == 0) {
+            return root.getChildren().keySet();
+        }
+        TrieNode node = traverseTrie(prefix);
+        if (node == null) {
+            return new HashSet<>();
+        }
+        Set<String> children = new HashSet<>();
+        node
+            .getChildren()
+            .keySet()
+            .forEach(child -> {
+                children.add(prefix + DELIMITER + child);
+            });
+
+        return children;
     }
 
     /**
@@ -154,9 +181,13 @@ public final class QTrie {
      * @return an integer representing the count of the node.
      * @throws Exception: if the key is not found in the trie.
      */
-    public Integer getCountForPrefix(String _prefix) throws Exception {
+    public Integer getCountForPrefix(String _prefix) {
         final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
-        return traverseTrie(prefix).getCount();
+        TrieNode node = traverseTrie(prefix);
+        if (node == null) {
+            return 0;
+        }
+        return node.getCount();
     }
 
     /**
@@ -166,7 +197,7 @@ public final class QTrie {
      * @return TrieNode that represents the given path.
      * @throws Exception: if the path is not found in the trie.
      */
-    private TrieNode traverseTrie(String path) throws Exception {
+    private TrieNode traverseTrie(String path) {
         BotStringTokenizer tokenizer = BotStringTokenizer
             .builder()
             .path(path)
@@ -177,7 +208,7 @@ public final class QTrie {
         while (tokenizer.hasMoreTokens()) {
             String nextKey = tokenizer.nextToken();
             if (!current.hasChild(nextKey)) {
-                throw new Exception("Prefix not found");
+                return null;
             }
             current = current.getChild(nextKey);
         }

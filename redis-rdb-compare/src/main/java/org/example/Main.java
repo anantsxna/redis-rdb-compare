@@ -374,7 +374,7 @@ public class Main {
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String actionId = req.getPayload().getActions().get(0).getActionId();
                         String requestId;
-                        String queryText = "";
+                        String queryText = "!root";
 
                         if (actionId.contains("click")) {
                             requestId = req.getPayload().getMessage().getText();

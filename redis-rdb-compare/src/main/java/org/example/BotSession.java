@@ -2,7 +2,6 @@ package org.example;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.example.Main.props;
-import static org.messaging.PostUpdate.postTextResponseAsync;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -51,6 +50,9 @@ public class BotSession {
     @Builder.Default
     private volatile String keysB = props.getProperty("DEFAULT_KEYS_B");
 
+    @Builder.Default
+    private volatile String diffFile = "";
+
     @Setter
     @Builder.Default
     private QTrie trieA = null;
@@ -58,6 +60,10 @@ public class BotSession {
     @Setter
     @Builder.Default
     private QTrie trieB = null;
+
+    @Setter
+    @Builder.Default
+    private QTrie trieC = null;
 
     @Builder.Default
     private volatile Parser parser = Parser.builder().build();
@@ -69,6 +75,9 @@ public class BotSession {
     private volatile Downloader downloader = Downloader.builder().build();
 
     private final String requestId;
+
+    @Builder.Default
+    private final long creationTime = -1;
 
     public static String elongateURL(@NonNull String s3link) {
         if (!s3link.matches(props.getProperty("INCOMPLETE_URL_REGEX"))) {
@@ -82,6 +91,7 @@ public class BotSession {
         this.dumpB = "./.sessionFiles/dump-B-downloaded-" + this.getRequestId() + ".rdb";
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
         this.keysB = "./.sessionFiles/keys-B-" + this.getRequestId() + ".txt";
+        this.diffFile = "./.sessionFiles/diff-" + this.getRequestId() + ".txt";
         try {
             this.s3linkA = new URL(props.getProperty("DEFAULT_S3_LINK"));
             this.s3linkB = new URL(props.getProperty("DEFAULT_S3_LINK"));
@@ -172,12 +182,22 @@ public class BotSession {
      */
     public static BotSession getBotSession(final String requestId) throws IllegalStateException {
         if (!allBotSessions.containsKey(requestId)) {
-            postTextResponseAsync(props.getProperty("BOT_SESSION_NOT_FOUND"), requestId);
-            throw new IllegalStateException(
-                props.getProperty("BOT_SESSION_DOES_NOT_EXIST") + requestId
-            );
+            //            postTextResponseAsync(props.getProperty("BOT_SESSION_NOT_FOUND"), requestId);
+            return null;
         }
-        return allBotSessions.get(requestId);
+
+        BotSession botSession = allBotSessions.get(requestId);
+
+        if (
+            botSession.creationTime != -1 &&
+            botSession.creationTime <
+            System.currentTimeMillis() -
+            Long.parseLong(props.getProperty("BOT_SESSION_TIMEOUT"))
+        ) {
+            return null;
+        }
+
+        return botSession;
     }
 
     /**
@@ -250,6 +270,7 @@ public class BotSession {
 
         long startTime = System.currentTimeMillis();
         parser.parse();
+        //        getDiffUtils(requestId);
         this.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
         long endTime = System.currentTimeMillis();
         log.info(props.getProperty("PARSE_SUCCESS"), getRequestId(), endTime - startTime);
@@ -268,11 +289,13 @@ public class BotSession {
     public String initiateTrieMaking() throws InterruptedException {
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
         log.info(props.getProperty("MAKE_TRIE_INITIATE"), requestId);
-        this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).build());
-        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).build());
+        this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).requestId(requestId).build());
+        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
+        //        this.setTrieC(QTrie.builder().keysFile(this.getDiffFile()).requestId(requestId).build());
 
         this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
         this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
+        //        this.getTrieMaker().addToTrieMaker(this.getDiffFile(), this.getTrieC());
 
         long startTime = System.currentTimeMillis();
         try {

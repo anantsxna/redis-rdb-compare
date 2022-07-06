@@ -47,6 +47,13 @@ public class BotStringTokenizer {
         return tokens.get(index++);
     }
 
+    public String startsWith() {
+        if (!tokens.isEmpty()) {
+            return tokens.get(0);
+        }
+        return null;
+    }
+
     public boolean hasMoreTokens() {
         return index < tokens.size();
     }

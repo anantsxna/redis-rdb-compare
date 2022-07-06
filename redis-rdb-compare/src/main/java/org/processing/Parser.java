@@ -162,6 +162,16 @@ public final class Parser {
             }
         }
 
+        //        for (Map.Entry mapElement : parsePairs.entrySet()) {
+        //            String keysFile = (String) mapElement.getValue();
+        //            try {
+        //                ExternalSort.mergeSortedFiles(ExternalSort.sortInBatch(new File(keysFile)), new File(keysFile + "sorted.txt"));
+        //            } catch (IOException e) {
+        //                throw new RuntimeException(e);
+        //            }
+        //        }
+
+        log.info("Parsing finished");
         loggingExecutor.shutdownNow();
     }
 

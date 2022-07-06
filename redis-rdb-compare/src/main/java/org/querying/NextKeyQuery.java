@@ -28,7 +28,7 @@ public class NextKeyQuery extends Query {
             BotSession botSession = getBotSession(getRequestId());
             try {
                 result.append(">In session ").append(getRequestId()).append("\n\n");
-                for (QTrie trie : new QTrie[] { botSession.getTrieA(), botSession.getTrieB() }) {
+                for (QTrie trie : new QTrie[] { botSession.getTrieC() }) {
                     try {
                         long startTime = System.currentTimeMillis();
                         List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);
@@ -38,8 +38,10 @@ public class NextKeyQuery extends Query {
                         result.append("Total keys with prefix *").append(key).append("*: ");
                         if (trie == botSession.getTrieA()) {
                             result.append("in first database: *");
-                        } else {
+                        } else if (trie == botSession.getTrieB()) {
                             result.append("in second database: *");
+                        } else {
+                            result.append("in diff file: *");
                         }
                         result.append(query.get(0).getValue());
                         result.append("*\n");
@@ -94,8 +96,7 @@ public class NextKeyQuery extends Query {
                         result
                             .append(">No keys found for ")
                             .append(key)
-                            .append(" in ")
-                            .append(trie.getKeysFile())
+                            .append(" in database.")
                             .append("\n");
                     }
                     log.info("Next query for key: {} in botSession: {}", key, getRequestId());
@@ -113,6 +114,7 @@ public class NextKeyQuery extends Query {
     @Override
     public String result() {
         if (getExitCode() == 0) {
+            log.info("result here: \n {}", result.toString());
             return result.toString();
         } else if (getExitCode() == -1) {
             return "Error: Query could not execute";
