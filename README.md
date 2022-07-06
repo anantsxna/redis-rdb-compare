@@ -23,16 +23,16 @@ A tool for comparing 2 Redis snapshots (.rdb files). The tool parses the .rdb fi
   git clone --recurse-submodules git@github.com:anantsxna/redis-rdb-compare.git
   ```
 
-- Build, Test and Package the .JAR file 
-  ```
-  mvn clean install
-  ```
-
 - `cd` inside the project root directory, locate the `Dockerfile` and `docker-compose.yml` and create a `.env` file with the following fields:
   ```
   SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
   SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
   SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+  ```
+  
+- Build, Test and Package the .JAR file 
+  ```
+  mvn clean install
   ```
   
 - Now, run the following commands:
