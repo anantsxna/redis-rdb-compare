@@ -37,8 +37,8 @@ public class CountQuery extends Query {
             if (key.equals("!root")) {
                 key = "";
             }
-            Set<String> setA = botSession.getTrieA().getChildren(key);
-            Set<String> setB = botSession.getTrieB().getChildren(key);
+            Set<String> setA = botSession.getTrieC().getChildren(key);
+            Set<String> setB = botSession.getTrieD().getChildren(key);
 
             Set<String> setCombine = new HashSet<>();
             setCombine.addAll(setA);
@@ -46,8 +46,8 @@ public class CountQuery extends Query {
 
             List<Map.Entry<Integer, String>> sortedResult = new ArrayList<>();
             for (String parentKey : setCombine) {
-                int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                int countInA = botSession.getTrieC().getCountForPrefix(parentKey);
+                int countInB = botSession.getTrieD().getCountForPrefix(parentKey);
                 sortedResult.add(new AbstractMap.SimpleEntry<>((countInA - countInB), parentKey));
             }
 
@@ -55,8 +55,8 @@ public class CountQuery extends Query {
 
             for (int i = 0; i < Math.min(head, sortedResult.size()); i++) {
                 String parentKey = sortedResult.get(i).getValue();
-                int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                int countInA = botSession.getTrieC().getCountForPrefix(parentKey);
+                int countInB = botSession.getTrieD().getCountForPrefix(parentKey);
                 log.info("foreach {} {} {}", parentKey, countInA, countInB);
                 if (!(countInA == 0 && countInB == 0)) {
                     result

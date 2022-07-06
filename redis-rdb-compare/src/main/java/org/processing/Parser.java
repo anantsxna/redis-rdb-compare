@@ -4,6 +4,7 @@ import static java.lang.Thread.currentThread;
 import static org.example.Main.props;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.google.code.externalsorting.ExternalSort;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.threading.FixedNameableExecutorService;
@@ -28,7 +31,7 @@ public final class Parser {
 
     @Builder.Default
     public static final long PARSING_TIMEOUT_SECONDS = Integer.parseInt(
-        props.getProperty("PARSING_TIMEOUT_SECONDS")
+            props.getProperty("PARSING_TIMEOUT_SECONDS")
     );
 
     @Builder.Default
@@ -36,11 +39,11 @@ public final class Parser {
 
     @Builder.Default
     private final ExecutorService loggingExecutor = FixedNameableExecutorService
-        .builder()
-        .baseName("logger-in-parser-threads")
-        .threadsNum(4)
-        .build()
-        .getExecutorService();
+            .builder()
+            .baseName("logger-in-parser-threads")
+            .threadsNum(4)
+            .build()
+            .getExecutorService();
 
     /**
      * Method for thread that gathers the logs from the redis-rdb-tools python script.
@@ -58,9 +61,9 @@ public final class Parser {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
             try (
-                BufferedReader input = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())
-                )
+                    BufferedReader input = new BufferedReader(
+                            new InputStreamReader(process.getInputStream())
+                    )
             ) {
                 while ((line = input.readLine()) != null) {
                     log.info("PYPY3!: {} in File {}", line, dumpFile);
@@ -89,9 +92,9 @@ public final class Parser {
             log.info("Monitoring Process {}", process.toString());
             String line = null;
             try (
-                BufferedReader errors = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream())
-                )
+                    BufferedReader errors = new BufferedReader(
+                            new InputStreamReader(process.getErrorStream())
+                    )
             ) {
                 while ((line = errors.readLine()) != null) {
                     log.error("PYPY3 Error: {} in File {}", line, dumpFile);
@@ -125,12 +128,12 @@ public final class Parser {
         for (Map.Entry mapElement : parsePairs.entrySet()) {
             String dumpFile = (String) mapElement.getKey();
             String keysFile = (String) mapElement.getValue();
-            String[] command = new String[] {
-                "python3",
-                "fast-parse.py",
-                "--rdb=" + dumpFile,
-                "--keys=" + keysFile,
-                "--objspace-std-withsmalllong",
+            String[] command = new String[]{
+                    "python3",
+                    "fast-parse.py",
+                    "--rdb=" + dumpFile,
+                    "--keys=" + keysFile,
+                    "--objspace-std-withsmalllong",
             };
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
@@ -150,26 +153,26 @@ public final class Parser {
             boolean exitStatus;
             exitStatus = process.waitFor(PARSING_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             log.error(
-                exitStatus
-                    ? "PYPY3 ParsingProcess exited normally"
-                    : "PYPY3 Parsing Process timed out after {} seconds",
-                PARSING_TIMEOUT_SECONDS
+                    exitStatus
+                            ? "PYPY3 ParsingProcess exited normally"
+                            : "PYPY3 Parsing Process timed out after {} seconds",
+                    PARSING_TIMEOUT_SECONDS
             );
             if (!exitStatus) {
                 throw new InterruptedException(
-                    "PYPY3 Parsing Process timed out after " + PARSING_TIMEOUT_SECONDS + " seconds"
+                        "PYPY3 Parsing Process timed out after " + PARSING_TIMEOUT_SECONDS + " seconds"
                 );
             }
         }
 
-        //        for (Map.Entry mapElement : parsePairs.entrySet()) {
-        //            String keysFile = (String) mapElement.getValue();
-        //            try {
-        //                ExternalSort.mergeSortedFiles(ExternalSort.sortInBatch(new File(keysFile)), new File(keysFile + "sorted.txt"));
-        //            } catch (IOException e) {
-        //                throw new RuntimeException(e);
-        //            }
-        //        }
+        for (Map.Entry mapElement : parsePairs.entrySet()) {
+            String keysFile = (String) mapElement.getValue();
+            try {
+                ExternalSort.mergeSortedFiles(ExternalSort.sortInBatch(new File(keysFile)), new File(keysFile + "sorted.txt"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         log.info("Parsing finished");
         loggingExecutor.shutdownNow();

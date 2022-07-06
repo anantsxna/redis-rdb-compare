@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.querying.CountQuery;
@@ -65,7 +66,7 @@ public class SlackUtils {
         String requestId = createBotSession();
         if (requestId != null) {
             return (
-                props.getProperty("SESSION_CREATED") + "\n\n\n>Generated Request Id: " + requestId
+                    props.getProperty("SESSION_CREATED") + "\n\n\n>Generated Request Id: " + requestId
             );
         } else {
             return props.getProperty("SESSION_IN_PROGRESS");
@@ -81,9 +82,9 @@ public class SlackUtils {
      * @return downloading status of the current botSession attached to the requestId
      */
     public static String downloadUtils(
-        final String text,
-        final String channelId,
-        boolean waitForCompletion
+            final String text,
+            final String channelId,
+            boolean waitForCompletion
     ) {
         BotSession botSession;
         try {
@@ -94,10 +95,10 @@ public class SlackUtils {
             botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
             botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
             log.info(
-                "Downloading files from S3 links: " +
-                botSession.getS3linkA() +
-                " and " +
-                botSession.getS3linkB()
+                    "Downloading files from S3 links: " +
+                            botSession.getS3linkA() +
+                            " and " +
+                            botSession.getS3linkB()
             );
         } catch (IllegalStateException e) {
             return props.getProperty("INVALID_REQUEST_ID");
@@ -124,7 +125,7 @@ public class SlackUtils {
                 } catch (Exception e) {
                     log.error(props.getProperty("DOWNLOADING_RUNNABLE_ERROR") + e);
                     String response =
-                        props.getProperty("DOWNLOADING_RUNNABLE_ERROR") + e.getMessage();
+                            props.getProperty("DOWNLOADING_RUNNABLE_ERROR") + e.getMessage();
                     postTextResponseAsync(response, channelId);
                 }
             }
@@ -134,8 +135,8 @@ public class SlackUtils {
             log.info(props.getProperty("DOWNLOADING_INITIATED"), requestId);
             if (waitForCompletion) {
                 Future<String> downloadCallable = botSession
-                    .getDownloadingExecutorService()
-                    .submit(new DownloadCallable());
+                        .getDownloadingExecutorService()
+                        .submit(new DownloadCallable());
                 try {
                     String response = downloadCallable.get();
                     botSession.getDownloadingExecutorService().shutdown();
@@ -143,7 +144,7 @@ public class SlackUtils {
                 } catch (InterruptedException e) {
                     log.error(props.getProperty("DOWNLOADING_CALLABLE_ERROR_INTERRUPT") + e);
                     return (
-                        props.getProperty("DOWNLOADING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
+                            props.getProperty("DOWNLOADING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
                     );
                 } catch (ExecutionException e) {
                     log.error(props.getProperty("DOWNLOADING_CALLABLE_ERROR_EXEC") + e);
@@ -159,16 +160,16 @@ public class SlackUtils {
                 return props.getProperty("DOWNLOADING_IN_PROGRESS");
             } else if (botSession.getDownloadingStatus().equals(DownloadingStatus.DOWNLOADED)) {
                 return (
-                    props.getProperty("DOWNLOADING_COMPLETED") +
-                    " in " +
-                    botSession.getDownloadingTime() /
-                    1000.0 +
-                    " second(s)."
+                        props.getProperty("DOWNLOADING_COMPLETED") +
+                                " in " +
+                                botSession.getDownloadingTime() /
+                                        1000.0 +
+                                " second(s)."
                 );
             } else {
                 return (
-                    props.getProperty("UNKNOWN_DOWNLOADING_BEHAVIOUR") +
-                    botSession.getDownloadingStatus()
+                        props.getProperty("UNKNOWN_DOWNLOADING_BEHAVIOUR") +
+                                botSession.getDownloadingStatus()
                 );
             }
         }
@@ -182,9 +183,9 @@ public class SlackUtils {
      * @param channelId  : channelId of the request
      */
     public static String parseUtils(
-        final String requestId,
-        final String channelId,
-        boolean waitForCompletion
+            final String requestId,
+            final String channelId,
+            boolean waitForCompletion
     ) {
         try {
             BotSession botSession = getBotSession(requestId);
@@ -210,7 +211,7 @@ public class SlackUtils {
                     } catch (Exception e) {
                         log.error(props.getProperty("PARSING_RUNNABLE_ERROR") + e);
                         String response =
-                            props.getProperty("PARSING_RUNNABLE_ERROR") + e.getMessage();
+                                props.getProperty("PARSING_RUNNABLE_ERROR") + e.getMessage();
                         postTextResponseAsync(response, channelId);
                     }
                 }
@@ -219,8 +220,8 @@ public class SlackUtils {
             if (botSession.getExecutedParsing().compareAndSet(false, true)) {
                 if (waitForCompletion) {
                     Future<String> parserCallable = botSession
-                        .getParsingExecutorService()
-                        .submit(new ParserCallable());
+                            .getParsingExecutorService()
+                            .submit(new ParserCallable());
                     try {
                         String response = parserCallable.get();
                         botSession.getParsingExecutorService().shutdown();
@@ -228,7 +229,7 @@ public class SlackUtils {
                     } catch (InterruptedException e) {
                         log.error(props.getProperty("PARSING_CALLABLE_ERROR_INTERRUPT") + e);
                         return (
-                            props.getProperty("PARSING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
+                                props.getProperty("PARSING_CALLABLE_ERROR_INTERRUPT") + e.getMessage()
                         );
                     } catch (ExecutionException e) {
                         log.error(props.getProperty("PARSING_CALLABLE_ERROR_EXEC") + e);
@@ -244,16 +245,16 @@ public class SlackUtils {
                     return props.getProperty("PARSING_IN_PROGRESS");
                 } else if (botSession.getParsingStatus().equals(ParsingStatus.COMPLETED)) {
                     return (
-                        props.getProperty("PARSING_COMPLETED") +
-                        " in " +
-                        botSession.getParsingTime() /
-                        1000.0 +
-                        " second(s)."
+                            props.getProperty("PARSING_COMPLETED") +
+                                    " in " +
+                                    botSession.getParsingTime() /
+                                            1000.0 +
+                                    " second(s)."
                     );
                 } else {
                     return (
-                        props.getProperty("UNKNOWN_PARSING_BEHAVIOUR") +
-                        botSession.getParsingStatus()
+                            props.getProperty("UNKNOWN_PARSING_BEHAVIOUR") +
+                                    botSession.getParsingStatus()
                     );
                 }
             }
@@ -272,9 +273,9 @@ public class SlackUtils {
      * @return trie making status of the session (started, in progress, completed)
      */
     public static String makeTrieUtils(
-        final String requestId,
-        final String channelId,
-        boolean waitForCompletion
+            final String requestId,
+            final String channelId,
+            boolean waitForCompletion
     ) {
         try {
             BotSession botSession = getBotSession(requestId);
@@ -300,7 +301,7 @@ public class SlackUtils {
                     } catch (Exception e) {
                         log.error(props.getProperty("TRIE_CONSTRUCTION_RUNNABLE_ERROR") + e);
                         String response =
-                            props.getProperty("TRIE_CONSTRUCTION_RUNNABLE_ERROR") + e.getMessage();
+                                props.getProperty("TRIE_CONSTRUCTION_RUNNABLE_ERROR") + e.getMessage();
                         postTextResponseAsync(response, channelId);
                     }
                 }
@@ -309,25 +310,25 @@ public class SlackUtils {
             if (botSession.getExecutedTrieMaking().compareAndSet(false, true)) {
                 if (waitForCompletion) {
                     Future<String> trieMakerCallable = botSession
-                        .getTrieMakingExecutorService()
-                        .submit(new TrieMakerCallable());
+                            .getTrieMakingExecutorService()
+                            .submit(new TrieMakerCallable());
                     try {
                         String response = trieMakerCallable.get();
                         botSession.getTrieMakingExecutorService().shutdown();
                         return response;
                     } catch (InterruptedException e) {
                         log.error(
-                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") + e
+                                props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") + e
                         );
                         return (
-                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") +
-                            e.getMessage()
+                                props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_INTERRUPT") +
+                                        e.getMessage()
                         );
                     } catch (ExecutionException e) {
                         log.error(props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_EXEC") + e);
                         return (
-                            props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_EXEC") +
-                            e.getMessage()
+                                props.getProperty("TRIE_CONSTRUCTION_CALLABLE_ERROR_EXEC") +
+                                        e.getMessage()
                         );
                     }
                 } else {
@@ -340,16 +341,16 @@ public class SlackUtils {
                     return props.getProperty("TRIE_CONSTRUCTION_IN_PROGRESS");
                 } else if (botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
                     return (
-                        props.getProperty("TRIE_CONSTRUCTION_COMPLETED") +
-                        " in " +
-                        botSession.getTrieMakingTime() /
-                        1000.0 +
-                        " second(s)."
+                            props.getProperty("TRIE_CONSTRUCTION_COMPLETED") +
+                                    " in " +
+                                    botSession.getTrieMakingTime() /
+                                            1000.0 +
+                                    " second(s)."
                     );
                 } else {
                     return (
-                        props.getProperty("UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR") +
-                        botSession.getTrieMakingStatus()
+                            props.getProperty("UNKNOWN_TRIE_CONSTRUCTION_BEHAVIOUR") +
+                                    botSession.getTrieMakingStatus()
                     );
                 }
             }
@@ -394,12 +395,12 @@ public class SlackUtils {
             }
             log.info(props.getProperty("GETCOUNT_QUERY"), prefixKey);
             Query query = CountQuery
-                .builder()
-                .key(prefixKey)
-                .queryType(Query.QueryType.GET_COUNT)
-                .head(head)
-                .requestId(requestId)
-                .build();
+                    .builder()
+                    .key(prefixKey)
+                    .queryType(Query.QueryType.GET_COUNT)
+                    .head(head)
+                    .requestId(requestId)
+                    .build();
             query.execute();
             return query.result();
         } catch (IllegalStateException e) {
@@ -415,12 +416,14 @@ public class SlackUtils {
         String fileB = botSession.getKeysB() + "sorted.txt";
 
         try (
-            FileReader fileReaderA = new FileReader(fileA);
-            BufferedReader readerA = new BufferedReader(fileReaderA);
-            FileReader fileReaderB = new FileReader(fileB);
-            BufferedReader readerB = new BufferedReader(fileReaderB);
-            FileWriter fileWriter = new FileWriter("./.sessionFiles/diff-" + requestId + ".txt");
-            BufferedWriter writer = new BufferedWriter(fileWriter)
+                FileReader fileReaderA = new FileReader(fileA);
+                BufferedReader readerA = new BufferedReader(fileReaderA);
+                FileReader fileReaderB = new FileReader(fileB);
+                BufferedReader readerB = new BufferedReader(fileReaderB);
+                FileWriter fileWriterA = new FileWriter("./.sessionFiles/diff-A-" + requestId + ".txt");
+                BufferedWriter writerA = new BufferedWriter(fileWriterA);
+                FileWriter fileWriterB = new FileWriter("./.sessionFiles/diff-B-" + requestId + ".txt");
+                BufferedWriter writerB = new BufferedWriter(fileWriterB)
         ) {
             while (true) {
                 String lineA = readerA.readLine();
@@ -428,10 +431,10 @@ public class SlackUtils {
                 if (lineA == null && lineB == null) {
                     break;
                 } else if (lineA == null) {
-                    writer.write(lineB + "\n");
+                    writerB.write(lineB + "\n");
                     lineB = readerB.readLine();
                 } else if (lineB == null) {
-                    writer.write(lineA + "\n");
+                    writerA.write(lineA + "\n");
                     lineA = readerA.readLine();
                 } else if (lineA != null && lineB != null) {
                     int comp = lineA.compareTo(lineB);
@@ -439,10 +442,10 @@ public class SlackUtils {
                         lineA = readerA.readLine();
                         lineB = readerB.readLine();
                     } else if (comp < 0) {
-                        writer.write(lineA + "\n");
+                        writerA.write(lineA + "\n");
                         lineA = readerA.readLine();
                     } else if (comp > 0) {
-                        writer.write(lineB + "\n");
+                        writerB.write(lineB + "\n");
                         lineB = readerB.readLine();
                     }
                 }
@@ -475,12 +478,12 @@ public class SlackUtils {
             prefixKey = tokens[1];
             count = Integer.parseInt(tokens[2]);
             log.info(
-                props.getProperty("GETNEXT_QUERY") +
-                prefixKey +
-                " count: " +
-                count +
-                " requestId: " +
-                requestId
+                    props.getProperty("GETNEXT_QUERY") +
+                            prefixKey +
+                            " count: " +
+                            count +
+                            " requestId: " +
+                            requestId
             );
             assert count > 0;
         } catch (Exception e) {
@@ -494,12 +497,12 @@ public class SlackUtils {
                 return props.getProperty("TRIES_NOT_CREATED");
             }
             Query query = NextKeyQuery
-                .builder()
-                .key(prefixKey)
-                .n(count)
-                .queryType(NextKeyQuery.QueryType.GET_NEXT)
-                .requestId(requestId)
-                .build();
+                    .builder()
+                    .key(prefixKey)
+                    .n(count)
+                    .queryType(NextKeyQuery.QueryType.GET_NEXT)
+                    .requestId(requestId)
+                    .build();
             query.execute();
             return query.result();
         } catch (IllegalStateException e) {
@@ -527,14 +530,15 @@ public class SlackUtils {
         try {
             log.info(props.getProperty("DELETING_INITIATE"), requestId);
             assert botSession != null;
-            for (String file : new String[] {
-                botSession.getKeysA(),
-                botSession.getKeysB(),
-                botSession.getDumpA(),
-                botSession.getDumpB(),
-                botSession.getKeysA() + "sorted.txt",
-                botSession.getKeysB() + "sorted.txt",
-                "diff-" + requestId + ".txt",
+            for (String file : new String[]{
+                    botSession.getKeysA(),
+                    botSession.getKeysB(),
+                    botSession.getDumpA(),
+                    botSession.getDumpB(),
+                    botSession.getKeysA() + "sorted.txt",
+                    botSession.getKeysB() + "sorted.txt",
+                    "./.sessionFiles/diff-A-" + requestId + ".txt",
+                    "./.sessionFiles/diff-B-" + requestId + ".txt",
             }) {
                 if (Files.exists(Paths.get(file))) {
                     Files.delete(Paths.get(file));
@@ -572,25 +576,25 @@ public class SlackUtils {
             sb.append(">No sessions are active.");
         } else {
             sb.append("Active sessions: \n\n");
-            final int[] index = { 1 };
+            final int[] index = {1};
             BotSession
-                .getAllBotSessions()
-                .forEach((key, channel) -> {
-                    sb
-                        .append(index[0])
-                        .append(". Request Id: `")
-                        .append(channel.getRequestId())
-                        .append("`:\n>A: <")
-                        .append(channel.getS3linkA())
-                        .append("|")
-                        .append(channel.getS3linkA())
-                        .append(">\n>B: <")
-                        .append(channel.getS3linkB())
-                        .append("|")
-                        .append(channel.getS3linkB())
-                        .append(">\n\n");
-                    index[0]++;
-                });
+                    .getAllBotSessions()
+                    .forEach((key, channel) -> {
+                        sb
+                                .append(index[0])
+                                .append(". Request Id: `")
+                                .append(channel.getRequestId())
+                                .append("`:\n>A: <")
+                                .append(channel.getS3linkA())
+                                .append("|")
+                                .append(channel.getS3linkA())
+                                .append(">\n>B: <")
+                                .append(channel.getS3linkB())
+                                .append("|")
+                                .append(channel.getS3linkB())
+                                .append(">\n\n");
+                        index[0]++;
+                    });
         }
         return sb.toString();
     }

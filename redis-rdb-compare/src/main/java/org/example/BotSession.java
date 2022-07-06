@@ -2,12 +2,14 @@ package org.example;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.example.Main.props;
+import static org.example.SlackUtils.getDiffUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -51,7 +53,10 @@ public class BotSession {
     private volatile String keysB = props.getProperty("DEFAULT_KEYS_B");
 
     @Builder.Default
-    private volatile String diffFile = "";
+    private volatile String diffFileA = "";
+
+    @Builder.Default
+    private volatile String diffFileB = "";
 
     @Setter
     @Builder.Default
@@ -64,6 +69,10 @@ public class BotSession {
     @Setter
     @Builder.Default
     private QTrie trieC = null;
+
+    @Setter
+    @Builder.Default
+    private QTrie trieD = null;
 
     @Builder.Default
     private volatile Parser parser = Parser.builder().build();
@@ -91,7 +100,8 @@ public class BotSession {
         this.dumpB = "./.sessionFiles/dump-B-downloaded-" + this.getRequestId() + ".rdb";
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
         this.keysB = "./.sessionFiles/keys-B-" + this.getRequestId() + ".txt";
-        this.diffFile = "./.sessionFiles/diff-" + this.getRequestId() + ".txt";
+        this.diffFileA = "./.sessionFiles/diff-A-" + this.getRequestId() + ".txt";
+        this.diffFileB = "./.sessionFiles/diff-B-" + this.getRequestId() + ".txt";
         try {
             this.s3linkA = new URL(props.getProperty("DEFAULT_S3_LINK"));
             this.s3linkB = new URL(props.getProperty("DEFAULT_S3_LINK"));
@@ -155,24 +165,24 @@ public class BotSession {
 
     @Builder.Default
     private ExecutorService trieMakingExecutorService = SingleNameableExecutorService
-        .builder()
-        .baseName("make-trie-caller")
-        .build()
-        .getExecutorService();
+            .builder()
+            .baseName("make-trie-caller")
+            .build()
+            .getExecutorService();
 
     @Builder.Default
     private ExecutorService parsingExecutorService = SingleNameableExecutorService
-        .builder()
-        .baseName("parsing-caller")
-        .build()
-        .getExecutorService();
+            .builder()
+            .baseName("parsing-caller")
+            .build()
+            .getExecutorService();
 
     @Builder.Default
     private ExecutorService downloadingExecutorService = SingleNameableExecutorService
-        .builder()
-        .baseName("downloading-caller")
-        .build()
-        .getExecutorService();
+            .builder()
+            .baseName("downloading-caller")
+            .build()
+            .getExecutorService();
 
     /**
      * Getter for the botSession.
@@ -189,10 +199,10 @@ public class BotSession {
         BotSession botSession = allBotSessions.get(requestId);
 
         if (
-            botSession.creationTime != -1 &&
-            botSession.creationTime <
-            System.currentTimeMillis() -
-            Long.parseLong(props.getProperty("BOT_SESSION_TIMEOUT"))
+                botSession.creationTime != -1 &&
+                        botSession.creationTime <
+                                System.currentTimeMillis() -
+                                        Long.parseLong(props.getProperty("BOT_SESSION_TIMEOUT"))
         ) {
             return null;
         }
@@ -208,8 +218,8 @@ public class BotSession {
     public static synchronized String createBotSession() {
         String requestId = "#" + randomNumeric(6);
         BotSession botSession = allBotSessions.putIfAbsent(
-            requestId,
-            BotSession.builder().requestId(requestId).build().setFileNames()
+                requestId,
+                BotSession.builder().requestId(requestId).build().setFileNames()
         );
         return (botSession == null) ? requestId : null;
     }
@@ -251,10 +261,10 @@ public class BotSession {
         this.setDownloadingTime(endTime - startTime);
         this.setDownloadingStatus(DownloadingStatus.DOWNLOADED); //volatile variable write
         return (
-            props.getProperty("DOWNLOAD_COMPLETE_A") +
-            (endTime - startTime) /
-            1000.0 +
-            props.getProperty("DOWNLOAD_COMPLETE_B")
+                props.getProperty("DOWNLOAD_COMPLETE_A") +
+                        (endTime - startTime) /
+                                1000.0 +
+                        props.getProperty("DOWNLOAD_COMPLETE_B")
         );
     }
 
@@ -270,16 +280,16 @@ public class BotSession {
 
         long startTime = System.currentTimeMillis();
         parser.parse();
-        //        getDiffUtils(requestId);
+        getDiffUtils(requestId);
         this.setParsingStatus(ParsingStatus.COMPLETED); //volatile variable write
         long endTime = System.currentTimeMillis();
         log.info(props.getProperty("PARSE_SUCCESS"), getRequestId(), endTime - startTime);
         this.setParsingTime(endTime - startTime);
         return (
-            props.getProperty("PARSE_COMPLETE_A") +
-            (endTime - startTime) /
-            1000.0 +
-            props.getProperty("PARSE_COMPLETE_B")
+                props.getProperty("PARSE_COMPLETE_A") +
+                        (endTime - startTime) /
+                                1000.0 +
+                        props.getProperty("PARSE_COMPLETE_B")
         );
     }
 
@@ -289,13 +299,15 @@ public class BotSession {
     public String initiateTrieMaking() throws InterruptedException {
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
         log.info(props.getProperty("MAKE_TRIE_INITIATE"), requestId);
-        this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).requestId(requestId).build());
-        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
-        //        this.setTrieC(QTrie.builder().keysFile(this.getDiffFile()).requestId(requestId).build());
+//        this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).requestId(requestId).build());
+//        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
+        this.setTrieC(QTrie.builder().keysFile(this.getDiffFileA()).requestId(requestId).build());
+        this.setTrieD(QTrie.builder().keysFile(this.getDiffFileB()).requestId(requestId).build());
 
-        this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
-        this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
-        //        this.getTrieMaker().addToTrieMaker(this.getDiffFile(), this.getTrieC());
+//        this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
+//        this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
+        this.getTrieMaker().addToTrieMaker(this.getDiffFileA(), this.getTrieC());
+        this.getTrieMaker().addToTrieMaker(this.getDiffFileB(), this.getTrieD());
 
         long startTime = System.currentTimeMillis();
         try {
@@ -316,10 +328,10 @@ public class BotSession {
         // log.info("time measures: {} {} {} {}", this.getRequestId(), this.getDownloadingTime() / 1000.0, this.getParsingTime() / 1000.0, this.getTrieMakingTime() / 1000.0);
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
         return (
-            props.getProperty("MAKE_TRIE_COMPLETE_A") +
-            (endTime - startTime) /
-            1000.0 +
-            props.getProperty("MAKE_TRIE_COMPLETE_B")
+                props.getProperty("MAKE_TRIE_COMPLETE_A") +
+                        (endTime - startTime) /
+                                1000.0 +
+                        props.getProperty("MAKE_TRIE_COMPLETE_B")
         );
     }
 }
