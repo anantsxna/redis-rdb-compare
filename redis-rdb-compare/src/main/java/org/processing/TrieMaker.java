@@ -49,7 +49,7 @@ public class TrieMaker {
         keysTriesPairs.forEach((keysFile, trie) -> {
             trieInsertionExecutorService.submit(() -> {
                 log.info("Inserting keys from {}", keysFile);
-                trie.takeInput();
+                trie.takeInputFromTwoFiles();
             });
         });
         trieInsertionExecutorService.shutdown();

@@ -31,8 +31,8 @@ public final class TrieNode {
         return children.size();
     }
 
-    public void addCount() {
-        count += 1;
+    public void addCount(int value) {
+        count += value;
     }
 
     public boolean hasChild(String childName) {

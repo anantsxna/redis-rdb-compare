@@ -19,7 +19,7 @@ class TrieNodeTest {
     void addCount() {
         log.info("Running addCount test...");
         TrieNode node = TrieNode.builder().build();
-        node.addCount();
+        node.addCount(1);
         assertEquals(node.getCount(), 1);
     }
 
