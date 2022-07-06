@@ -380,7 +380,7 @@ public class SlackUtils {
             if (queryArgs.length == 3) {
                 head = Integer.parseInt(queryArgs[2]);
             } else {
-                head = 5;
+                head = Integer.parseInt(props.getProperty("DEFAULT_HEAD"));
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -526,53 +526,22 @@ public class SlackUtils {
         }
         try {
             log.info(props.getProperty("DELETING_INITIATE"), requestId);
-            if (Files.exists(Paths.get(botSession.getDumpA()))) {
-                Files.delete(Paths.get(botSession.getDumpA()));
-                log.info(props.getProperty("DELETING_DUMP_SUCCESS"), botSession.getDumpA());
-            } else {
-                log.info(props.getProperty("DELETING_DUMP_ERROR"), botSession.getDumpA());
-            }
-
-            if (Files.exists(Paths.get(botSession.getDumpB()))) {
-                Files.delete(Paths.get(botSession.getDumpB()));
-                log.info(props.getProperty("DELETING_DUMP_SUCCESS"), botSession.getDumpB());
-            } else {
-                log.info(props.getProperty("DELETING_DUMP_ERROR"), botSession.getDumpB());
-            }
-
-            if (Files.exists(Paths.get(botSession.getKeysA()))) {
-                Files.delete(Paths.get(botSession.getKeysA()));
-                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
-            } else {
-                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
-            }
-
-            if (Files.exists(Paths.get(botSession.getKeysB()))) {
-                Files.delete(Paths.get(botSession.getKeysB()));
-                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysB());
-            } else {
-                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysB());
-            }
-
-            if (Files.exists(Paths.get(botSession.getKeysA() + "sorted.txt"))) {
-                Files.delete(Paths.get(botSession.getKeysA() + "sorted.txt"));
-                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
-            } else {
-                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
-            }
-
-            if (Files.exists(Paths.get(botSession.getKeysB() + "sorted.txt"))) {
-                Files.delete(Paths.get(botSession.getKeysB() + "sorted.txt"));
-                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysB());
-            } else {
-                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysB());
-            }
-
-            if (Files.exists(Paths.get("./.sessionFiles/diff-" + requestId + ".txt"))) {
-                Files.delete(Paths.get("./.sessionFiles/diff-" + requestId + ".txt"));
-                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), botSession.getKeysA());
-            } else {
-                log.info(props.getProperty("DELETING_KEYS_ERROR"), botSession.getKeysA());
+            assert botSession != null;
+            for (String file : new String[] {
+                botSession.getKeysA(),
+                botSession.getKeysB(),
+                botSession.getDumpA(),
+                botSession.getDumpB(),
+                botSession.getKeysA() + "sorted.txt",
+                botSession.getKeysB() + "sorted.txt",
+                "diff-" + requestId + ".txt",
+            }) {
+                if (Files.exists(Paths.get(file))) {
+                    Files.delete(Paths.get(file));
+                    log.info(props.getProperty("DELETING_KEYS_SUCCESS"), file);
+                } else {
+                    log.info(props.getProperty("DELETING_KEYS_ERROR"), file);
+                }
             }
         } catch (IOException e) {
             log.error(props.getProperty("DELETING_ERROR"), requestId);

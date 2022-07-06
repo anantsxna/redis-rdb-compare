@@ -87,7 +87,7 @@ public class QueryView {
             viewType == ViewType.GET_COUNT_REQUEST || viewType == ViewType.GET_COUNT_RESPONSE
         ) {
             inputActionId = "buttonBlock-query-view-getcount-response-" + randomAlphanumeric(10);
-            inputPlaceHolder = "[Prefix Key]\n\nEx. 'HTTPSESSION'";
+            inputPlaceHolder = "[Prefix Key] [Count of Keys]\n\nEx. 'ACCOUNT 10'";
         }
 
         if (viewType != ViewType.NO_QUERY) {
