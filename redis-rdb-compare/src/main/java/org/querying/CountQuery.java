@@ -4,6 +4,7 @@ import static org.example.BotSession.getBotSession;
 import static org.example.Main.props;
 
 import java.util.*;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
@@ -59,16 +60,23 @@ public class CountQuery extends Query {
                 log.info("foreach {} {} {}", parentKey, countInA, countInB);
                 if (!(countInA == 0 && countInB == 0)) {
                     result
-                        .append("`")
-                        .append(parentKey)
-                        .append("` : ")
-                        .append(countInA - countInB)
-                        .append("\n\n");
+                            .append("`")
+                            .append(parentKey)
+                            .append("` : ")
+                            .append(countInA - countInB)
+                            .append("\n\n");
                 }
             }
 
             if (setCombine.isEmpty()) {
-                result.append("No keys found in either database.");
+                result.append("""
+                        ```It seems you have reached the leaf node of the trie.
+                        This trie does not store the token on the tail-end of the parsed keys.
+                        For ex: the key "FOO:BAR:BAZ" will be stored as:
+                        root
+                          |___FOO
+                               |___BAR```
+                        """);
             }
 
             long endTime = System.currentTimeMillis();
