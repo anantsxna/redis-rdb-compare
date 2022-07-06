@@ -425,9 +425,9 @@ public class SlackUtils {
                 FileWriter fileWriterB = new FileWriter("./.sessionFiles/diff-B-" + requestId + ".txt");
                 BufferedWriter writerB = new BufferedWriter(fileWriterB)
         ) {
+            String lineA = readerA.readLine();
+            String lineB = readerB.readLine();
             while (true) {
-                String lineA = readerA.readLine();
-                String lineB = readerB.readLine();
                 if (lineA == null && lineB == null) {
                     break;
                 } else if (lineA == null) {

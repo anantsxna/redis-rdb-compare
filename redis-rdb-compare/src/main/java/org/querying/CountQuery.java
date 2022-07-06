@@ -48,7 +48,7 @@ public class CountQuery extends Query {
             for (String parentKey : setCombine) {
                 int countInA = botSession.getTrieC().getCountForPrefix(parentKey);
                 int countInB = botSession.getTrieD().getCountForPrefix(parentKey);
-                sortedResult.add(new AbstractMap.SimpleEntry<>((countInA - countInB), parentKey));
+                sortedResult.add(new AbstractMap.SimpleEntry<>((countInB - countInA), parentKey));
             }
 
             Collections.sort(sortedResult, Comparator.comparing(p -> -Math.abs(p.getKey())));
@@ -63,7 +63,7 @@ public class CountQuery extends Query {
                             .append("`")
                             .append(parentKey)
                             .append("` : ")
-                            .append(countInA - countInB)
+                            .append(countInB - countInA)
                             .append("\n\n");
                 }
             }
