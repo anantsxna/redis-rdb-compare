@@ -1,6 +1,7 @@
 package org.querying;
 
 import static org.example.BotSession.getBotSession;
+import static org.example.Main.props;
 
 import java.util.*;
 import lombok.Builder;
@@ -21,7 +22,7 @@ public class CountQuery extends Query {
 
     @NonNull
     @Builder.Default
-    private Integer head = 5;
+    private Integer head = Integer.parseInt(props.getProperty("DEFAULT_HEAD"));
 
     @Override
     public void execute() {
@@ -34,7 +35,6 @@ public class CountQuery extends Query {
             assert botSession != null;
             if (key.equals("!root")) {
                 key = "";
-                head = 20;
             }
             Set<String> setA = botSession.getTrieA().getChildren(key);
             Set<String> setB = botSession.getTrieB().getChildren(key);
