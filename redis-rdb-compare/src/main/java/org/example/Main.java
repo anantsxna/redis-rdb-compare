@@ -3,15 +3,18 @@ package org.example;
 import static org.example.SlackUtils.*;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 import static org.messaging.PostUpdateUtils.deleteResponseAsync;
+import static org.messaging.PostUpdateUtils.postResponseAsync;
 
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.AppConfig;
 import com.slack.api.bolt.socket_mode.SocketModeApp;
+import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.event.AppMentionEvent;
 import com.slack.api.model.event.MessageChangedEvent;
 import com.slack.api.model.event.MessageDeletedEvent;
 import com.slack.api.model.event.MessageEvent;
 import com.slack.api.util.thread.DaemonThreadExecutorServiceProvider;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -168,9 +171,9 @@ public class Main {
                         log.info(props.getProperty("GETCOUNT_RECEIVED"));
                         final String channelId = req.getContext().getChannelId();
                         final String text = req.getPayload().getText();
-                        String response = countUtils(text);
-                        log.info(props.getProperty("GETCOUNT_RESPONSE"), response);
-                        postTextResponseAsync(response, channelId);
+                        List<LayoutBlock> responseBlocks = countUtils(text);
+                        log.info(props.getProperty("GETCOUNT_RESPONSE"), responseBlocks);
+                        postResponseAsync(responseBlocks, channelId, "OK 200");
                     });
                 return ctx.ack();
             }
@@ -360,7 +363,7 @@ public class Main {
 
         // blockAction - clicked Query button or selected a session from the main menu
         app.blockAction(
-            Pattern.compile(props.getProperty("QUERY_INPUT")),
+            Pattern.compile(props.getProperty("QUERY_GENERAL_INPUT")),
             (req, ctx) -> {
                 app
                     .executorService()
@@ -369,7 +372,7 @@ public class Main {
                         final String channelId = req.getPayload().getChannel().getId();
                         final String messageTs = req.getPayload().getContainer().getMessageTs();
                         final String actionId = req.getPayload().getActions().get(0).getActionId();
-                        String requestId;
+                        String requestId = "";
                         String queryText = "!root";
 
                         if (actionId.contains("click")) {
@@ -382,8 +385,20 @@ public class Main {
                         } else if (actionId.contains("getnext-request")) {
                             requestId = req.getPayload().getMessage().getText();
                         } else if (actionId.contains("getcount-response")) {
-                            requestId = req.getPayload().getMessage().getText();
-                            queryText = req.getPayload().getActions().get(0).getValue();
+                            if (actionId.contains("search")) {
+                                //                                        log.info(req.getRequestBodyAsString());
+                                String requestId_queryText = actionId
+                                    .replaceFirst("buttonBlock-query-search-getcount-response-", "")
+                                    .replaceFirst("-[-\\w]*", "");
+                                log.info("Here: {}", requestId_queryText);
+                                requestId = requestId_queryText.split("%")[0];
+                                String parentKey = requestId_queryText.split("%")[1];
+                                String head = requestId_queryText.split("%")[2];
+                                queryText = parentKey + " " + head;
+                            } else {
+                                requestId = req.getPayload().getMessage().getText();
+                                queryText = req.getPayload().getActions().get(0).getValue();
+                            }
                         } else if (actionId.contains("getnext-response")) {
                             requestId = req.getPayload().getMessage().getText();
                             queryText = req.getPayload().getActions().get(0).getValue();

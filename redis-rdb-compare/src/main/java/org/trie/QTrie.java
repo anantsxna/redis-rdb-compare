@@ -88,16 +88,16 @@ public final class QTrie {
         //            botSession.getParentKeys().add(startsWith);
         //        }
 
-        while (tokenizer.hasMoreTokens()) {
+        while (true) {
             current.addCount();
+            if (!tokenizer.hasMoreTokens()) {
+                break;
+            }
             char nextKey = tokenizer.nextToken();
-            //            log.info("Next key: {}", nextKey);
-            if (tokenizer.hasMoreTokens()) {
-                if (!current.hasChild(nextKey)) {
-                    current.addChild(nextKey);
-                }
-                current = current.getChild(nextKey);
-            } else break;
+            if (!current.hasChild(nextKey)) {
+                current.addChild(nextKey);
+            }
+            current = current.getChild(nextKey);
         }
     }
 

@@ -2,13 +2,17 @@ package org.example;
 
 import static org.example.BotSession.*;
 import static org.example.Main.props;
+import static org.messaging.Blocks.TextBlock;
 import static org.messaging.PostUpdate.postTextResponseAsync;
 import static org.messaging.PostUpdate.postTextResponseSync;
 
+import com.slack.api.model.block.LayoutBlock;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -370,31 +374,43 @@ public class SlackUtils {
      * @param text: the query arguments
      * @return String containing the query result or error message
      */
-    public static String countUtils(final String text) {
+    public static List<LayoutBlock> countUtils(final String text) {
         String requestId;
         String prefixKey;
         Integer head;
+        List<LayoutBlock> responseBlocks = new ArrayList<>();
         log.info("countutils: " + text);
         try {
             assert !text.isEmpty();
-            String[] queryArgs = text.split(" ");
-            assert queryArgs.length == 2 || queryArgs.length == 3;
-            requestId = queryArgs[0];
-            prefixKey = queryArgs[1];
-            if (queryArgs.length == 3) {
-                head = Integer.parseInt(queryArgs[2]);
+            String[] queryArgsTemp = text.split("[\\s]+");
+            log.info("arg size: {}", queryArgsTemp.length);
+
+            List<String> queryArgs = new ArrayList<>();
+            for (String arg : queryArgsTemp) {
+                if (!arg.isEmpty()) {
+                    queryArgs.add(arg);
+                }
+            }
+
+            assert queryArgs.size() == 2 || queryArgs.size() == 3;
+            requestId = queryArgs.get(0);
+            prefixKey = queryArgs.get(1);
+            if (queryArgs.size() == 3) {
+                head = Integer.parseInt(queryArgs.get(2));
             } else {
                 head = Integer.parseInt(props.getProperty("DEFAULT_HEAD"));
             }
         } catch (Exception e) {
             log.error(e.getMessage());
-            return props.getProperty("BAD_ARGUMENTS");
+            responseBlocks.add(TextBlock(props.getProperty("BAD_ARGUMENTS")));
+            return responseBlocks;
         }
         try {
             BotSession botSession = getBotSession(requestId);
             assert botSession != null;
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
-                return props.getProperty("TRIES_NOT_CREATED");
+                responseBlocks.add(TextBlock(props.getProperty("TRIES_NOT_CREATED")));
+                return responseBlocks;
             }
             log.info(props.getProperty("GETCOUNT_QUERY"), prefixKey);
             Query query = CountQuery
@@ -408,7 +424,8 @@ public class SlackUtils {
             return query.result();
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return props.getProperty("INVALID_REQUEST_ID");
+            responseBlocks.add(TextBlock(props.getProperty("INVALID_REQUEST_ID")));
+            return responseBlocks;
         }
     }
 
@@ -467,9 +484,10 @@ public class SlackUtils {
      * @param text: [requestId] [prefixKey] [count]
      * @return String containing the query result or error message
      */
-    public static String getNextKeyUtils(String text) {
+    public static List<LayoutBlock> getNextKeyUtils(String text) {
         String requestId;
         String prefixKey;
+        List<LayoutBlock> responseBlocks = new ArrayList<>();
         int count;
         try {
             assert (!text.isEmpty());
@@ -489,13 +507,15 @@ public class SlackUtils {
             assert count > 0;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return props.getProperty("BAD_ARGUMENTS");
+            responseBlocks.add(TextBlock(props.getProperty("BAD_ARGUMENTS")));
+            return responseBlocks;
         }
 
         try {
             BotSession botSession = getBotSession(requestId);
             if (!botSession.getTrieMakingStatus().equals(TrieMakingStatus.CONSTRUCTED)) {
-                return props.getProperty("TRIES_NOT_CREATED");
+                responseBlocks.add(TextBlock(props.getProperty("TRIES_NOT_CREATED")));
+                return responseBlocks;
             }
             Query query = NextKeyQuery
                 .builder()
@@ -508,7 +528,8 @@ public class SlackUtils {
             return query.result();
         } catch (IllegalStateException e) {
             log.error(e.getMessage());
-            return props.getProperty("INVALID_REQUEST_ID");
+            responseBlocks.add(TextBlock(props.getProperty("INVALID_REQUEST_ID")));
+            return responseBlocks;
         }
     }
 

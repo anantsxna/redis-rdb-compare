@@ -100,11 +100,9 @@ public class QueryView {
             );
 
             if (viewType == ViewType.GET_COUNT_RESPONSE || viewType == ViewType.GET_COUNT_REQUEST) {
-                blocks.add(TextImageBlock(countUtils(requestId + " " + queryText), REDIS_LOGO_URL));
+                blocks.addAll((countUtils(requestId + " " + queryText)));
             } else if (viewType == ViewType.GET_NEXT_RESPONSE) {
-                blocks.add(
-                    TextImageBlock(getNextKeyUtils(requestId + " " + queryText), REDIS_LOGO_URL)
-                );
+                blocks.addAll((getNextKeyUtils(requestId + " " + queryText)));
             }
 
             blocks.add(

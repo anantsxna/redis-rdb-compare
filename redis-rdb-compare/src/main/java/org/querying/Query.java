@@ -1,10 +1,14 @@
 package org.querying;
 
+import com.slack.api.model.block.LayoutBlock;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.messaging.Blocks;
 
 /**
  * Abstract class for all queries.
@@ -35,9 +39,12 @@ public abstract class Query {
     private final String requestId;
 
     @Builder.Default
-    StringBuilder result = new StringBuilder();
+    StringBuilder text = new StringBuilder();
+
+    @Builder.Default
+    List<LayoutBlock> result = new ArrayList<>();
 
     public abstract void execute(); //abstract method for executing the query
 
-    public abstract String result(); //abstract method for returning the result of the query
+    public abstract List<LayoutBlock> result(); //abstract method for returning the result of the query
 }

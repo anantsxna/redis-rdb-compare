@@ -1,7 +1,10 @@
 package org.querying;
 
 import static org.example.BotSession.getBotSession;
+import static org.messaging.Blocks.TextBlock;
 
+import com.slack.api.model.block.LayoutBlock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -27,7 +30,7 @@ public class NextKeyQuery extends Query {
         try {
             BotSession botSession = getBotSession(getRequestId());
             try {
-                result.append(">In session ").append(getRequestId()).append("\n\n");
+                text.append(">In session ").append(getRequestId()).append("\n\n");
                 for (QTrie trie : new QTrie[] { botSession.getTrieC() }) {
                     try {
                         long startTime = System.currentTimeMillis();
@@ -35,18 +38,18 @@ public class NextKeyQuery extends Query {
                         long endTime = System.currentTimeMillis();
                         int found = query.size() - 2;
 
-                        result.append("Total keys with prefix *").append(key).append("*: ");
+                        text.append("Total keys with prefix *").append(key).append("*: ");
                         if (trie == botSession.getTrieA()) {
-                            result.append("in first database: *");
+                            text.append("in first database: *");
                         } else if (trie == botSession.getTrieB()) {
-                            result.append("in second database: *");
+                            text.append("in second database: *");
                         } else {
-                            result.append("in diff file: *");
+                            text.append("in diff file: *");
                         }
-                        result.append(query.get(0).getValue());
-                        result.append("*\n");
+                        text.append(query.get(0).getValue());
+                        text.append("*\n");
                         if (query.get(0).getValue() > 0 && found == 0) {
-                            result.append(
+                            text.append(
                                 """
                                             ```It seems you have reached the leaf node of the trie.
                                             This trie does not store the token on the tail-end of the parsed keys.
@@ -59,21 +62,21 @@ public class NextKeyQuery extends Query {
                             continue;
                         }
                         if (found < n) {
-                            result
+                            text
                                 .append("`WARN: Found ")
                                 .append(found)
                                 .append(" prefixes only, less than the requested number (")
                                 .append(n)
                                 .append(")`\n");
                         }
-                        result
+                        text
                             .append(">Top ")
                             .append(found)
                             .append(" key-prefixes that start with: \"")
                             .append(key)
                             .append("\": \n");
                         for (int i = 2; i < query.size(); i++) {
-                            result
+                            text
                                 .append(">")
                                 .append(i - 1)
                                 .append(". ")
@@ -83,17 +86,17 @@ public class NextKeyQuery extends Query {
                                 .append(" key(s).\n");
                         }
                         if (query.get(1).getValue() > found) {
-                            result
+                            text
                                 .append(">... and ")
                                 .append(query.get(1).getValue() - found)
                                 .append(" others...\n");
                         }
-                        result
+                        text
                             .append("`query time: ")
                             .append(endTime - startTime)
                             .append(" ms`\n\n\n");
                     } catch (Exception e) {
-                        result
+                        text
                             .append(">No keys found for ")
                             .append(key)
                             .append(" in database.")
@@ -102,24 +105,31 @@ public class NextKeyQuery extends Query {
                     log.info("Next query for key: {} in botSession: {}", key, getRequestId());
                 }
             } catch (Exception e) {
-                result.append(">The key does not exist in the database.");
+                text.append(">The key does not exist in the database.");
             }
             setExitCode(0);
         } catch (Exception e) {
-            result.append(INVALID_REQUEST_ID);
+            text.append(INVALID_REQUEST_ID);
             setExitCode(0);
         }
     }
 
     @Override
-    public String result() {
+    public List<LayoutBlock> result() {
         if (getExitCode() == 0) {
-            log.info("result here: \n {}", result.toString());
-            return result.toString();
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+            return result;
         } else if (getExitCode() == -1) {
-            return "Error: Query could not execute";
+            text.append("Error: Query could not execute");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+            return result;
         } else {
-            return "Error: Query failed";
+            text.append("Error: Query failed");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+            return result;
         }
     }
 }

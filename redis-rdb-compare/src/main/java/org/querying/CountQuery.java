@@ -2,7 +2,9 @@ package org.querying;
 
 import static org.example.BotSession.getBotSession;
 import static org.example.Main.props;
+import static org.messaging.Blocks.*;
 
+import com.slack.api.model.block.LayoutBlock;
 import java.util.*;
 import lombok.Builder;
 import lombok.NonNull;
@@ -28,14 +30,30 @@ public class CountQuery extends Query {
     public void execute() {
         try {
             BotSession botSession = getBotSession(getRequestId());
-
-            result.append(">In session ").append(getRequestId()).append("\n\n");
-            long startTime = System.currentTimeMillis();
-
-            assert botSession != null;
             if (key.equals("!root")) {
                 key = "";
             }
+
+            text.append(">In session ").append(getRequestId());
+            if (key.equals("")) {
+                text.append("\n\nFor both the tries");
+            } else {
+                text.append("\n\nFor query: *").append(key).append("*");
+            }
+            text
+                .append(", with change: ")
+                .append(
+                    botSession.getTrieB().getCountForPrefix(key) -
+                    botSession.getTrieA().getCountForPrefix(key)
+                )
+                .append("\n\n");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+
+            long startTime = System.currentTimeMillis();
+
+            assert botSession != null;
+
             Set<String> setA = botSession.getTrieA().getChildren(key);
             Set<String> setB = botSession.getTrieB().getChildren(key);
 
@@ -58,17 +76,31 @@ public class CountQuery extends Query {
                 int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
                 log.info("foreach {} {} {}", parentKey, countInA, countInB);
                 if (!(countInA == 0 && countInB == 0)) {
-                    result
+                    text
                         .append("`")
                         .append(parentKey)
                         .append("` : ")
                         .append(countInB - countInA)
                         .append("\n\n");
+                    result.add(
+                        ButtonWithTextBlock(
+                            text.toString(),
+                            "Search",
+                            "query-search-getcount-response-" +
+                            getRequestId() +
+                            "%" +
+                            parentKey +
+                            "%" +
+                            head,
+                            "primary"
+                        )
+                    );
+                    text.setLength(0);
                 }
             }
 
             if (setCombine.isEmpty()) {
-                result.append(
+                text.append(
                     """
                                 ```It seems you have reached the leaf node of the trie.
                                 This trie does not store the chars more than the max trie depth (default 100) of the parsed keys.
@@ -80,27 +112,58 @@ public class CountQuery extends Query {
                                               |___B```
                                 """
                 );
+                result.add(TextBlock(text.toString()));
+                text.setLength(0);
             }
 
             long endTime = System.currentTimeMillis();
-            result.append("\n`query time: ").append(endTime - startTime).append(" ms`\n");
+            text.append("\n`query time: ").append(endTime - startTime).append(" ms`\n");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
 
+            //            log.info("key {} smallkey {}", key, key.substring(0, key.length() - 1));
+            String backKey;
+
+            if (key.length() > 1 && !key.equals("!root")) backKey =
+                key.substring(0, key.length() - 1); else backKey = "!root";
+            if (!key.equals("") && !key.equals("!root")) {
+                result.add(
+                    ButtonBlock(
+                        "Go Back",
+                        "query-search-getcount-response-" +
+                        getRequestId() +
+                        "%" +
+                        backKey +
+                        "%" +
+                        head,
+                        "danger"
+                    )
+                );
+            }
             setExitCode(0);
         } catch (Exception e) {
             log.info("Exception here: {}", e.getMessage());
-            result.append(INVALID_REQUEST_ID);
+            text.append(INVALID_REQUEST_ID);
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
             setExitCode(0);
         }
     }
 
     @Override
-    public String result() {
+    public List<LayoutBlock> result() {
         if (getExitCode() == 0) {
-            return result.toString();
+            return result;
         } else if (getExitCode() == -1) {
-            return "Error: Query could not execute";
+            text.append("Error: Query could not execute");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+            return result;
         } else {
-            return "Error: Query failed";
+            text.append("Error: Query failed");
+            result.add(TextBlock(text.toString()));
+            text.setLength(0);
+            return result;
         }
     }
 }
