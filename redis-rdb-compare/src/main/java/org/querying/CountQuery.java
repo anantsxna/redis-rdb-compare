@@ -35,52 +35,79 @@ public class CountQuery extends Query {
             }
 
             text.append(">In session ").append(getRequestId());
-            if (key.equals("")) {
-                text.append("\n\nFor both the tries");
+
+            boolean isSingle = botSession.getIsSingle();
+            if (!isSingle) {
+                if (key.equals("")) {
+                    text.append("\n\nComparing 2 database files");
+                } else {
+                    text.append("\n\nFor query: *").append(key).append("*");
+                }
             } else {
-                text.append("\n\nFor query: *").append(key).append("*");
+                if (key.equals("")) {
+                    text.append("\n\nFor the given database");
+                } else {
+                    text.append("\n\nFor query: *").append(key).append("*");
+                }
             }
-            text
-                .append(", with change: ")
-                .append(
-                    botSession.getTrieB().getCountForPrefix(key) -
-                    botSession.getTrieA().getCountForPrefix(key)
-                )
-                .append("\n\n");
+            int count = botSession.getTrieA().getCountForPrefix(key);
+            if (!isSingle) {
+                count = botSession.getTrieB().getCountForPrefix(key) - count;
+            }
+
+            if (!isSingle) {
+                text.append(", with change: ").append(count).append("\n\n");
+            } else {
+                text.append(", with count: ").append(count).append("\n\n");
+            }
+
             result.add(TextBlock(text.toString()));
             text.setLength(0);
 
             long startTime = System.currentTimeMillis();
 
-            assert botSession != null;
+            Set<String> setCombine = new HashSet<>();
 
             Set<String> setA = botSession.getTrieA().getChildren(key);
-            Set<String> setB = botSession.getTrieB().getChildren(key);
-
-            Set<String> setCombine = new HashSet<>();
             setCombine.addAll(setA);
-            setCombine.addAll(setB);
+
+            if (!isSingle) {
+                Set<String> setB = botSession.getTrieB().getChildren(key);
+                setCombine.addAll(setB);
+            }
 
             List<Map.Entry<Integer, String>> sortedResult = new ArrayList<>();
             for (String parentKey : setCombine) {
-                int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
-                sortedResult.add(new AbstractMap.SimpleEntry<>((countInB - countInA), parentKey));
+                int countKey = 0;
+                if (isSingle) {
+                    countKey = botSession.getTrieA().getCountForPrefix(parentKey);
+                } else {
+                    int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
+                    int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                    countKey = countInB - countInA;
+                }
+                sortedResult.add(new AbstractMap.SimpleEntry<>((countKey), parentKey));
             }
 
             Collections.sort(sortedResult, Comparator.comparing(p -> -Math.abs(p.getKey())));
 
             for (int i = 0; i < Math.min(head, sortedResult.size()); i++) {
                 String parentKey = sortedResult.get(i).getValue();
-                int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
-                log.info("foreach {} {} {}", parentKey, countInA, countInB);
-                if (!(countInA == 0 && countInB == 0)) {
+                int countKey = 0;
+                if (isSingle) {
+                    countKey = botSession.getTrieA().getCountForPrefix(parentKey);
+                } else {
+                    int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
+                    int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                    countKey = countInB - countInA;
+                }
+                log.info("foreach {} {}", parentKey, countKey);
+                if (!(countKey == 0)) {
                     text
                         .append("`")
                         .append(parentKey)
                         .append("` : ")
-                        .append(countInB - countInA)
+                        .append(countKey)
                         .append("\n\n");
                     result.add(
                         ButtonWithTextBlock(

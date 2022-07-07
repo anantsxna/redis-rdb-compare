@@ -93,13 +93,23 @@ public class SlackUtils {
         try {
             assert (!text.isEmpty());
             String[] args = text.split("\\r?\\n|\\r|\\s");
-            assert (args.length == 4 || args.length == 3);
+            assert (args.length == 4 || args.length == 3 || args.length == 2);
+
             botSession = getBotSession(args[0]);
             botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
-            botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
             if (args.length == 4) {
+                botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
                 int maxTrieDepth = Integer.parseInt(args[3]);
-                botSession.setMaxTrieDepth(maxTrieDepth + 1);
+                botSession.setMaxTrieDepth(maxTrieDepth);
+            } else if (args.length == 3) {
+                try {
+                    botSession.setMaxTrieDepth(Integer.parseInt(args[2]));
+                    botSession.setIsSingle(true);
+                } catch (Exception e) {
+                    botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
+                }
+            } else {
+                botSession.setIsSingle(true);
             }
             log.info(
                 "Downloading files from S3 links: " +
@@ -383,7 +393,6 @@ public class SlackUtils {
         try {
             assert !text.isEmpty();
             String[] queryArgsTemp = text.split("[\\s]+");
-            log.info("arg size: {}", queryArgsTemp.length);
 
             List<String> queryArgs = new ArrayList<>();
             for (String arg : queryArgsTemp) {
