@@ -87,7 +87,8 @@ public class QueryView {
             viewType == ViewType.GET_COUNT_REQUEST || viewType == ViewType.GET_COUNT_RESPONSE
         ) {
             inputActionId = "buttonBlock-query-view-getcount-response-" + randomAlphanumeric(10);
-            inputPlaceHolder = "[Prefix Key] [Count of Keys]\n\nEx. 'ACCOUNT 10'";
+            inputPlaceHolder =
+                "[Prefix Key] [Count of Keys]\n\nEx. 'ACCOUNT 10'\n\nUse '!root' for root\n\nDefault value of Count of Keys is 10";
         }
 
         if (viewType != ViewType.NO_QUERY) {
@@ -99,11 +100,9 @@ public class QueryView {
             );
 
             if (viewType == ViewType.GET_COUNT_RESPONSE || viewType == ViewType.GET_COUNT_REQUEST) {
-                blocks.add(TextImageBlock(countUtils(requestId + " " + queryText), REDIS_LOGO_URL));
+                blocks.addAll((countUtils(requestId + " " + queryText)));
             } else if (viewType == ViewType.GET_NEXT_RESPONSE) {
-                blocks.add(
-                    TextImageBlock(getNextKeyUtils(requestId + " " + queryText), REDIS_LOGO_URL)
-                );
+                blocks.addAll((getNextKeyUtils(requestId + " " + queryText)));
             }
 
             blocks.add(

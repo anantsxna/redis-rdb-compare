@@ -23,13 +23,12 @@ public class QTrieTest {
             e.printStackTrace();
         }
     }
-
-    @Test
-    public void checkDelimiter() {
-        assertEquals(props.getProperty("DELIMITER"), ":");
-        QTrie.setDELIMITER(props.getProperty("DELIMITER"));
-        assertEquals(QTrie.getDELIMITER(), ":");
-    }
+    //    @Test
+    //    public void checkDelimiter() {
+    //        assertEquals(props.getProperty("DELIMITER"), ":");
+    //        QTrie.setDELIMITER(props.getProperty("DELIMITER"));
+    //        assertEquals(QTrie.getDELIMITER(), ":");
+    //    }
     //    @Test
     //    public void initTest() {
     //        QTrie trie = QTrie.builder().keysFile("./src/test/resources/testKeysFile.txt").build();

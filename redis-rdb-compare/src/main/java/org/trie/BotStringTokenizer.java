@@ -1,9 +1,8 @@
 package org.trie;
 
+import static java.lang.Math.min;
 import static org.example.Main.props;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -12,49 +11,46 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BotStringTokenizer {
 
-    @NonNull
     @Builder.Default
-    private final String delimiter = props.getProperty("DELIMITER");
-
-    @NonNull
-    @Builder.Default
-    private final List<String> tokens = new ArrayList<>();
+    private char[] tokens;
 
     @Builder.Default
     private int index = 0;
 
+    @Builder.Default
+    private int charArraySize = 0;
+
     @NonNull
     private final String path;
 
+    @NonNull
+    @Builder.Default
+    private final int maxTrieDepth = Integer.parseInt(props.getProperty("MAX_TRIE_DEPTH_DEFAULT"));
+
     public BotStringTokenizer tokenize() {
-        String[] tokensWithEmptyString = path.split(delimiter, -1);
-        boolean previousTokenEmpty = false;
-        for (String token : tokensWithEmptyString) {
-            if (token.isEmpty()) {
-                previousTokenEmpty = true;
-                continue;
-            }
-            tokens.add((previousTokenEmpty ? delimiter : "") + token);
-            previousTokenEmpty = false;
-        }
+        //        String[] tokensWithEmptyString = path.split(delimiter, -1);
+        char[] charArrayTemp = path.toCharArray();
+        charArraySize = min(charArrayTemp.length, (maxTrieDepth));
+        tokens = new char[charArraySize];
+        System.arraycopy(charArrayTemp, 0, tokens, 0, charArraySize);
         return this;
     }
 
-    public String nextToken() {
-        if (index >= tokens.size()) {
-            return null;
+    public char nextToken() {
+        if (index >= charArraySize) {
+            return '\0';
         }
-        return tokens.get(index++);
+        return tokens[index++];
     }
 
-    public String startsWith() {
-        if (!tokens.isEmpty()) {
-            return tokens.get(0);
+    public char startsWith() {
+        if (charArraySize != 0) {
+            return tokens[0];
         }
-        return null;
+        return '\0';
     }
 
     public boolean hasMoreTokens() {
-        return index < tokens.size();
+        return index < charArraySize;
     }
 }

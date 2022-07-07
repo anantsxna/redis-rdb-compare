@@ -6,8 +6,8 @@ import java.util.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.BotSession;
 import org.example.Main;
 
 /**
@@ -24,10 +24,10 @@ public final class QTrie {
     @Builder.Default
     private final Properties props = Main.props;
 
-    @Getter
-    @Setter
-    @Builder.Default
-    private static String DELIMITER = ":";
+    //    @Getter
+    //    @Setter
+    //    @Builder.Default
+    //    private static String DELIMITER = ":";
 
     @NonNull
     private final String keysFile;
@@ -39,7 +39,7 @@ public final class QTrie {
      * Reads keys from file and inserts them into trie.
      */
     public void takeInput() {
-        DELIMITER = props.getProperty("DELIMITER");
+        //        DELIMITER = props.getProperty("DELIMITER");
         try (
             FileReader fileReader = new FileReader(keysFile);
             BufferedReader reader = new BufferedReader(fileReader)
@@ -75,7 +75,7 @@ public final class QTrie {
         BotStringTokenizer tokenizer = BotStringTokenizer
             .builder()
             .path(dbKey)
-            .delimiter(DELIMITER)
+            .maxTrieDepth(BotSession.getBotSession(requestId).getMaxTrieDepth())
             .build()
             .tokenize();
         // log.info("Inserting key: {}", dbKey);
@@ -88,33 +88,33 @@ public final class QTrie {
         //            botSession.getParentKeys().add(startsWith);
         //        }
 
-        while (tokenizer.hasMoreTokens()) {
+        while (true) {
             current.addCount();
-            String nextKey = tokenizer.nextToken();
-            //            log.info("Next key: {}", nextKey);
-            if (tokenizer.hasMoreTokens()) {
-                if (!current.hasChild(nextKey)) {
-                    current.addChild(nextKey);
-                }
-                current = current.getChild(nextKey);
-            } else break;
+            if (!tokenizer.hasMoreTokens()) {
+                break;
+            }
+            char nextKey = tokenizer.nextToken();
+            if (!current.hasChild(nextKey)) {
+                current.addChild(nextKey);
+            }
+            current = current.getChild(nextKey);
         }
     }
 
     /**
      * Returns the 'n' maximum count child nodes of a node that represents the given prefix.
      *
-     * @param _prefix: prefix to be searched.
-     * @param n:       number of child nodes to be returned.
+     * @param prefix: prefix to be searched.
+     * @param n:      number of child nodes to be returned.
      * @return List of (n+2) pairs, where:
      * the first pair has the total number of keys with the prefix '_prefix'.
      * the second pair has the total number of child nodes of the node that represents the prefix '_prefix'.
      * each of the next n pairs contains the child keys in decreasing order of their count.
      * If the number of child nodes is less than n, List has less than (n+2) pairs.
      */
-    public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String _prefix, int n)
+    public List<Map.Entry<String, Integer>> topNKeyWithPrefix(String prefix, int n)
         throws Exception {
-        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
+        //        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
 
         List<Map.Entry<String, Integer>> result = new ArrayList<>();
         TrieNode node = traverseTrie(prefix);
@@ -140,7 +140,9 @@ public final class QTrie {
 
     public Set<String> getChildren(String prefix) {
         if (prefix.compareTo("") == 0) {
-            return root.getChildren().keySet();
+            Set<String> children = new HashSet<>();
+            root.getChildren().keySet().forEach(c -> children.add(c + ""));
+            return children;
         }
         TrieNode node = traverseTrie(prefix);
         if (node == null) {
@@ -151,7 +153,7 @@ public final class QTrie {
             .getChildren()
             .keySet()
             .forEach(child -> {
-                children.add(prefix + DELIMITER + child);
+                children.add(prefix + child);
             });
 
         return children;
@@ -165,24 +167,21 @@ public final class QTrie {
      * @return Pair<full key, count of the key>.
      */
     private Map.Entry<String, Integer> getKeyAndCountOutput(
-        Map.Entry<String, TrieNode> _entry,
+        Map.Entry<Character, TrieNode> _entry,
         String prefix
     ) {
-        return Map.entry(
-            prefix.concat(DELIMITER).concat(_entry.getKey()),
-            _entry.getValue().getCount()
-        );
+        return Map.entry(prefix.concat(_entry.getKey() + ""), _entry.getValue().getCount());
     }
 
     /**
      * Returns the count of a node that represents the given key.
      *
-     * @param _prefix: key to be searched.
+     * @param prefix: key to be searched.
      * @return an integer representing the count of the node.
      * @throws Exception: if the key is not found in the trie.
      */
-    public Integer getCountForPrefix(String _prefix) {
-        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
+    public Integer getCountForPrefix(String prefix) {
+        //        final String prefix = _prefix.replaceFirst(DELIMITER + "$", "");
         TrieNode node = traverseTrie(prefix);
         if (node == null) {
             return 0;
@@ -198,15 +197,10 @@ public final class QTrie {
      * @throws Exception: if the path is not found in the trie.
      */
     private TrieNode traverseTrie(String path) {
-        BotStringTokenizer tokenizer = BotStringTokenizer
-            .builder()
-            .path(path)
-            .delimiter(DELIMITER)
-            .build()
-            .tokenize();
+        BotStringTokenizer tokenizer = BotStringTokenizer.builder().path(path).build().tokenize();
         TrieNode current = root;
         while (tokenizer.hasMoreTokens()) {
-            String nextKey = tokenizer.nextToken();
+            char nextKey = tokenizer.nextToken();
             if (!current.hasChild(nextKey)) {
                 return null;
             }

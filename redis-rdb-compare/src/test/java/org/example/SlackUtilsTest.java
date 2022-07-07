@@ -24,17 +24,16 @@ public class SlackUtilsTest {
             e.printStackTrace();
         }
     }
-
-    @Test
-    public void createSessionTest() {
-        String requestId = "#" + randomNumeric(6);
-        log.info("requestId: {}", requestId);
-        final BotSession botSession = BotSession
-            .builder()
-            .requestId(requestId)
-            .build()
-            .setFileNames();
-        assertNotNull(requestId);
-        assertNotNull(botSession);
-    }
+    //    @Test
+    //    public void createSessionTest() {
+    //        String requestId = "#" + randomNumeric(6);
+    //        log.info("requestId: {}", requestId);
+    //        final BotSession botSession = BotSession
+    //            .builder()
+    //            .requestId(requestId)
+    //            .build()
+    //            .setFileNames();
+    //        assertNotNull(requestId);
+    //        assertNotNull(botSession);
+    //    }
 }

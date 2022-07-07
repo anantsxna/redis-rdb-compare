@@ -13,7 +13,7 @@ public final class TrieNode {
 
     @NonNull
     @Builder.Default
-    private final HashMap<String, TrieNode> children = new HashMap<>(); // children of the node
+    private final HashMap<Character, TrieNode> children = new HashMap<>(); // children of the node
 
     @Builder.Default
     private Integer count = 0; // count of strings that go through this node
@@ -23,7 +23,7 @@ public final class TrieNode {
     }
 
     @NotNull
-    public HashMap<String, TrieNode> getChildren() {
+    public HashMap<Character, TrieNode> getChildren() {
         return children;
     }
 
@@ -35,15 +35,15 @@ public final class TrieNode {
         count += 1;
     }
 
-    public boolean hasChild(String childName) {
+    public boolean hasChild(char childName) {
         return children.containsKey(childName);
     }
 
-    public TrieNode getChild(String childName) {
+    public TrieNode getChild(char childName) {
         return children.get(childName);
     }
 
-    public void addChild(String childName) {
+    public void addChild(char childName) {
         children.put(childName, TrieNode.builder().build());
     }
 }

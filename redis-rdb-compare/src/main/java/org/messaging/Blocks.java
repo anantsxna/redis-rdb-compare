@@ -75,6 +75,19 @@ public class Blocks {
         );
     }
 
+    public static LayoutBlock ButtonWithTextBlock(
+        String text,
+        String buttonText,
+        String buttonValue,
+        String buttonStyle
+    ) {
+        return section(s ->
+            s
+                .text(MarkdownTextObject.builder().text(text).build())
+                .accessory(buttonElement(buttonText, buttonValue, buttonStyle))
+        );
+    }
+
     /**
      * @param buttonText:  the text of the button
      * @param buttonValue: the value used to make the actionId of the payload the button will send back
