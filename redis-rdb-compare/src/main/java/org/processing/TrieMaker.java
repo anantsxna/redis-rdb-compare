@@ -62,7 +62,6 @@ public class TrieMaker {
                 log.info("Inserted keys from {}", keysFile);
                 CompressedQTrie compressedTrie = compressedTriesPairs.get(trie);
                 compressedTrie.takeInput();
-                compressedTrie.show();
             });
         });
         trieInsertionExecutorService.shutdown();

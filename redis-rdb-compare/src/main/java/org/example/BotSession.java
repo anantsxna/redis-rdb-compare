@@ -3,8 +3,11 @@ package org.example;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.example.Main.props;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -288,6 +291,18 @@ public class BotSession {
         long endTime = System.currentTimeMillis();
         log.info(props.getProperty("PARSE_SUCCESS"), getRequestId(), endTime - startTime);
         this.setParsingTime(endTime - startTime);
+        for (String file : new String[] { this.getDumpA(), this.getDumpB() }) {
+            if (Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), file);
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), file);
+            }
+        }
         return (
             props.getProperty("PARSE_COMPLETE_A") +
             (endTime - startTime) /
@@ -332,6 +347,20 @@ public class BotSession {
         this.setTrieMakingTime(endTime - startTime);
         // log.info("time measures: {} {} {} {}", this.getRequestId(), this.getDownloadingTime() / 1000.0, this.getParsingTime() / 1000.0, this.getTrieMakingTime() / 1000.0);
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
+        this.setTrieA(null);
+        this.setTrieB(null);
+        for (String file : new String[] { this.getKeysA(), this.getKeysB() }) {
+            if (Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), file);
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), file);
+            }
+        }
         return (
             props.getProperty("MAKE_TRIE_COMPLETE_A") +
             (endTime - startTime) /
