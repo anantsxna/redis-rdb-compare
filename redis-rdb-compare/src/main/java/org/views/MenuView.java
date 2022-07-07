@@ -96,7 +96,7 @@ public class MenuView {
                                 PlainTextObject
                                     .builder()
                                     .text(
-                                        "Enter the links for databases and max trie depth, space-separated:\n\n[S3Link_1] [S3Link_2] [maxTrieDepth (default: 100)]"
+                                        "Enter the links for databases and max trie depth, space-separated:\n\n[S3Link_1] [S3Link_2 (optional)] [maxTrieDepth (optional, default: 100)]"
                                     )
                                     .build()
                             )

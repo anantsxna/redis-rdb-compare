@@ -35,6 +35,10 @@ public class BotSession {
     @Setter
     private URL s3linkA;
 
+    @Builder.Default
+    @Setter
+    private Boolean isSingle = false;
+
     @Setter
     private URL s3linkB;
 
@@ -85,7 +89,7 @@ public class BotSession {
     private final long creationTime = -1;
 
     public static String elongateURL(@NonNull String s3link) {
-        if (!s3link.matches(props.getProperty("INCOMPLETE_URL_REGEX"))) {
+        if (!s3link.startsWith("https://") && !s3link.startsWith("http://")) {
             s3link = "https://" + s3link;
         }
         return s3link;
@@ -237,8 +241,7 @@ public class BotSession {
         this.setDownloadingStatus(DownloadingStatus.DOWNLOADING);
         Downloader downloader = this.getDownloader();
         downloader.addToDownloader(this.getS3linkA(), this.getDumpA());
-        downloader.addToDownloader(this.getS3linkB(), this.getDumpB());
-
+        if (!this.getIsSingle()) downloader.addToDownloader(this.getS3linkB(), this.getDumpB());
         long startTime = System.currentTimeMillis();
         try {
             boolean terminatedWithSuccess = this.getDownloader().download();
@@ -271,7 +274,7 @@ public class BotSession {
         this.setParsingStatus(ParsingStatus.IN_PROGRESS);
         Parser parser = this.getParser();
         parser.addToParser(this.getDumpA(), this.getKeysA());
-        parser.addToParser(this.getDumpB(), this.getKeysB());
+        if (!this.getIsSingle()) parser.addToParser(this.getDumpB(), this.getKeysB());
 
         long startTime = System.currentTimeMillis();
         parser.parse();
@@ -295,12 +298,12 @@ public class BotSession {
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTING);
         log.info(props.getProperty("MAKE_TRIE_INITIATE"), requestId);
         this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).requestId(requestId).build());
-        this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
-        //        this.setTrieC(QTrie.builder().keysFile(this.getDiffFile()).requestId(requestId).build());
-
         this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
-        this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
-        //        this.getTrieMaker().addToTrieMaker(this.getDiffFile(), this.getTrieC());
+
+        if (!this.getIsSingle()) {
+            this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
+            this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
+        }
 
         long startTime = System.currentTimeMillis();
         try {
