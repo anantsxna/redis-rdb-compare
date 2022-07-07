@@ -27,22 +27,22 @@ class TrieNodeTest {
     void hasChild() {
         log.info("Running hasChild test...");
         TrieNode node = TrieNode.builder().build();
-        assertFalse(node.hasChild("a"));
+        assertFalse(node.hasChild('a'));
     }
 
     @Test
     void getChild() {
         log.info("Running getChild test...");
         TrieNode node = TrieNode.builder().build();
-        assertNull(node.getChild("a"));
+        assertNull(node.getChild('a'));
     }
 
     @Test
     void addChild() {
         log.info("Running addChild test...");
         TrieNode node = TrieNode.builder().build();
-        node.addChild("a");
-        assertTrue(node.hasChild("a"));
+        node.addChild('a');
+        assertTrue(node.hasChild('a'));
     }
 
     @Test

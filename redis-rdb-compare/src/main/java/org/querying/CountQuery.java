@@ -70,13 +70,15 @@ public class CountQuery extends Query {
             if (setCombine.isEmpty()) {
                 result.append(
                     """
-                        ```It seems you have reached the leaf node of the trie.
-                        This trie does not store the token on the tail-end of the parsed keys.
-                        For ex: the key "FOO:BAR:BAZ" will be stored as:
-                        root
-                          |___FOO
-                               |___BAR```
-                        """
+                                ```It seems you have reached the leaf node of the trie.
+                                This trie does not store the chars more than the max trie depth (default 100) of the parsed keys.
+                                For ex: the key "FOOBAR" and depth 4 will be stored as:
+                                root
+                                  |___F
+                                      |___O
+                                          |___O
+                                              |___B```
+                                """
                 );
             }
 

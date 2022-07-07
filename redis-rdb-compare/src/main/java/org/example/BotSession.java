@@ -76,6 +76,11 @@ public class BotSession {
 
     private final String requestId;
 
+    @Getter
+    @Builder.Default
+    @Setter
+    private Integer maxTrieDepth = Integer.parseInt(props.getProperty("MAX_TRIE_DEPTH_DEFAULT"));
+
     @Builder.Default
     private final long creationTime = -1;
 

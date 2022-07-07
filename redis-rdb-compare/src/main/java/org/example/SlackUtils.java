@@ -89,10 +89,14 @@ public class SlackUtils {
         try {
             assert (!text.isEmpty());
             String[] args = text.split("\\r?\\n|\\r|\\s");
-            assert (args.length == 3);
+            assert (args.length == 4 || args.length == 3);
             botSession = getBotSession(args[0]);
             botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
             botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
+            if (args.length == 4) {
+                int maxTrieDepth = Integer.parseInt(args[3]);
+                botSession.setMaxTrieDepth(maxTrieDepth + 1);
+            }
             log.info(
                 "Downloading files from S3 links: " +
                 botSession.getS3linkA() +
