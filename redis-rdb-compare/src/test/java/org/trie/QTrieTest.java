@@ -2,6 +2,7 @@ package org.trie;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.net.URL;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ public class QTrieTest {
             e.printStackTrace();
         }
     }
+
     //    @Test
     //    public void checkDelimiter() {
     //        assertEquals(props.getProperty("DELIMITER"), ":");
@@ -37,4 +39,13 @@ public class QTrieTest {
     //        //        trie.insertKey("hello:bye");
     //        assertEquals(trie.getRoot().getCount(), 7956);
     //    }
+
+    @Test
+    public void isS3() {
+        try {
+            new URL("s3://qa4-cdata-app.sprinklr.com/EXPORT/itops-348637-001-node-0001.rdb");
+        } catch (Exception e) {
+            log.info("Not an S3 URL");
+        }
+    }
 }

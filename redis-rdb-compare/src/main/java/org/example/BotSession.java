@@ -33,14 +33,19 @@ public class BotSession {
     private static final ConcurrentHashMap<String, BotSession> allBotSessions = new ConcurrentHashMap<>(); //static map of botSession ids to requestIds
 
     @Setter
-    private URL s3linkA;
+    private String s3linkA;
 
     @Builder.Default
     @Setter
     private Boolean isSingle = false;
 
+    @Builder.Default
+    @Getter
     @Setter
-    private URL s3linkB;
+    private Boolean isS3URL = false;
+
+    @Setter
+    private String s3linkB;
 
     @Builder.Default
     private volatile String dumpA = props.getProperty("DEFAULT_DUMP_A");
@@ -89,7 +94,11 @@ public class BotSession {
     private final long creationTime = -1;
 
     public static String elongateURL(@NonNull String s3link) {
-        if (!s3link.startsWith("https://") && !s3link.startsWith("http://")) {
+        if (
+            !s3link.startsWith("https://") &&
+            !s3link.startsWith("http://") &&
+            !s3link.startsWith("s3://")
+        ) {
             s3link = "https://" + s3link;
         }
         return s3link;
@@ -101,13 +110,8 @@ public class BotSession {
         this.keysA = "./.sessionFiles/keys-A-" + this.getRequestId() + ".txt";
         this.keysB = "./.sessionFiles/keys-B-" + this.getRequestId() + ".txt";
         this.diffFile = "./.sessionFiles/diff-" + this.getRequestId() + ".txt";
-        try {
-            this.s3linkA = new URL(props.getProperty("DEFAULT_S3_LINK"));
-            this.s3linkB = new URL(props.getProperty("DEFAULT_S3_LINK"));
-        } catch (MalformedURLException e) {
-            log.error(props.getProperty("S3_LINK_NOT_INITIALIZED"), this.getRequestId());
-            e.printStackTrace();
-        }
+        this.s3linkA = (props.getProperty("DEFAULT_S3_LINK"));
+        this.s3linkB = (props.getProperty("DEFAULT_S3_LINK"));
         return this;
     }
 
@@ -244,7 +248,7 @@ public class BotSession {
         if (!this.getIsSingle()) downloader.addToDownloader(this.getS3linkB(), this.getDumpB());
         long startTime = System.currentTimeMillis();
         try {
-            boolean terminatedWithSuccess = this.getDownloader().download();
+            boolean terminatedWithSuccess = this.getDownloader().download(this.getIsS3URL());
             if (!terminatedWithSuccess) {
                 throw new InterruptedException(props.getProperty("DOWNLOAD_TIMEOUT"));
             }

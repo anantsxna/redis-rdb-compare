@@ -91,14 +91,15 @@ public class SlackUtils {
     ) {
         BotSession botSession;
         try {
+            boolean isS3Url = false;
             assert (!text.isEmpty());
             String[] args = text.split("\\r?\\n|\\r|\\s");
             assert (args.length == 4 || args.length == 3 || args.length == 2);
 
             botSession = getBotSession(args[0]);
-            botSession.setS3linkA(new URL(BotSession.elongateURL(args[1])));
+            botSession.setS3linkA((BotSession.elongateURL(args[1])));
             if (args.length == 4) {
-                botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
+                botSession.setS3linkB((BotSession.elongateURL(args[2])));
                 int maxTrieDepth = Integer.parseInt(args[3]);
                 botSession.setMaxTrieDepth(maxTrieDepth);
             } else if (args.length == 3) {
@@ -106,11 +107,21 @@ public class SlackUtils {
                     botSession.setMaxTrieDepth(Integer.parseInt(args[2]));
                     botSession.setIsSingle(true);
                 } catch (Exception e) {
-                    botSession.setS3linkB(new URL(BotSession.elongateURL(args[2])));
+                    botSession.setS3linkB((BotSession.elongateURL(args[2])));
                 }
             } else {
                 botSession.setIsSingle(true);
             }
+
+            try {
+                new URL(botSession.getS3linkA());
+                if (!botSession.getIsSingle()) {
+                    new URL(botSession.getS3linkB());
+                }
+            } catch (Exception e) {
+                botSession.setIsS3URL(true);
+            }
+
             log.info(
                 "Downloading files from S3 links: " +
                 botSession.getS3linkA() +
