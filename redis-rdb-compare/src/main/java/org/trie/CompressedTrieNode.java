@@ -1,11 +1,11 @@
 package org.trie;
 
+import java.util.HashMap;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 /**
  * Trie Node class.
@@ -20,6 +20,16 @@ public final class CompressedTrieNode {
     @Builder.Default
     @Setter
     private Integer count = 0; // count of strings that go through this node
+
+    @Builder.Default
+    @Setter
+    @Getter
+    private String myPath = "!root";
+
+    @Builder.Default
+    @Getter
+    @Setter
+    private int parentChildKeyDiff = 0;
 
     public Integer getCount() {
         return count;
@@ -47,6 +57,9 @@ public final class CompressedTrieNode {
     }
 
     public void addChild(String childName) {
-        children.put(childName, CompressedTrieNode.builder().build());
+        children.put(
+            childName,
+            CompressedTrieNode.builder().parentChildKeyDiff(childName.length()).build()
+        );
     }
 }

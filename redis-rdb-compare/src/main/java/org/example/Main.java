@@ -387,9 +387,15 @@ public class Main {
                         } else if (actionId.contains("getcount-response")) {
                             if (actionId.contains("search")) {
                                 //                                        log.info(req.getRequestBodyAsString());
-                                String requestId_queryText = actionId
-                                    .replaceFirst("buttonBlock-query-search-getcount-response-", "")
-                                    .replaceFirst("-[-\\w]*", "");
+                                String requestId_queryText = actionId.replaceFirst(
+                                    "buttonBlock-query-search-getcount-response-",
+                                    ""
+                                );
+                                requestId_queryText =
+                                    requestId_queryText.substring(
+                                        0,
+                                        requestId_queryText.length() - 11
+                                    );
                                 log.info("Here: {}", requestId_queryText);
                                 requestId = requestId_queryText.split("%")[0];
                                 String parentKey = requestId_queryText.split("%")[1];
