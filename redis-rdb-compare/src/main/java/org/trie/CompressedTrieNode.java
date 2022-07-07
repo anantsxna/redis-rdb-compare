@@ -22,11 +22,6 @@ public final class CompressedTrieNode {
     private Integer count = 0; // count of strings that go through this node
 
     @Builder.Default
-    @Setter
-    @Getter
-    private String myPath = "!root";
-
-    @Builder.Default
     @Getter
     @Setter
     private int parentChildKeyDiff = 0;

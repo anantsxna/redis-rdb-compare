@@ -20,10 +20,8 @@ import org.trie.CompressedTrieNode;
 @SuperBuilder
 public class CountQuery extends Query {
 
-    @NonNull
     private String key;
 
-    @NonNull
     @Builder.Default
     private Integer head = Integer.parseInt(props.getProperty("DEFAULT_HEAD"));
 

@@ -17,7 +17,7 @@ public final class CompressedQTrie {
 
     @Builder.Default
     @Getter
-    private final CompressedTrieNode root = CompressedTrieNode.builder().myPath("").build();
+    private final CompressedTrieNode root = CompressedTrieNode.builder().build();
 
     @Builder.Default
     private final Properties props = Main.props;
@@ -119,7 +119,6 @@ public final class CompressedQTrie {
     ) {
         node.setCount(copy.getCount());
         if (node == root) {
-            node.setMyPath("");
             node.setCount(copy.getCount());
         } else {
             StringBuilder joinedString = new StringBuilder();
@@ -137,10 +136,10 @@ public final class CompressedQTrie {
                     break;
                 }
             }
-            node.setMyPath(parent.getMyPath() + joinedString.toString());
+            //            node.setMyPath(parent.getMyPath() + joinedString.toString());
             node.setCount(copy.getCount());
             node.setParentChildKeyDiff(joinedString.length());
-            log.info("Path: {}, Count: {}", node.getMyPath(), node.getCount());
+            //            log.info("Path: {}, Count: {}", node.getMyPath(), node.getCount());
             parent.getChildren().put(joinedString.toString(), node);
         }
 
@@ -149,7 +148,7 @@ public final class CompressedQTrie {
             .forEach((key, childNode) -> {
                 CompressedTrieNode child = CompressedTrieNode
                     .builder()
-                    .myPath(node.getMyPath() + key)
+                    //                            .myPath(node.getMyPath() + key)
                     .build();
                 matchNodes(child, childNode, node, key + "");
             });

@@ -24,11 +24,6 @@ public final class QTrie {
     @Builder.Default
     private final Properties props = Main.props;
 
-    //    @Getter
-    //    @Setter
-    //    @Builder.Default
-    //    private static String DELIMITER = ":";
-
     @NonNull
     private final String keysFile;
 
@@ -46,17 +41,17 @@ public final class QTrie {
         ) {
             log.info("Reading keys from file: {}", keysFile);
             String line;
-            int i = 0;
+            //            int i = 0;
             while ((line = reader.readLine()) != null) {
                 insertKey(line);
-                i++;
+                //                i++;
                 //                if (i == 10) {
                 //                    break;
                 //                }
-                if (i % 100 == 0 && keysFile.contains("B")) {
-                    //     log.info("{} {}", i, line);
-                    log.info("Read " + i + " keys.");
-                }
+                //                if (i % 100 == 0 && keysFile.contains("B")) {
+                //                    //     log.info("{} {}", i, line);
+                //                    log.info("Read " + i + " keys.");
+                //                }
                 //                int finalI = i;
                 //                stops.forEach(stop -> {
                 //                    if (finalI == stop) {
