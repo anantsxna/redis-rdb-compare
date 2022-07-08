@@ -31,7 +31,7 @@ public class NextKeyQuery extends Query {
             BotSession botSession = getBotSession(getRequestId());
             try {
                 text.append(">In session ").append(getRequestId()).append("\n\n");
-                for (QTrie trie : new QTrie[] { botSession.getTrieC() }) {
+                for (QTrie trie : new QTrie[] { botSession.getTrieA() }) {
                     try {
                         long startTime = System.currentTimeMillis();
                         List<Map.Entry<String, Integer>> query = trie.topNKeyWithPrefix(key, n);

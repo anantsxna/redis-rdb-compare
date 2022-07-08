@@ -3,8 +3,11 @@ package org.example;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.example.Main.props;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +20,7 @@ import org.processing.Downloader;
 import org.processing.Parser;
 import org.processing.TrieMaker;
 import org.threading.SingleNameableExecutorService;
+import org.trie.CompressedQTrie;
 import org.trie.QTrie;
 
 /**
@@ -72,7 +76,11 @@ public class BotSession {
 
     @Setter
     @Builder.Default
-    private QTrie trieC = null;
+    private CompressedQTrie compTrieA = null;
+
+    @Setter
+    @Builder.Default
+    private CompressedQTrie compTrieB = null;
 
     @Builder.Default
     private volatile Parser parser = Parser.builder().build();
@@ -287,6 +295,18 @@ public class BotSession {
         long endTime = System.currentTimeMillis();
         log.info(props.getProperty("PARSE_SUCCESS"), getRequestId(), endTime - startTime);
         this.setParsingTime(endTime - startTime);
+        for (String file : new String[] { this.getDumpA(), this.getDumpB() }) {
+            if (Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), file);
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), file);
+            }
+        }
         return (
             props.getProperty("PARSE_COMPLETE_A") +
             (endTime - startTime) /
@@ -303,10 +323,14 @@ public class BotSession {
         log.info(props.getProperty("MAKE_TRIE_INITIATE"), requestId);
         this.setTrieA(QTrie.builder().keysFile(this.getKeysA()).requestId(requestId).build());
         this.getTrieMaker().addToTrieMaker(this.getDumpA(), this.getTrieA());
+        this.setCompTrieA(CompressedQTrie.builder().trie(trieA).build());
+        this.getTrieMaker().addToCompressedTrieMaker(this.getTrieA(), this.getCompTrieA());
 
         if (!this.getIsSingle()) {
             this.setTrieB(QTrie.builder().keysFile(this.getKeysB()).requestId(requestId).build());
             this.getTrieMaker().addToTrieMaker(this.getDumpB(), this.getTrieB());
+            this.setCompTrieB(CompressedQTrie.builder().trie(trieB).build());
+            this.getTrieMaker().addToCompressedTrieMaker(this.getTrieB(), this.getCompTrieB());
         }
 
         long startTime = System.currentTimeMillis();
@@ -327,6 +351,20 @@ public class BotSession {
         this.setTrieMakingTime(endTime - startTime);
         // log.info("time measures: {} {} {} {}", this.getRequestId(), this.getDownloadingTime() / 1000.0, this.getParsingTime() / 1000.0, this.getTrieMakingTime() / 1000.0);
         this.setTrieMakingStatus(TrieMakingStatus.CONSTRUCTED); //volatile variable write
+        this.setTrieA(null);
+        this.setTrieB(null);
+        for (String file : new String[] { this.getKeysA(), this.getKeysB() }) {
+            if (Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info(props.getProperty("DELETING_KEYS_SUCCESS"), file);
+            } else {
+                log.info(props.getProperty("DELETING_KEYS_ERROR"), file);
+            }
+        }
         return (
             props.getProperty("MAKE_TRIE_COMPLETE_A") +
             (endTime - startTime) /

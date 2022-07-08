@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.threading.FixedNameableExecutorService;
+import org.trie.CompressedQTrie;
+import org.trie.CompressedTrieNode;
 import org.trie.QTrie;
 
 /**
@@ -25,6 +27,9 @@ public class TrieMaker {
     private final HashMap<String, QTrie> keysTriesPairs = new HashMap<>();
 
     @Builder.Default
+    private final HashMap<QTrie, CompressedQTrie> compressedTriesPairs = new HashMap<>();
+
+    @Builder.Default
     private final ExecutorService trieInsertionExecutorService = FixedNameableExecutorService
         .builder()
         .baseName("trie-initializer-threads")
@@ -42,6 +47,10 @@ public class TrieMaker {
         keysTriesPairs.put(keysFile, trie);
     }
 
+    public void addToCompressedTrieMaker(QTrie trie, CompressedQTrie compTrie) {
+        compressedTriesPairs.put(trie, compTrie);
+    }
+
     /**
      * Initialize the tries.
      */
@@ -50,6 +59,9 @@ public class TrieMaker {
             trieInsertionExecutorService.submit(() -> {
                 log.info("Inserting keys from {}", keysFile);
                 trie.takeInput();
+                log.info("Inserted keys from {}", keysFile);
+                CompressedQTrie compressedTrie = compressedTriesPairs.get(trie);
+                compressedTrie.takeInput();
             });
         });
         trieInsertionExecutorService.shutdown();

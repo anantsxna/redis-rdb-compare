@@ -88,7 +88,7 @@ public class QueryView {
         ) {
             inputActionId = "buttonBlock-query-view-getcount-response-" + randomAlphanumeric(10);
             inputPlaceHolder =
-                "[Prefix Key] [Count of Keys]\n\nEx. 'ACCOUNT 10'\n\nUse '!root' for root\n\nDefault value of Count of Keys is 10";
+                "[Prefix Key] [Count of Keys]\n\nEx. '!root 10'\n\nUse '!root' for root\n\nDefault value of Count of Keys is 10";
         }
 
         if (viewType != ViewType.NO_QUERY) {

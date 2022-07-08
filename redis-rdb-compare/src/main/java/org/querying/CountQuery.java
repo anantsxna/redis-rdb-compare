@@ -11,6 +11,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.example.BotSession;
+import org.trie.CompressedTrieNode;
 
 /**
  * "/getcount [prefixKey]" query.
@@ -19,10 +20,8 @@ import org.example.BotSession;
 @SuperBuilder
 public class CountQuery extends Query {
 
-    @NonNull
     private String key;
 
-    @NonNull
     @Builder.Default
     private Integer head = Integer.parseInt(props.getProperty("DEFAULT_HEAD"));
 
@@ -50,9 +49,9 @@ public class CountQuery extends Query {
                     text.append("\n\nFor query: *").append(key).append("*");
                 }
             }
-            int count = botSession.getTrieA().getCountForPrefix(key);
+            int count = botSession.getCompTrieA().getCountForPrefix(key);
             if (!isSingle) {
-                count = botSession.getTrieB().getCountForPrefix(key) - count;
+                count = botSession.getCompTrieB().getCountForPrefix(key) - count;
             }
 
             if (!isSingle) {
@@ -68,24 +67,28 @@ public class CountQuery extends Query {
 
             Set<String> setCombine = new HashSet<>();
 
-            Set<String> setA = botSession.getTrieA().getChildren(key);
+            Set<String> setA = botSession.getCompTrieA().getChildren(key);
             setCombine.addAll(setA);
 
+            log.info("{}", setCombine);
+
             if (!isSingle) {
-                Set<String> setB = botSession.getTrieB().getChildren(key);
+                Set<String> setB = botSession.getCompTrieB().getChildren(key);
                 setCombine.addAll(setB);
             }
 
             List<Map.Entry<Integer, String>> sortedResult = new ArrayList<>();
             for (String parentKey : setCombine) {
+                //                log.info("checking for {}", parentKey);
                 int countKey = 0;
                 if (isSingle) {
-                    countKey = botSession.getTrieA().getCountForPrefix(parentKey);
+                    countKey = botSession.getCompTrieA().getCountForPrefix(parentKey);
                 } else {
-                    int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                    int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                    int countInA = botSession.getCompTrieA().getCountForPrefix(parentKey);
+                    int countInB = botSession.getCompTrieB().getCountForPrefix(parentKey);
                     countKey = countInB - countInA;
                 }
+                //                log.info("{}", countKey);
                 sortedResult.add(new AbstractMap.SimpleEntry<>((countKey), parentKey));
             }
 
@@ -93,37 +96,33 @@ public class CountQuery extends Query {
 
             for (int i = 0; i < Math.min(head, sortedResult.size()); i++) {
                 String parentKey = sortedResult.get(i).getValue();
+                //                log.info("parentKey {}, head {}", parentKey, head);
                 int countKey = 0;
                 if (isSingle) {
-                    countKey = botSession.getTrieA().getCountForPrefix(parentKey);
+                    countKey = botSession.getCompTrieA().getCountForPrefix(parentKey);
                 } else {
-                    int countInA = botSession.getTrieA().getCountForPrefix(parentKey);
-                    int countInB = botSession.getTrieB().getCountForPrefix(parentKey);
+                    int countInA = botSession.getCompTrieA().getCountForPrefix(parentKey);
+                    int countInB = botSession.getCompTrieB().getCountForPrefix(parentKey);
                     countKey = countInB - countInA;
                 }
-                log.info("foreach {} {}", parentKey, countKey);
-                if (!(countKey == 0)) {
-                    text
-                        .append("`")
-                        .append(parentKey)
-                        .append("` : ")
-                        .append(countKey)
-                        .append("\n\n");
-                    result.add(
-                        ButtonWithTextBlock(
-                            text.toString(),
-                            "Search",
-                            "query-search-getcount-response-" +
-                            getRequestId() +
-                            "%" +
-                            parentKey +
-                            "%" +
-                            head,
-                            "primary"
-                        )
-                    );
-                    text.setLength(0);
-                }
+                //                log.info("foreach {} {}", parentKey, countKey);
+
+                text.append("`").append(parentKey).append("` : ").append(countKey).append("\n\n");
+                //                log.info("again foreach {} {}", parentKey, countKey);
+                result.add(
+                    ButtonWithTextBlock(
+                        text.toString(),
+                        "Search",
+                        "query-search-getcount-response-" +
+                        getRequestId() +
+                        "%" +
+                        parentKey +
+                        "%" +
+                        head,
+                        "primary"
+                    )
+                );
+                text.setLength(0);
             }
 
             if (setCombine.isEmpty()) {
@@ -151,8 +150,17 @@ public class CountQuery extends Query {
             //            log.info("key {} smallkey {}", key, key.substring(0, key.length() - 1));
             String backKey;
 
-            if (key.length() > 1 && !key.equals("!root")) backKey =
-                key.substring(0, key.length() - 1); else backKey = "!root";
+            if (key.length() > 1 && !key.equals("!root")) {
+                CompressedTrieNode node = botSession.getCompTrieA().traverseTrie(key);
+                if (node != null) {
+                    backKey = key.substring(0, key.length() - node.getParentChildKeyDiff());
+                    if (backKey.length() == 0) {
+                        backKey = "!root";
+                    }
+                } else {
+                    backKey = "!root";
+                }
+            } else backKey = "!root";
             if (!key.equals("") && !key.equals("!root")) {
                 result.add(
                     ButtonBlock(
